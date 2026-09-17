@@ -86,26 +86,29 @@
         </div>
       </div>
 
-      <!-- Consumer Action Controls (Pure Veg Toggle, Header Cart, Profile) -->
-      <div class="flex items-center space-x-2">
+      <!-- Consumer Action Controls (Language Selector, Pure Veg Toggle, Header Cart, Profile) -->
+      <div class="flex items-center space-x-1.5 sm:space-x-2">
+        <!-- Language Switcher Mount -->
+        <div class="langSelectorMount"></div>
+
         <!-- Quick Pure Veg Filter Toggle -->
         <button id="vegFilterBtn" onclick="toggleVegFilter()" 
-          class="flex items-center space-x-1.5 px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:border-gray-300 transition shadow-sm whitespace-nowrap">
+          class="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:border-gray-300 transition shadow-sm whitespace-nowrap">
           <span class="w-3.5 h-3.5 rounded border-2 border-green-600 flex items-center justify-center p-0.5">
             <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
           </span>
-          <span class="hidden sm:inline font-bold">Pure Veg</span>
+          <span class="hidden sm:inline font-bold" data-i18n="pure_veg">Pure Veg</span>
         </button>
 
         <!-- Header Cart Button -->
-        <button id="headerCartBtn" onclick="openCartDrawer()" class="relative px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white flex items-center space-x-1.5 font-bold text-xs shadow-md shadow-orange-600/20 transition">
+        <button id="headerCartBtn" onclick="openCartDrawer()" class="relative px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white flex items-center space-x-1.5 font-bold text-xs shadow-md shadow-orange-600/20 transition">
           <i class="fa-solid fa-basket-shopping text-xs"></i>
           <span id="headerCartTotal">₹0</span>
           <span id="headerCartBadge" class="hidden ml-1 px-1.5 py-0.2 bg-white text-orange-600 rounded-full text-[10px] font-black">0</span>
         </button>
 
         <!-- Auth / Profile Button -->
-        <button id="authBtn" onclick="handleAuthBtnClick()" class="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 border border-orange-200 flex items-center justify-center font-bold text-sm hover:bg-orange-100 transition shadow-sm" title="My Profile & Addresses">
+        <button id="authBtn" onclick="handleAuthBtnClick()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-orange-50 text-orange-600 border border-orange-200 flex items-center justify-center font-bold text-sm hover:bg-orange-100 transition shadow-sm" title="My Profile & Addresses">
           <i class="fa-regular fa-user"></i>
         </button>
       </div>
@@ -122,10 +125,10 @@
       <div class="relative z-10 max-w-lg space-y-2">
         <div class="inline-flex items-center space-x-1.5 bg-black/20 backdrop-blur px-2.5 py-1 rounded-full text-xs font-semibold">
           <i class="fa-solid fa-shield-halved text-amber-300"></i>
-          <span>100% FSSAI Inspected & Clean Certified Stalls</span>
+          <span data-i18n="hero_badge">100% FSSAI Inspected & Clean Certified Stalls</span>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Authentic Street Food.<br>Zero Hygiene Compromise.</h1>
-        <p class="text-xs sm:text-sm text-orange-100">Direct from iconic heritage thelas in Indiranagar. Delivered in thermal insulated boxes within 15 mins.</p>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" data-i18n-html="hero_title">Authentic Street Food.<br>Zero Hygiene Compromise.</h1>
+        <p class="text-xs sm:text-sm text-orange-100" data-i18n="hero_desc">Direct from iconic heritage thelas in Indiranagar. Delivered in thermal insulated boxes within 15 mins.</p>
       </div>
       <!-- Decorative Indian Street Graphic Accent -->
       <div class="absolute -right-6 -bottom-6 w-36 h-36 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
@@ -138,7 +141,7 @@
     <div class="flex items-center space-x-3">
       <div class="relative flex-1">
         <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-        <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Search 'Golgappa', 'Babu Vada Pav', 'Momos'..." 
+        <input type="text" id="searchInput" oninput="handleSearch()" data-i18n-placeholder="search_placeholder" placeholder="Search dishes or street food..." 
           class="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 shadow-sm transition">
       </div>
       <!-- Pure Veg Toggle -->
@@ -823,6 +826,8 @@
     </button>
   </div>
 
+  <!-- Multi-Language Localization Engine -->
+  <script src="/i18n.js"></script>
   <!-- Client-side Logic Script -->
   <script src="/app.js"></script>
 </body>

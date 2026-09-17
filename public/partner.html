@@ -1,4 +1,4 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -60,19 +60,22 @@
         <!-- Sound Test Button -->
         <button onclick="testChime()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-amber-400 border border-gray-700 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm" title="Test Order Bell">
           <i class="fa-solid fa-bell"></i>
-          <span class="hidden sm:inline">Test Bell</span>
+          <span class="hidden sm:inline" data-i18n="sound_test">Test Bell</span>
         </button>
+
+        <!-- Multi-Language Selector Mount -->
+        <div class="langSelectorMount"></div>
 
         <!-- Segmented Role Switcher -->
         <div class="bg-gray-800 p-1 rounded-xl flex items-center text-xs font-bold border border-gray-700">
           <button id="tabVendor" onclick="switchPartnerRole('vendor')" class="px-3 py-1.5 rounded-lg transition-all bg-orange-600 text-white shadow-sm flex items-center space-x-1.5">
             <i class="fa-solid fa-kitchen-set"></i>
-            <span>Kitchen POS</span>
+            <span data-i18n="tab_kitchen">Kitchen POS</span>
             <span id="partnerVendorBadge" class="hidden ml-1 px-1.5 py-0.2 bg-red-600 text-white rounded-full text-[9px] font-black">0</span>
           </button>
           <button id="tabRider" onclick="switchPartnerRole('rider')" class="px-3 py-1.5 rounded-lg transition-all text-gray-400 hover:text-white flex items-center space-x-1.5">
             <i class="fa-solid fa-motorcycle"></i>
-            <span>Delivery Fleet</span>
+            <span data-i18n="tab_rider">Delivery Fleet</span>
           </button>
         </div>
 
@@ -242,6 +245,8 @@
     </div>
   </footer>
 
+  <!-- Multi-Language Localization Engine -->
+  <script src="/i18n.js"></script>
   <!-- Script logic for Partner App -->
   <script src="/partner.js"></script>
 </body>

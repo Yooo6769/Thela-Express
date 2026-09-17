@@ -25,6 +25,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (role && ['vendor', 'rider'].includes(role)) {
     switchPartnerRole(role);
   }
+
+  window.addEventListener('thela_language_changed', () => {
+    if (PARTNER_STATE.stalls.length === 0) {
+      renderNoStallsState();
+    } else {
+      if (PARTNER_STATE.currentRole === 'vendor') {
+        loadVendorOrders();
+        loadVendorMenuItems();
+      } else {
+        loadRiderOrders();
+      }
+    }
+  });
 });
 
 // ==========================================================
@@ -248,6 +261,7 @@ async function loadStalls() {
 }
 
 function renderNoStallsState() {
+  const tr = (k, fb) => (typeof t === 'function' ? t(k, fb) : fb);
   const container = document.getElementById('vendorOrdersList');
   if (container) {
     container.innerHTML = `
@@ -255,11 +269,11 @@ function renderNoStallsState() {
         <div class="w-14 h-14 mx-auto mb-3 bg-orange-50 text-orange-600 rounded-2xl flex items-center justify-center text-2xl">
           <i class="fa-solid fa-store"></i>
         </div>
-        <h3 class="font-black text-gray-900 text-base mb-1">No Food Stalls Registered Yet</h3>
-        <p class="text-xs text-gray-500 max-w-sm mx-auto mb-4">Register your real street food thela or quick-service stall to start receiving live customer orders on this kitchen terminal.</p>
+        <h3 class="font-black text-gray-900 text-base mb-1">${tr('no_stalls_title', 'No Food Stalls Registered Yet')}</h3>
+        <p class="text-xs text-gray-500 max-w-sm mx-auto mb-4">${tr('no_stalls_desc', 'Register your real street food thela or quick-service stall to start receiving live customer orders on this kitchen terminal.')}</p>
         <a href="/onboard-vendor.html" class="inline-flex items-center space-x-2 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-black text-xs px-5 py-2.5 rounded-xl shadow-md hover:opacity-95 transition">
           <i class="fa-solid fa-plus-circle"></i>
-          <span>Register New Street Stall</span>
+          <span>${tr('register_stall_btn', 'Register New Street Stall')}</span>
         </a>
       </div>
     `;

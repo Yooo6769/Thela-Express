@@ -53,6 +53,11 @@ document.addEventListener('DOMContentLoaded', () => {
     window.location.href = `/partner.html?role=${view}`;
     return;
   }
+
+  window.addEventListener('thela_language_changed', () => {
+    if (STATE.stalls) renderStalls(STATE.stalls);
+    if (typeof loadCategories === 'function') loadCategories();
+  });
 });
 
 async function loadStoredUser() {
@@ -401,12 +406,13 @@ function renderStalls(stalls) {
   }
 
   if (stalls.length === 0) {
+    const tr = (k, fb) => (typeof t === 'function' ? t(k, fb) : fb);
     if (STATE.selectedCategory === 'favorites') {
       container.innerHTML = `
         <div class="col-span-full py-12 text-center text-gray-500 bg-white rounded-3xl border border-gray-200 p-6">
           <i class="fa-regular fa-heart text-3xl text-gray-300 mb-2"></i>
-          <p class="font-bold text-sm text-gray-800">No favorite stalls saved yet</p>
-          <p class="text-xs text-gray-400 mt-1">Tap the heart icon on any stall to add it here</p>
+          <p class="font-bold text-sm text-gray-800">${tr('no_favorites_title', 'No favorite stalls saved yet')}</p>
+          <p class="text-xs text-gray-400 mt-1">${tr('no_favorites_desc', 'Tap the heart icon on any stall to add it here')}</p>
         </div>
       `;
     } else {
@@ -416,15 +422,15 @@ function renderStalls(stalls) {
             <i class="fa-solid fa-store"></i>
           </div>
           <div>
-            <h3 class="font-black text-base text-gray-900">No Street Stalls Live Yet</h3>
+            <h3 class="font-black text-base text-gray-900">${tr('no_stalls_title', 'No Street Stalls Live Yet')}</h3>
             <p class="text-xs text-gray-500 mt-1 max-w-md mx-auto">
-              All demo food carts have been removed. Are you a local street vendor or food cart owner? Register your cart in 2 minutes and start receiving live customer orders!
+              ${tr('no_stalls_desc', 'All demo food carts have been removed. Are you a local street vendor or food cart owner? Register your cart in 2 minutes and start receiving live customer orders!')}
             </p>
           </div>
           <div class="pt-2">
             <a href="/onboard-vendor.html" class="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-black shadow-md shadow-orange-600/20 transition">
               <i class="fa-solid fa-plus-circle"></i>
-              <span>Register Real Street Stall Now ➔</span>
+              <span>${tr('register_stall_btn', 'Register Real Street Stall Now ➔')}</span>
             </a>
           </div>
         </div>
