@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ThelaExpress - Street Vendor Partner Onboarding</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <style>body { font-family: 'Plus Jakarta Sans', sans-serif; }</style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen antialiased flex flex-col">
+
+  <!-- Header -->
+  <header class="sticky top-0 z-30 bg-white/95 backdrop-blur border-b border-gray-200 px-4 py-3">
+    <div class="max-w-2xl mx-auto flex items-center justify-between">
+      <a href="/" class="flex items-center space-x-2">
+        <div class="w-9 h-9 rounded-xl bg-orange-600 flex items-center justify-center text-white font-bold shadow-md shadow-orange-600/20">
+          <i class="fa-solid fa-store"></i>
+        </div>
+        <div>
+          <span class="font-extrabold text-base tracking-tight text-gray-900">Thela<span class="text-orange-600">Express</span></span>
+          <span class="text-[10px] text-gray-500 block font-medium">Vendor Partner Portal</span>
+        </div>
+      </a>
+      <a href="/" class="text-xs font-bold text-gray-600 hover:text-orange-600 flex items-center space-x-1">
+        <i class="fa-solid fa-arrow-left"></i>
+        <span>Customer App</span>
+      </a>
+    </div>
+  </header>
+
+  <!-- Main Onboarding Form Container -->
+  <main class="flex-1 max-w-2xl w-full mx-auto px-4 py-6 space-y-6">
+    
+    <!-- Hero / Value Proposition -->
+    <div class="bg-gradient-to-br from-orange-600 to-amber-500 text-white rounded-3xl p-6 shadow-lg shadow-orange-600/15 relative overflow-hidden">
+      <div class="relative z-10 space-y-2">
+        <span class="bg-black/20 text-amber-200 text-xs font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+          0% Registration Fee • Real Daily Payouts
+        </span>
+        <h1 class="text-2xl font-black tracking-tight">Onboard Your Street Food Stall</h1>
+        <p class="text-xs text-orange-100 leading-relaxed">
+          Start receiving live orders from hungry customers nearby. Get your dedicated kitchen audio order bell & doorstep delivery riders.
+        </p>
+      </div>
+      <div class="absolute right-3 bottom-0 text-7xl opacity-20 pointer-events-none">
+        <i class="fa-solid fa-utensils"></i>
+      </div>
+    </div>
+
+    <!-- Onboarding Form -->
+    <form id="onboardVendorForm" onsubmit="handleVendorSubmit(event)" class="space-y-6">
+      
+      <!-- Section 1: Stall & Owner Basics -->
+      <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4 shadow-sm">
+        <div class="flex items-center space-x-2 border-b border-gray-100 pb-2.5">
+          <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-black">1</span>
+          <h2 class="font-extrabold text-sm text-gray-900">Stall & Contact Basics</h2>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
+          <div class="space-y-1">
+            <label class="font-bold text-gray-700">Stall / Cart Brand Name *</label>
+            <input type="text" id="stallName" required placeholder="e.g. Gupta Ji Ka Special Chaat"
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-gray-700">Owner Full Name *</label>
+            <input type="text" id="ownerName" required placeholder="e.g. Rameshwar Gupta"
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-gray-700">Owner WhatsApp / Phone Number *</label>
+            <div class="relative">
+              <span class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-gray-500">+91</span>
+              <input type="tel" id="ownerPhone" required maxlength="10" placeholder="98450 12345"
+                class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-3 p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <div class="flex items-center justify-between">
+              <label class="font-bold text-gray-700">Food Category *</label>
+              <button type="button" onclick="toggleCustomCategoryInput()" id="toggleCatBtn" class="text-[11px] font-bold text-orange-600 hover:text-orange-700">
+                ✍️ Type Custom
+              </button>
+            </div>
+            
+            <select id="stallCategory" onchange="onCategorySelectChange()" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <option value="chaat">🥔 Chaat & Pani Puri (Golgappe, Sev Puri, Bhel)</option>
+              <option value="vadapav">🍔 Mumbai Vada Pav & Sandwiches</option>
+              <option value="pavbhaji">🍲 Pav Bhaji & Tawa Pulao</option>
+              <option value="momos">🥟 Tibetan Momos, Dimsums & Thukpa</option>
+              <option value="rolls">🌯 Kathi Rolls, Frankies & Wraps</option>
+              <option value="south">🥞 Benne Dosa, Podi Idli & Vada</option>
+              <option value="parathas">🫓 Stuffed Parathas & Chole Bhature</option>
+              <option value="samosa">🥟 Samosa, Kachori & Street Snacks</option>
+              <option value="chinese">🍜 Indo-Chinese Wok & Chowmein</option>
+              <option value="biryani">🍗 Dum Biryani & Street Kebabs</option>
+              <option value="shawarma">🥙 Shawarma & Falafel</option>
+              <option value="sweets">🍯 Jalebi, Rabri, Gulab Jamun & Kulfi</option>
+              <option value="beverages">🥤 Kulhad Chai, Filter Coffee & Lassi</option>
+              <option value="juices">🍉 Fresh Juices, Shakes & Fruit Bowls</option>
+              <option value="__custom__">✍️ + Type My Own Custom Category...</option>
+            </select>
+
+            <!-- Custom Category Text Input -->
+            <div id="customCategoryWrapper" class="hidden mt-1.5 space-y-1">
+              <div class="relative">
+                <input type="text" id="customCategoryInput" placeholder="Type your category: e.g. Litti Chokha, Waffles, Kulcha..."
+                  class="w-full bg-orange-50 border-2 border-orange-400 rounded-xl px-3 py-2 text-xs font-bold text-gray-900 focus:outline-none focus:ring-2 focus:ring-orange-500">
+                <button type="button" onclick="toggleCustomCategoryInput(false)" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 text-xs">
+                  <i class="fa-solid fa-xmark"></i>
+                </button>
+              </div>
+              <p class="text-[10px] text-orange-700 font-semibold">Your custom category will be displayed across the app for customers.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="space-y-1 text-xs">
+          <label class="font-bold text-gray-700">Signature Dish / Specialty Tagline *</label>
+          <input type="text" id="stallSpecialty" required placeholder="e.g. Authentic Hing Pani Golgappe & Crispy Aloo Tikki"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+        </div>
+      </div>
+
+      <!-- Section 2: Street Address & Location -->
+      <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4 shadow-sm">
+        <div class="flex items-center space-x-2 border-b border-gray-100 pb-2.5">
+          <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-black">2</span>
+          <h2 class="font-extrabold text-sm text-gray-900">Exact Street Location (For Rider Pickups)</h2>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div class="space-y-1">
+            <label class="font-bold text-gray-700">Cart Landmark / Street Address *</label>
+            <input type="text" id="stallAddress" required placeholder="e.g. Near Indiranagar Metro Station, 100ft Road"
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <button type="button" onclick="captureLiveGps()" class="px-3 py-2 bg-gray-100 text-gray-800 rounded-xl text-xs font-bold hover:bg-gray-200 flex items-center space-x-1.5 transition">
+              <i class="fa-solid fa-location-crosshairs text-orange-600"></i>
+              <span id="gpsButtonLabel">Detect My GPS Location</span>
+            </button>
+            <span id="gpsCoordsText" class="text-[11px] text-gray-400 font-mono">Default: 12.9725° N, 77.6408° E</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 3: Hygiene & FSSAI Details -->
+      <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4 shadow-sm">
+        <div class="flex items-center space-x-2 border-b border-gray-100 pb-2.5">
+          <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-black">3</span>
+          <h2 class="font-extrabold text-sm text-gray-900">Hygiene & Trust Standards</h2>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div class="space-y-1">
+            <label class="font-bold text-gray-700">FSSAI Registration Number (Optional)</label>
+            <input type="text" id="fssaiNumber" placeholder="e.g. 21223010000456 (Leave blank if pending)"
+              class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+            <p class="text-[11px] text-gray-400">Basic street food FSSAI registration is ₹100/year and increases customer orders by 3x.</p>
+          </div>
+
+          <div class="space-y-2 pt-2">
+            <label class="font-bold text-gray-700 block">Hygiene Checklist (Check all that apply)</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-800 font-medium">
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="hygieneWater" checked class="rounded text-orange-600 focus:ring-orange-500">
+                <span>RO / Packaged Mineral Water only</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="hygieneCart" checked class="rounded text-orange-600 focus:ring-orange-500">
+                <span>Covered glass food enclosure</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="hygieneDona" checked class="rounded text-orange-600 focus:ring-orange-500">
+                <span>Food-grade paper plates / dona</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="hygieneOil" checked class="rounded text-orange-600 focus:ring-orange-500">
+                <span>Zero-oil reuse / fresh oil guarantee</span>
+              </label>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Section 4: Menu Builder -->
+      <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4 shadow-sm">
+        <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
+          <div class="flex items-center space-x-2">
+            <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-black">4</span>
+            <h2 class="font-extrabold text-sm text-gray-900">Your Menu Dishes & Prices</h2>
+          </div>
+          <button type="button" onclick="addDishRow()" class="px-2.5 py-1 bg-orange-50 text-orange-600 border border-orange-200 rounded-lg text-xs font-bold hover:bg-orange-100 transition">
+            + Add Dish
+          </button>
+        </div>
+
+        <div id="dishesContainer" class="space-y-3">
+          <!-- Populated with initial 2 items -->
+        </div>
+      </div>
+
+      <!-- Section 5: Payouts & UPI Details -->
+      <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4 shadow-sm">
+        <div class="flex items-center space-x-2 border-b border-gray-100 pb-2.5">
+          <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-black">5</span>
+          <h2 class="font-extrabold text-sm text-gray-900">Daily Payout UPI ID (Where You Receive Money)</h2>
+        </div>
+
+        <div class="space-y-2 text-xs">
+          <label class="font-bold text-gray-700">Vendor UPI ID (GPay / PhonePe / Paytm / BHIM) *</label>
+          <input type="text" id="vendorUpi" required placeholder="e.g. 9845012345@upi or guptaji@okaxis"
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <p class="text-[11px] text-emerald-600 font-medium">
+            <i class="fa-solid fa-shield-check mr-1"></i>Your earnings are settled directly to this UPI address after delivery.
+          </p>
+        </div>
+      </div>
+
+      <!-- Submit Button -->
+      <button type="submit" id="submitBtn" class="w-full bg-orange-600 text-white rounded-2xl py-4 font-black text-sm shadow-xl shadow-orange-600/25 hover:bg-orange-700 flex items-center justify-center space-x-2 transition">
+        <span>Complete Onboarding & Launch Live Kitchen</span>
+        <i class="fa-solid fa-arrow-right"></i>
+      </button>
+
+    </form>
+  </main>
+
+  <!-- Success Modal -->
+  <div id="successModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white max-w-md w-full rounded-3xl p-6 text-center space-y-4 shadow-2xl animate-in zoom-in-95 duration-200">
+      <div class="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-3xl font-black">
+        <i class="fa-solid fa-circle-check"></i>
+      </div>
+
+      <h3 class="text-xl font-black text-gray-900">Stall Successfully Onboarded!</h3>
+      <p class="text-xs text-gray-600">Your street cart is now live on ThelaExpress. Customers can now discover your stall and place orders!</p>
+
+      <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-left space-y-2 text-xs">
+        <div class="font-bold text-gray-900" id="successStallName">Gupta Ji Ka Special Chaat</div>
+        <div class="text-gray-500" id="successStallAddress">Indiranagar 100ft Rd</div>
+        <div class="text-emerald-700 font-bold bg-emerald-50 px-2 py-1 rounded-lg inline-block">
+          Kitchen Order Stream Ready
+        </div>
+      </div>
+
+      <div class="space-y-2 pt-2">
+        <a id="successPosLink" href="#" class="w-full bg-orange-600 text-white rounded-xl py-3 font-bold text-xs block hover:bg-orange-700 shadow-md transition">
+          Open Live Kitchen POS Display ➔
+        </a>
+        <a href="/" class="w-full bg-gray-100 text-gray-800 rounded-xl py-2.5 font-bold text-xs block hover:bg-gray-200 transition">
+          View on Customer App
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let capturedLat = 12.9725;
+    let capturedLng = 77.6408;
+
+    // Start with a single clean empty dish row for the real vendor to input their own items
+    document.addEventListener('DOMContentLoaded', () => {
+      addDishRow('', '', true, '');
+    });
+
+    function addDishRow(name = '', price = '', isVeg = true, desc = '') {
+      const container = document.getElementById('dishesContainer');
+      const rowId = 'dish_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+
+      const div = document.createElement('div');
+      div.id = rowId;
+      div.className = 'bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-2 relative';
+      div.innerHTML = `
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-2">
+            <select class="dish-veg bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold text-gray-800">
+              <option value="true" ${isVeg ? 'selected' : ''}>🟢 Veg</option>
+              <option value="false" ${!isVeg ? 'selected' : ''}>🔴 Non-Veg</option>
+            </select>
+            <input type="text" class="dish-name bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-xs font-bold w-44 sm:w-56" 
+              placeholder="Dish Name (e.g. Masala Dosa)" value="${name}" required>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span class="text-xs font-bold text-gray-500">₹</span>
+            <input type="number" class="dish-price bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold w-16 text-right" 
+              placeholder="50" value="${price}" required>
+            <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-500 hover:text-red-700 text-xs px-1">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </div>
+        </div>
+        <input type="text" class="dish-desc w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-[11px] text-gray-600" 
+          placeholder="Brief description (e.g. Freshly made with white butter)" value="${desc}">
+      `;
+      container.appendChild(div);
+    }
+
+    function onCategorySelectChange() {
+      const sel = document.getElementById('stallCategory');
+      if (sel.value === '__custom__') {
+        toggleCustomCategoryInput(true);
+      }
+    }
+
+    function toggleCustomCategoryInput(show) {
+      const wrapper = document.getElementById('customCategoryWrapper');
+      const sel = document.getElementById('stallCategory');
+      const input = document.getElementById('customCategoryInput');
+      const btn = document.getElementById('toggleCatBtn');
+
+      const willShow = show !== undefined ? show : wrapper.classList.contains('hidden');
+      if (willShow) {
+        wrapper.classList.remove('hidden');
+        input.focus();
+        btn.innerText = '📋 Choose from List';
+        sel.value = '__custom__';
+      } else {
+        wrapper.classList.add('hidden');
+        btn.innerText = '✍️ Type Custom';
+        if (sel.value === '__custom__') sel.value = 'chaat';
+      }
+    }
+
+    function captureLiveGps() {
+      const btn = document.getElementById('gpsButtonLabel');
+      const text = document.getElementById('gpsCoordsText');
+
+      if (navigator.geolocation) {
+        btn.innerText = 'Detecting GPS...';
+        navigator.geolocation.getCurrentPosition(
+          (pos) => {
+            capturedLat = pos.coords.latitude;
+            capturedLng = pos.coords.longitude;
+            btn.innerText = 'GPS Captured ✓';
+            text.innerText = `${capturedLat.toFixed(4)}° N, ${capturedLng.toFixed(4)}° E`;
+            text.className = 'text-[11px] text-emerald-600 font-bold font-mono';
+          },
+          (err) => {
+            btn.innerText = 'Location Permission Denied';
+            console.warn(err);
+          }
+        );
+      } else {
+        alert('Geolocation not supported on this browser.');
+      }
+    }
+
+    async function handleVendorSubmit(e) {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      btn.disabled = true;
+      btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i>Registering Stall...`;
+
+      // Collect dishes
+      const dishes = [];
+      document.querySelectorAll('#dishesContainer > div').forEach(row => {
+        const name = row.querySelector('.dish-name')?.value;
+        const price = row.querySelector('.dish-price')?.value;
+        const isVeg = row.querySelector('.dish-veg')?.value === 'true';
+        const desc = row.querySelector('.dish-desc')?.value;
+        if (name && price) {
+          dishes.push({
+            name: name.trim(),
+            price: parseFloat(price),
+            isVeg: isVeg,
+            description: desc || ''
+          });
+        }
+      });
+
+      // Hygiene highlights
+      const hygieneHighlights = [];
+      if (document.getElementById('hygieneWater').checked) hygieneHighlights.push('Filtered Clean Water');
+      if (document.getElementById('hygieneCart').checked) hygieneHighlights.push('Covered Glass Food Cart');
+      if (document.getElementById('hygieneDona').checked) hygieneHighlights.push('Food-Grade Dona & Paper');
+      if (document.getElementById('hygieneOil').checked) hygieneHighlights.push('Zero-Oil Reheat Certified');
+
+      let finalCategory = document.getElementById('stallCategory').value;
+      const customCategoryVal = document.getElementById('customCategoryInput').value.trim();
+      if (finalCategory === '__custom__' || customCategoryVal) {
+        finalCategory = customCategoryVal || 'Street Food';
+      }
+
+      const payload = {
+        name: document.getElementById('stallName').value.trim(),
+        owner_name: document.getElementById('ownerName').value.trim(),
+        owner_phone: document.getElementById('ownerPhone').value.trim(),
+        category: finalCategory,
+        specialty: document.getElementById('stallSpecialty').value.trim(),
+        address: document.getElementById('stallAddress').value.trim(),
+        lat: capturedLat,
+        lng: capturedLng,
+        fssai_number: document.getElementById('fssaiNumber').value.trim(),
+        upi_id: document.getElementById('vendorUpi').value.trim(),
+        isVeg: true,
+        hygieneHighlights: hygieneHighlights,
+        menu_items: dishes
+      };
+
+      try {
+        const res = await fetch('/api/onboard/vendor', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          document.getElementById('successStallName').innerText = data.stall.name;
+          document.getElementById('successStallAddress').innerText = data.stall.address;
+          document.getElementById('successPosLink').href = `/partner.html?role=vendor&stallId=${data.stall.id}`;
+          document.getElementById('successModal').classList.remove('hidden');
+        } else {
+          alert('Registration failed: ' + (data.error || 'Check fields'));
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Could not connect to server.');
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = `<span>Complete Onboarding & Launch Live Kitchen</span><i class="fa-solid fa-arrow-right ml-2"></i>`;
+      }
+    }
+  </script>
+</body>
+</html>

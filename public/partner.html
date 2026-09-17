@@ -1,0 +1,248 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ThelaExpress Partner Portal — Kitchen POS & Delivery Fleet</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
+        }
+      }
+    }
+  </script>
+  <style>
+    body { font-family: 'Plus Jakarta Sans', sans-serif; -webkit-tap-highlight-color: transparent; }
+    .hide-scrollbar::-webkit-scrollbar { display: none; }
+    .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+  </style>
+</head>
+<body class="bg-gray-100 text-gray-900 min-h-screen flex flex-col antialiased">
+
+  <!-- Partner App Header -->
+  <header class="sticky top-0 z-40 bg-gray-900 text-white border-b border-gray-800 shadow-md">
+    <div class="max-w-5xl mx-auto px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+      <!-- Brand & Hub Identity -->
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2.5">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white shadow-md">
+            <i class="fa-solid fa-store text-lg"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-1.5">
+              <span class="font-extrabold text-base tracking-tight text-white">Thela<span class="text-orange-500">Express</span></span>
+              <span class="text-[10px] font-black bg-orange-600 text-white px-2 py-0.5 rounded-full tracking-wider uppercase">PARTNER APP</span>
+            </div>
+            <p class="text-[11px] text-gray-400">Unified Portal for Kitchen Owners & Delivery Fleet</p>
+          </div>
+        </div>
+
+        <!-- Connection Status Indicator (Mobile) -->
+        <div class="sm:hidden flex items-center space-x-1 text-[11px] bg-gray-800 px-2.5 py-1 rounded-full text-emerald-400">
+          <span class="w-2 h-2 rounded-full bg-emerald-500" id="wsDotMobile"></span>
+          <span id="wsTextMobile">Live</span>
+        </div>
+      </div>
+
+      <!-- Partner Role Switcher & Audio Controls -->
+      <div class="flex items-center space-x-2">
+        <!-- Live WS Status Indicator (Desktop) -->
+        <div class="hidden sm:flex items-center space-x-1.5 bg-gray-800 px-3 py-1.5 rounded-xl text-xs font-bold text-emerald-400 border border-gray-700">
+          <span class="w-2 h-2 rounded-full bg-emerald-500" id="wsDot"></span>
+          <span id="wsText">Live Gateway</span>
+        </div>
+
+        <!-- Sound Test Button -->
+        <button onclick="testChime()" class="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-amber-400 border border-gray-700 rounded-xl text-xs font-bold transition flex items-center space-x-1.5 shadow-sm" title="Test Order Bell">
+          <i class="fa-solid fa-bell"></i>
+          <span class="hidden sm:inline">Test Bell</span>
+        </button>
+
+        <!-- Segmented Role Switcher -->
+        <div class="bg-gray-800 p-1 rounded-xl flex items-center text-xs font-bold border border-gray-700">
+          <button id="tabVendor" onclick="switchPartnerRole('vendor')" class="px-3 py-1.5 rounded-lg transition-all bg-orange-600 text-white shadow-sm flex items-center space-x-1.5">
+            <i class="fa-solid fa-kitchen-set"></i>
+            <span>Kitchen POS</span>
+            <span id="partnerVendorBadge" class="hidden ml-1 px-1.5 py-0.2 bg-red-600 text-white rounded-full text-[9px] font-black">0</span>
+          </button>
+          <button id="tabRider" onclick="switchPartnerRole('rider')" class="px-3 py-1.5 rounded-lg transition-all text-gray-400 hover:text-white flex items-center space-x-1.5">
+            <i class="fa-solid fa-motorcycle"></i>
+            <span>Delivery Fleet</span>
+          </button>
+        </div>
+
+        <!-- Back to Customer Food App Link -->
+        <a href="/" class="w-9 h-9 rounded-xl bg-gray-800 text-gray-300 hover:text-white border border-gray-700 flex items-center justify-center font-bold text-sm transition shadow-sm" title="Go to Customer Food App">
+          <i class="fa-solid fa-utensils"></i>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Quick Info & Onboarding Bar -->
+  <div class="bg-orange-50 border-b border-orange-200 px-4 py-2 text-xs font-bold text-orange-900">
+    <div class="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+      <div class="flex items-center space-x-2">
+        <span class="bg-orange-600 text-white px-1.5 py-0.5 rounded text-[10px] font-black uppercase">PARTNER ECOSYSTEM</span>
+        <span>Vendors receive 90% direct payout. Riders earn ₹40 flat + 100% customer tips.</span>
+      </div>
+      <div class="flex items-center space-x-3 text-[11px]">
+        <a href="/onboard-vendor.html" class="text-orange-700 hover:text-orange-900 underline flex items-center">
+          <i class="fa-solid fa-plus-circle mr-1"></i>New Stall Register
+        </a>
+        <span>•</span>
+        <a href="/onboard-rider.html" class="text-orange-700 hover:text-orange-900 underline flex items-center">
+          <i class="fa-solid fa-user-plus mr-1"></i>New Rider Sign-Up
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- ROLE 1: VENDOR KITCHEN POS (KDS)                               -->
+  <!-- ============================================================== -->
+  <main id="partnerVendorView" class="flex-1 max-w-5xl w-full mx-auto px-4 py-5 space-y-5">
+    
+    <!-- Vendor Control Header -->
+    <div class="bg-white rounded-3xl border border-gray-200 p-5 shadow-sm space-y-4">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="w-3 h-3 rounded-full bg-emerald-500 animate-ping"></span>
+            <h1 class="text-xl font-black text-gray-900">Vendor Live Kitchen Display (KDS)</h1>
+          </div>
+          <p class="text-xs text-gray-500 mt-0.5">Real-time incoming orders with instant audio notification & 1-tap cooking stages.</p>
+        </div>
+        
+        <!-- Stall Switcher -->
+        <div class="flex items-center space-x-2">
+          <label class="text-xs font-bold text-gray-600">Active Stall:</label>
+          <select id="vendorStallSelect" onchange="onVendorStallChange()" class="bg-gray-50 border border-gray-200 rounded-xl px-3 py-2 text-xs font-black text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500">
+            <!-- Populated dynamically -->
+          </select>
+        </div>
+      </div>
+
+      <!-- Live Stall Status Bar -->
+      <div class="flex items-center justify-between pt-3 border-t border-gray-100">
+        <div class="flex items-center space-x-3">
+          <div class="text-xs font-bold text-gray-600">Store Status:</div>
+          <button id="vendorToggleOpenBtn" onclick="toggleStallOpenStatus()" class="px-3 py-1.5 rounded-full text-xs font-extrabold bg-green-100 text-green-700 flex items-center space-x-1.5 transition">
+            <span class="w-2 h-2 rounded-full bg-green-600"></span>
+            <span id="vendorOpenLabel">OPEN FOR ORDERS</span>
+          </button>
+        </div>
+        <div class="text-xs font-semibold text-gray-500">
+          <i class="fa-solid fa-signal text-green-600 mr-1"></i>Realtime WebSocket Online
+        </div>
+      </div>
+    </div>
+
+    <!-- Incoming Orders Queue -->
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <div class="flex items-center space-x-2">
+          <h2 class="text-base font-extrabold text-gray-900">Active Orders Queue</h2>
+          <span id="vendorActiveCount" class="bg-orange-100 text-orange-700 font-bold px-2 py-0.5 rounded-full text-xs">0 Active</span>
+        </div>
+        <button onclick="loadVendorOrders()" class="text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center space-x-1">
+          <i class="fa-solid fa-rotate"></i>
+          <span>Refresh</span>
+        </button>
+      </div>
+
+      <div id="vendorOrdersList" class="space-y-3">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Stall Menu Item Stock Management -->
+    <div class="bg-white rounded-3xl border border-gray-200 p-5 shadow-sm space-y-3">
+      <h2 class="text-base font-extrabold text-gray-900">Item Stock Availability (86/85 List)</h2>
+      <p class="text-xs text-gray-500">Ran out of fresh ingredients? Toggle any dish out-of-stock instantly to stop customer orders.</p>
+      <div id="vendorMenuItemsList" class="divide-y divide-gray-100">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- ROLE 2: RIDER DELIVERY CONSOLE                                 -->
+  <!-- ============================================================== -->
+  <main id="partnerRiderView" class="hidden flex-1 max-w-5xl w-full mx-auto px-4 py-5 space-y-5">
+    
+    <!-- Rider Profile & Vehicle Header -->
+    <div class="bg-white rounded-3xl border border-gray-200 p-5 shadow-sm space-y-3">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-3">
+          <div class="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-black text-xl">
+            <i class="fa-solid fa-motorcycle"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h1 class="text-lg font-extrabold text-gray-900" id="riderHeaderName">Delivery Partner</h1>
+              <span class="bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full text-[10px]" id="riderHeaderVehicle">Active Fleet</span>
+            </div>
+            <div class="text-xs text-gray-500 font-medium flex items-center space-x-2 mt-0.5">
+              <span id="riderStatusSubtext">Duty: ONLINE • Ready for pickups</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="text-right">
+          <div class="text-xs text-gray-400">Today's Earnings</div>
+          <div class="text-lg font-black text-emerald-600" id="riderEarningsTotal">₹0.00</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Delivery Assignment -->
+    <div class="space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="text-base font-extrabold text-gray-900">Current Assigned Delivery</h2>
+        <button onclick="loadRiderOrders()" class="text-xs font-bold text-emerald-600 hover:text-emerald-700 flex items-center space-x-1">
+          <i class="fa-solid fa-rotate"></i>
+          <span>Check Gigs</span>
+        </button>
+      </div>
+
+      <div id="riderActiveGig" class="bg-white rounded-3xl border border-gray-200 p-5 shadow-sm space-y-4">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- All Recent Trips -->
+    <div class="bg-white rounded-3xl border border-gray-200 p-5 shadow-sm space-y-3">
+      <h2 class="text-base font-extrabold text-gray-900">Recent Completed Trips</h2>
+      <div id="riderTripsList" class="divide-y divide-gray-100 text-xs">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Partner Footer -->
+  <footer class="py-6 text-center text-xs text-gray-500 border-t border-gray-200 bg-white space-y-1 mt-auto">
+    <div class="font-extrabold text-gray-700">ThelaExpress Partner Portal</div>
+    <div>Empowering local street food vendors & eco-friendly delivery partners with zero high aggregator fees.</div>
+    <div class="pt-2 flex items-center justify-center space-x-4 text-[11px] font-bold text-orange-600">
+      <a href="/" class="hover:underline">Customer Food App</a>
+      <span>•</span>
+      <a href="/onboard-vendor.html" class="hover:underline">Stall Onboarding</a>
+      <span>•</span>
+      <a href="/onboard-rider.html" class="hover:underline">Rider Onboarding</a>
+      <span>•</span>
+      <a href="/admin.html" class="hover:underline">Platform HQ Admin</a>
+    </div>
+  </footer>
+
+  <!-- Script logic for Partner App -->
+  <script src="/partner.js"></script>
+</body>
+</html>

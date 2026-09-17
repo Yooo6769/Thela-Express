@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>ThelaExpress - Authentic Street Food Delivery</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['"Plus Jakarta Sans"', 'sans-serif'],
+          },
+          colors: {
+            brand: {
+              50: '#fff7ed',
+              100: '#ffedd5',
+              500: '#f97316',
+              600: '#ea580c',
+              700: '#c2410c'
+            },
+            saffron: '#ff7708',
+            thelagreen: '#16a34a'
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      -webkit-tap-highlight-color: transparent;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+    .hide-scrollbar::-webkit-scrollbar {
+      display: none;
+    }
+    .hide-scrollbar {
+      -ms-overflow-style: none;
+      scrollbar-width: none;
+    }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.95); opacity: 0.8; }
+      50% { transform: scale(1.15); opacity: 0.3; }
+      100% { transform: scale(0.95); opacity: 0.8; }
+    }
+    .pulse-animation {
+      animation: pulse-ring 2s infinite ease-in-out;
+    }
+    @keyframes bounce-subtle {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-4px); }
+    }
+    .bounce-subtle {
+      animation: bounce-subtle 2s infinite;
+    }
+  </style>
+</head>
+<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col antialiased select-none md:select-auto">
+
+  <!-- Top App Navigation & Ecosystem Switcher -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-gray-200 shadow-sm transition-all">
+    <div class="max-w-4xl mx-auto px-4 py-2.5 flex items-center justify-between">
+      <!-- Brand Logo -->
+      <div class="flex items-center space-x-2.5 cursor-pointer" onclick="switchView('customer')">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
+          <i class="fa-solid fa-utensils text-lg"></i>
+        </div>
+        <div>
+          <div class="flex items-center space-x-1.5">
+            <span class="font-extrabold text-lg tracking-tight text-gray-900">Thela<span class="text-orange-600">Express</span></span>
+            <span class="text-[10px] font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full uppercase tracking-wider">LIVE</span>
+          </div>
+          <div class="text-[11px] text-gray-500 font-medium flex items-center cursor-pointer hover:text-orange-600 transition" onclick="openAddressDrawer()" title="Click to select or change delivery address">
+            <i class="fa-solid fa-location-dot text-orange-500 mr-1"></i>
+            <span id="headerLocation" class="font-bold text-gray-800 underline decoration-orange-300 underline-offset-2 max-w-[170px] sm:max-w-[260px] truncate">Select Delivery Location</span>
+            <i class="fa-solid fa-chevron-down text-[8px] ml-1 text-gray-400"></i>
+          </div>
+        </div>
+      </div>
+
+      <!-- Consumer Action Controls (Pure Veg Toggle, Header Cart, Profile) -->
+      <div class="flex items-center space-x-2">
+        <!-- Quick Pure Veg Filter Toggle -->
+        <button id="vegFilterBtn" onclick="toggleVegFilter()" 
+          class="flex items-center space-x-1.5 px-3 py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:border-gray-300 transition shadow-sm whitespace-nowrap">
+          <span class="w-3.5 h-3.5 rounded border-2 border-green-600 flex items-center justify-center p-0.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+          </span>
+          <span class="hidden sm:inline font-bold">Pure Veg</span>
+        </button>
+
+        <!-- Header Cart Button -->
+        <button id="headerCartBtn" onclick="openCartDrawer()" class="relative px-3.5 py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white flex items-center space-x-1.5 font-bold text-xs shadow-md shadow-orange-600/20 transition">
+          <i class="fa-solid fa-basket-shopping text-xs"></i>
+          <span id="headerCartTotal">₹0</span>
+          <span id="headerCartBadge" class="hidden ml-1 px-1.5 py-0.2 bg-white text-orange-600 rounded-full text-[10px] font-black">0</span>
+        </button>
+
+        <!-- Auth / Profile Button -->
+        <button id="authBtn" onclick="handleAuthBtnClick()" class="w-9 h-9 rounded-xl bg-orange-50 text-orange-600 border border-orange-200 flex items-center justify-center font-bold text-sm hover:bg-orange-100 transition shadow-sm" title="My Profile & Addresses">
+          <i class="fa-regular fa-user"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ============================================================== -->
+  <!-- VIEW 1: CUSTOMER APP (Clean, Modern Food Delivery Experience) -->
+  <!-- ============================================================== -->
+  <main id="viewCustomer" class="flex-1 max-w-4xl w-full mx-auto px-4 py-4 space-y-5">
+    
+    <!-- Hero Banner / Hyperlocal Quality Assurance -->
+    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-500 text-white p-5 shadow-lg shadow-orange-500/15">
+      <div class="relative z-10 max-w-lg space-y-2">
+        <div class="inline-flex items-center space-x-1.5 bg-black/20 backdrop-blur px-2.5 py-1 rounded-full text-xs font-semibold">
+          <i class="fa-solid fa-shield-halved text-amber-300"></i>
+          <span>100% FSSAI Inspected & Clean Certified Stalls</span>
+        </div>
+        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight">Authentic Street Food.<br>Zero Hygiene Compromise.</h1>
+        <p class="text-xs sm:text-sm text-orange-100">Direct from iconic heritage thelas in Indiranagar. Delivered in thermal insulated boxes within 15 mins.</p>
+      </div>
+      <!-- Decorative Indian Street Graphic Accent -->
+      <div class="absolute -right-6 -bottom-6 w-36 h-36 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+      <div class="absolute right-4 bottom-2 text-7xl opacity-20 pointer-events-none">
+        <i class="fa-solid fa-bowl-rice"></i>
+      </div>
+    </div>
+
+    <!-- Search & Veg Filter Bar -->
+    <div class="flex items-center space-x-3">
+      <div class="relative flex-1">
+        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
+        <input type="text" id="searchInput" oninput="handleSearch()" placeholder="Search 'Golgappa', 'Babu Vada Pav', 'Momos'..." 
+          class="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 shadow-sm transition">
+      </div>
+      <!-- Pure Veg Toggle -->
+      <button id="vegFilterBtn" onclick="toggleVegFilter()" class="flex items-center space-x-1.5 px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:border-green-500 transition shadow-sm whitespace-nowrap">
+        <span class="w-3.5 h-3.5 rounded-sm border-2 border-green-600 flex items-center justify-center p-0.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+        </span>
+        <span class="hidden sm:inline">Pure Veg</span>
+      </button>
+    </div>
+
+    <!-- Category Pills -->
+    <div id="categoriesPillsContainer" class="flex items-center space-x-2 overflow-x-auto hide-scrollbar pb-1">
+      <button onclick="filterCategory('all')" class="cat-pill active px-4 py-2 rounded-full bg-orange-600 text-white font-bold text-xs whitespace-nowrap shadow-sm transition">
+        🍽️ All Stalls
+      </button>
+      <button onclick="filterCategory('favorites')" id="favPillBtn" class="cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm">
+        ❤️ Favorites (<span id="favCountBadge">0</span>)
+      </button>
+      <button onclick="filterCategory('chaat')" class="cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm">
+        🥔 Chaat & Pani Puri
+      </button>
+      <button onclick="filterCategory('vadapav')" class="cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm">
+        🍔 Mumbai Vada Pav
+      </button>
+      <button onclick="filterCategory('pavbhaji')" class="cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm">
+        🍲 Pav Bhaji
+      </button>
+      <button onclick="filterCategory('momos')" class="cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm">
+        🥟 Tibetan Momos
+      </button>
+      <button onclick="filterCategory('south')" class="cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm">
+        🥞 Benne Dosa
+      </button>
+    </div>
+
+    <!-- Active Orders Live Bar (If any active orders) -->
+    <div id="activeOrdersBar" class="hidden space-y-2"></div>
+
+    <!-- Stalls Catalog Grid -->
+    <div>
+      <div class="flex items-center justify-between mb-3">
+        <h2 class="text-base font-extrabold text-gray-900 tracking-tight">Verified Street Thelas Near You</h2>
+        <span id="stallsCount" class="text-xs text-gray-500 font-medium">Loading authentic carts...</span>
+      </div>
+      <div id="stallsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Rendered dynamically -->
+      </div>
+    </div>
+
+    <!-- Partner App Callout -->
+    <div class="bg-gradient-to-r from-gray-900 to-slate-800 text-white rounded-3xl p-5 shadow-sm space-y-3">
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h3 class="font-extrabold text-base text-white">Own a Street Cart or Want to Deliver?</h3>
+          <p class="text-xs text-gray-400 mt-0.5">Access Kitchen Display System (KDS) & Delivery Fleet on the unified Partner App.</p>
+        </div>
+        <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
+          <a href="/partner.html" class="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white transition flex items-center space-x-2 shadow-md">
+            <i class="fa-solid fa-store"></i>
+            <span>Open Partner App (Vendors & Fleet) ➔</span>
+          </a>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: STALL MENU & ITEM CUSTOMIZER                           -->
+  <!-- ============================================================== -->
+  <div id="stallModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all">
+    <div class="bg-white w-full sm:max-w-2xl max-h-[92vh] sm:rounded-3xl rounded-t-3xl flex flex-col overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom duration-200">
+      <!-- Modal Header Banner -->
+      <div class="relative h-44 sm:h-52 w-full overflow-hidden bg-gray-900">
+        <img id="modalStallImage" src="" alt="Stall Banner" class="w-full h-full object-cover opacity-85">
+        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+        <button onclick="closeStallModal()" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur hover:bg-black/70 transition">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+        <div class="absolute bottom-3 left-4 right-4 text-white">
+          <div class="flex items-center space-x-2">
+            <span id="modalStallBadge" class="bg-green-500/90 backdrop-blur text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider"></span>
+            <span id="modalStallRating" class="text-xs font-bold text-amber-300 flex items-center">
+              <i class="fa-solid fa-star mr-1"></i>4.8
+            </span>
+          </div>
+          <h2 id="modalStallName" class="text-xl sm:text-2xl font-black mt-1"></h2>
+          <p id="modalStallSpecialty" class="text-xs text-gray-200 line-clamp-1"></p>
+        </div>
+      </div>
+
+      <!-- Stall Hygiene Highlights Bar -->
+      <div class="bg-amber-50/80 border-b border-amber-100 px-4 py-2.5 flex items-center justify-between text-xs text-amber-900">
+        <div class="flex items-center space-x-2">
+          <i class="fa-solid fa-award text-amber-600 text-sm"></i>
+          <span id="modalStallHygiene">RO Filtered Water • Dona/Paper Only</span>
+        </div>
+        <span class="font-extrabold text-amber-700">FSSAI Certified</span>
+      </div>
+
+      <!-- Menu Items List -->
+      <div id="modalMenuItems" class="flex-1 overflow-y-auto p-4 space-y-4 divide-y divide-gray-100">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Bottom Floating Cart Trigger (if items in cart) -->
+      <div id="modalCartBar" class="hidden border-t border-gray-200 bg-white p-3 shadow-lg">
+        <button onclick="openCartDrawer()" class="w-full bg-orange-600 text-white rounded-2xl py-3 px-4 flex items-center justify-between font-bold text-sm hover:bg-orange-700 shadow-md shadow-orange-600/20 transition">
+          <div class="flex items-center space-x-2">
+            <span id="modalCartCount" class="bg-white/20 px-2 py-0.5 rounded-lg text-xs">0 ITEMS</span>
+            <span id="modalCartTotal">₹0</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <span>View Cart</span>
+            <i class="fa-solid fa-arrow-right text-xs"></i>
+          </div>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: ITEM CUSTOMIZATION DRAWER                              -->
+  <!-- ============================================================== -->
+  <div id="customizerModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 id="customizerItemName" class="font-extrabold text-base text-gray-900">Customize Item</h3>
+          <p id="customizerItemBasePrice" class="text-xs text-orange-600 font-bold">Base: ₹0</p>
+        </div>
+        <button onclick="closeCustomizerModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark text-lg"></i>
+        </button>
+      </div>
+      <div id="customizerOptionsContainer" class="space-y-4 max-h-60 overflow-y-auto">
+        <!-- Rendered dynamically -->
+      </div>
+      <button onclick="confirmCustomizationAndAdd()" class="w-full bg-orange-600 text-white rounded-xl py-3 font-bold text-sm hover:bg-orange-700 transition">
+        Add Customized Item to Cart
+      </button>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- DRAWER: CART & CHECKOUT                                        -->
+  <!-- ============================================================== -->
+  <div id="cartDrawer" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end transition-all">
+    <div class="bg-white w-full sm:max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
+      <!-- Cart Header -->
+      <div class="p-4 border-b border-gray-200 flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-basket-shopping"></i>
+          </div>
+          <div>
+            <h2 class="font-black text-base text-gray-900">Your Street Cart</h2>
+            <p id="cartStallName" class="text-xs text-gray-500">Select street bites to order</p>
+          </div>
+        </div>
+        <button onclick="closeCartDrawer()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Cart Items List -->
+      <div id="cartItemsList" class="flex-1 overflow-y-auto p-4 space-y-3 divide-y divide-gray-100">
+        <!-- Rendered dynamically -->
+      </div>
+
+      <!-- Bill & Checkout Section -->
+      <div class="p-4 border-t border-gray-200 bg-gray-50 space-y-3">
+        <!-- Delivery Address Selector (Swiggy/Zomato Style) -->
+        <div class="bg-white p-3 rounded-2xl border border-gray-200 space-y-2 shadow-sm">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-1.5 text-xs font-black text-gray-900">
+              <i class="fa-solid fa-location-dot text-orange-600"></i>
+              <span id="cartAddressTag">Delivery Address</span>
+            </div>
+            <button type="button" onclick="openAddressDrawer()" class="text-[11px] font-bold text-orange-600 hover:text-orange-700">
+              Change
+            </button>
+          </div>
+          <p id="cartAddressSummary" class="text-xs text-gray-600 font-medium">Click to select or enter delivery address</p>
+          <input type="text" id="cartAddressInput" placeholder="House/Flat No., Landmark, Area" 
+            class="w-full bg-gray-50 border border-gray-200 rounded-xl px-3 py-1.5 text-xs font-medium focus:outline-none focus:ring-2 focus:ring-orange-500">
+        </div>
+
+        <!-- Rider Tip Option (100% goes to rider) -->
+        <div class="bg-white p-3 rounded-2xl border border-gray-200 space-y-2 shadow-sm">
+          <div class="flex items-center justify-between text-xs">
+            <span class="font-extrabold text-gray-900 flex items-center">
+              <i class="fa-solid fa-heart text-red-500 mr-1.5"></i>Tip Your Rider
+            </span>
+            <span class="text-[10px] text-emerald-600 font-bold">100% goes to partner</span>
+          </div>
+          <div class="flex items-center space-x-1.5" id="tipButtonsContainer">
+            <button type="button" onclick="selectTip(0)" class="tip-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-orange-600 bg-orange-50 text-orange-700">No Tip</button>
+            <button type="button" onclick="selectTip(10)" class="tip-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-gray-200 bg-white text-gray-700 hover:border-orange-500">+₹10</button>
+            <button type="button" onclick="selectTip(20)" class="tip-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-gray-200 bg-white text-gray-700 hover:border-orange-500">+₹20</button>
+            <button type="button" onclick="selectTip(30)" class="tip-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-gray-200 bg-white text-gray-700 hover:border-orange-500">+₹30</button>
+            <button type="button" onclick="selectTip(50)" class="tip-btn px-2.5 py-1 rounded-lg text-xs font-bold border border-gray-200 bg-white text-gray-700 hover:border-orange-500">+₹50</button>
+          </div>
+        </div>
+
+        <!-- Eco-Friendly Dona Packaging Option -->
+        <label class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-gray-200 cursor-pointer shadow-sm">
+          <div class="flex items-center space-x-2 text-xs">
+            <i class="fa-solid fa-leaf text-green-600 text-sm"></i>
+            <span class="font-bold text-gray-800">Eco-Friendly Leaf Dona Packaging</span>
+          </div>
+          <input type="checkbox" id="ecoPackagingToggle" checked class="w-4 h-4 accent-orange-600 rounded">
+        </label>
+
+        <!-- Delivery Instructions -->
+        <input type="text" id="cartInstructionInput" placeholder="Cooking instruction: 'Less spicy', 'Extra dona'..." 
+          class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500">
+
+        <!-- Bill Details -->
+        <div class="space-y-1.5 text-xs text-gray-600">
+          <div class="flex justify-between">
+            <span>Item Total</span>
+            <span id="billSubtotal" class="font-bold text-gray-900">₹0</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Delivery Fee (Within 1.5 km)</span>
+            <span class="text-green-600 font-bold">FREE</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Food-grade Packaging Fee</span>
+            <span id="billPackagingFee" class="text-gray-900">₹10</span>
+          </div>
+          <div class="flex justify-between hidden" id="billTipRow">
+            <span>Delivery Tip</span>
+            <span id="billTipAmount" class="text-orange-600 font-bold">₹0</span>
+          </div>
+          <div class="flex justify-between pt-2 border-t border-gray-200 text-sm font-black text-gray-900">
+            <span>To Pay</span>
+            <span id="billGrandTotal" class="text-orange-600 text-base">₹0</span>
+          </div>
+        </div>
+
+        <!-- Payment Method Pill -->
+        <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-gray-200">
+          <div class="flex items-center space-x-2 text-xs font-bold text-gray-800">
+            <i class="fa-brands fa-google-pay text-lg text-blue-600"></i>
+            <span>UPI / Instant QR</span>
+          </div>
+          <span class="text-[11px] text-green-700 bg-green-50 px-2 py-0.5 rounded-md font-bold">Fast & Zero-Fee</span>
+        </div>
+
+        <!-- Checkout Action Button -->
+        <button id="placeOrderBtn" onclick="handlePlaceOrder()" class="w-full bg-orange-600 text-white rounded-2xl py-3.5 font-black text-sm hover:bg-orange-700 shadow-lg shadow-orange-600/25 flex items-center justify-center space-x-2 transition">
+          <span>Place Order</span>
+          <i class="fa-solid fa-arrow-right"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: LIVE ORDER TRACKING SCREEN (Realtime WebSocket)         -->
+  <!-- ============================================================== -->
+  <div id="trackingModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-lg max-h-[92vh] rounded-t-3xl sm:rounded-3xl flex flex-col overflow-hidden shadow-2xl">
+      <!-- Tracking Header -->
+      <div class="p-4 bg-orange-600 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-white/20 flex items-center justify-center text-white">
+            <i class="fa-solid fa-clock text-sm"></i>
+          </div>
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="font-extrabold text-base">Live Order Tracking</h2>
+              <span id="trackOrderId" class="bg-white/20 text-[10px] font-bold px-1.5 py-0.5 rounded">#TH-0000</span>
+            </div>
+            <p id="trackEtaText" class="text-xs text-orange-100">Estimated Delivery in 14 mins</p>
+          </div>
+        </div>
+        <button onclick="closeTrackingModal()" class="w-8 h-8 rounded-full bg-black/20 text-white flex items-center justify-center hover:bg-black/30">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Doorstep Delivery OTP Badge -->
+      <div class="bg-amber-50 border-b border-amber-200 px-4 py-3 flex items-center justify-between">
+        <div>
+          <div class="text-[11px] font-extrabold uppercase tracking-wider text-amber-800">Doorstep Delivery OTP</div>
+          <div class="text-xs text-amber-700">Share this code with the rider upon arrival</div>
+        </div>
+        <div id="trackDeliveryOtp" class="text-xl font-black tracking-widest bg-white border border-amber-300 text-amber-900 px-3 py-1 rounded-xl shadow-inner font-mono">
+          4829
+        </div>
+      </div>
+
+      <!-- Interactive Radar & Telemetry Canvas -->
+      <div class="relative bg-slate-900 h-48 w-full overflow-hidden flex items-center justify-center">
+        <!-- Grid pattern background -->
+        <div class="absolute inset-0 opacity-20 bg-[radial-gradient(#38bdf8_1px,transparent_1px)] [background-size:16px_16px]"></div>
+        
+        <!-- Live Route Simulation Canvas -->
+        <canvas id="radarCanvas" width="400" height="190" class="w-full h-full"></canvas>
+
+        <!-- Live GPS Tag -->
+        <div class="absolute top-2 left-2 bg-black/60 backdrop-blur text-emerald-400 font-mono text-[10px] px-2 py-0.5 rounded flex items-center space-x-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+          <span>LIVE TELEMETRY: 24Hz</span>
+        </div>
+      </div>
+
+      <!-- 5-Stage Live Order Stepper -->
+      <div class="p-4 space-y-3 overflow-y-auto flex-1">
+        <div class="relative pl-6 space-y-4 border-l-2 border-orange-200 ml-3" id="trackerStepsList">
+          <!-- Populated dynamically -->
+        </div>
+
+        <!-- Assigned Rider Info Card -->
+        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-3 flex items-center justify-between">
+          <div class="flex items-center space-x-3">
+            <div class="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-lg">
+              <i class="fa-solid fa-person-biking"></i>
+            </div>
+            <div>
+              <div class="font-extrabold text-xs text-gray-900" id="trackRiderName">Assigned Delivery Partner</div>
+              <div class="text-[11px] text-gray-500" id="trackRiderVehicle">Thermal Insulated Hot Box • Live Tracking</div>
+            </div>
+          </div>
+          <a id="trackRiderPhoneBtn" href="#" class="w-9 h-9 rounded-xl bg-white border border-gray-200 text-green-600 flex items-center justify-center shadow-sm hover:bg-green-50">
+            <i class="fa-solid fa-phone"></i>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: PHONE NUMBER OTP AUTHENTICATION                         -->
+  <!-- ============================================================== -->
+  <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-mobile-screen"></i>
+          </div>
+          <h3 class="font-extrabold text-base text-gray-900">Phone Login</h3>
+        </div>
+        <button onclick="closeAuthModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-gray-500">Enter your name and mobile number to receive live tracking and delivery updates.</p>
+
+      <div class="space-y-3">
+        <div>
+          <input type="text" id="authNameInput" placeholder="Enter your full name" value=""
+            class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+        </div>
+
+        <div class="relative">
+          <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-500">+91</span>
+          <input type="tel" id="authPhoneInput" maxlength="10" placeholder="10-digit mobile number" value=""
+            class="w-full bg-white border border-gray-200 rounded-xl pl-12 pr-3 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+        </div>
+
+        <div id="authOtpSection" class="hidden space-y-2">
+          <div class="flex justify-between items-center text-xs text-gray-500">
+            <span>Enter 4-Digit OTP</span>
+            <span class="text-orange-600 font-bold cursor-pointer" onclick="handleSendOtp()">Resend</span>
+          </div>
+          <input type="text" id="authOtpInput" maxlength="4" placeholder="Enter 4-digit OTP" value=""
+            class="w-full text-center tracking-widest text-lg font-mono font-bold bg-gray-50 border border-gray-200 rounded-xl py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          <div class="text-[11px] text-amber-700 bg-amber-50 p-2 rounded-lg">
+            <i class="fa-solid fa-info-circle mr-1"></i>Demo OTP: Enter <strong>1234</strong> to verify and login.
+          </div>
+        </div>
+
+        <button id="authActionBtn" onclick="handleSendOtp()" class="w-full bg-orange-600 text-white rounded-xl py-2.5 font-bold text-sm hover:bg-orange-700 transition">
+          Send OTP
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- DRAWER: USER PROFILE & SETTINGS                                -->
+  <!-- ============================================================== -->
+  <div id="profileModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end transition-all">
+    <div class="bg-white w-full sm:max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
+      <!-- Profile Header -->
+      <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-gradient-to-r from-orange-50 to-amber-50">
+        <div class="flex items-center space-x-3">
+          <div id="profileAvatar" class="w-12 h-12 rounded-2xl bg-orange-600 text-white flex items-center justify-center font-black text-lg shadow-md shadow-orange-600/20">
+            SF
+          </div>
+          <div>
+            <h2 id="profileDisplayName" class="font-extrabold text-base text-gray-900">Street Foodie</h2>
+            <div class="flex items-center space-x-2 text-xs text-gray-500">
+              <span id="profileDisplayPhone">+91 ••••• •••••</span>
+              <span>•</span>
+              <span id="profileMemberBadge" class="bg-orange-100 text-orange-700 font-bold px-1.5 py-0.5 rounded text-[10px]">Thela Club</span>
+            </div>
+          </div>
+        </div>
+        <button onclick="closeProfileModal()" class="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center hover:bg-gray-100">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Profile Body -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-5">
+        <!-- Account Stats Quick Cards -->
+        <div class="grid grid-cols-3 gap-2 text-center">
+          <div class="bg-gray-50 border border-gray-100 rounded-2xl p-2.5">
+            <div id="statTotalOrders" class="text-lg font-black text-gray-900">0</div>
+            <div class="text-[10px] text-gray-500 font-semibold">Total Orders</div>
+          </div>
+          <div class="bg-gray-50 border border-gray-100 rounded-2xl p-2.5">
+            <div id="statSavedAddresses" class="text-lg font-black text-gray-900">0</div>
+            <div class="text-[10px] text-gray-500 font-semibold">Saved Addresses</div>
+          </div>
+          <div class="bg-gray-50 border border-gray-100 rounded-2xl p-2.5">
+            <div id="statFavoritesCount" class="text-lg font-black text-red-500">0</div>
+            <div class="text-[10px] text-gray-500 font-semibold">Favorites</div>
+          </div>
+        </div>
+
+        <!-- Edit Profile Form -->
+        <form id="editProfileForm" onsubmit="handleUpdateProfile(event)" class="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-gray-200 pb-2">
+            <h3 class="text-xs font-black text-gray-800 uppercase tracking-wider">Edit Personal Details</h3>
+            <span class="text-[10px] text-gray-400 font-semibold">Instant Sync</span>
+          </div>
+
+          <div class="space-y-1 text-xs">
+            <label class="font-bold text-gray-700">Your Full Name</label>
+            <input type="text" id="profileNameInput" placeholder="e.g. Rahul Sharma" required
+              class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          </div>
+
+          <div class="space-y-1 text-xs">
+            <label class="font-bold text-gray-700">Email Address</label>
+            <input type="email" id="profileEmailInput" placeholder="e.g. foodie@gmail.com"
+              class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 font-semibold text-gray-800 focus:outline-none focus:ring-2 focus:ring-orange-500">
+          </div>
+
+          <div class="flex items-center justify-between bg-white p-2.5 rounded-xl border border-gray-200">
+            <div class="text-xs">
+              <div class="font-bold text-gray-800">Pure Veg Mode</div>
+              <div class="text-[10px] text-gray-500">Only show 100% vegetarian food carts</div>
+            </div>
+            <input type="checkbox" id="profileVegPrefToggle" class="w-4 h-4 accent-green-600 rounded cursor-pointer">
+          </div>
+
+          <button type="submit" id="saveProfileBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white rounded-xl py-2.5 text-xs font-black transition shadow-sm">
+            Save Profile Changes
+          </button>
+        </form>
+
+        <!-- Quick Access Navigation -->
+        <div class="space-y-2">
+          <button type="button" onclick="openAddressDrawer()" class="w-full bg-white border border-gray-200 rounded-2xl p-3 flex items-center justify-between hover:bg-gray-50 transition shadow-sm text-left">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-sm font-bold">
+                <i class="fa-solid fa-map-location-dot"></i>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-gray-900">Manage Saved Addresses</div>
+                <div class="text-[10px] text-gray-500">Home, Work, Other delivery locations</div>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+          </button>
+
+          <button type="button" onclick="openOrderHistoryModal()" class="w-full bg-white border border-gray-200 rounded-2xl p-3 flex items-center justify-between hover:bg-gray-50 transition shadow-sm text-left">
+            <div class="flex items-center space-x-3">
+              <div class="w-9 h-9 rounded-xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-sm font-bold">
+                <i class="fa-solid fa-receipt"></i>
+              </div>
+              <div>
+                <div class="text-xs font-bold text-gray-900">Past Orders & 1-Tap Reorder</div>
+                <div class="text-[10px] text-gray-500">View past bills, repeat favorite orders</div>
+              </div>
+            </div>
+            <i class="fa-solid fa-chevron-right text-xs text-gray-400"></i>
+          </button>
+        </div>
+
+        <!-- Logout Button -->
+        <div class="pt-2">
+          <button type="button" onclick="handleLogout()" class="w-full border border-red-200 text-red-600 bg-red-50 hover:bg-red-100 rounded-2xl py-3 text-xs font-bold transition flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-arrow-right-from-bracket"></i>
+            <span>Log Out of Account</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- DRAWER: SAVED ADDRESS BOOK & ADD NEW ADDRESS                   -->
+  <!-- ============================================================== -->
+  <div id="addressDrawer" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end transition-all">
+    <div class="bg-white w-full sm:max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
+      <!-- Address Header -->
+      <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-location-dot"></i>
+          </div>
+          <div>
+            <h2 class="font-extrabold text-base text-gray-900">Delivery Addresses</h2>
+            <p class="text-xs text-gray-500">Select where you want your food delivered</p>
+          </div>
+        </div>
+        <button onclick="closeAddressDrawer()" class="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center hover:bg-gray-100">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Address Content -->
+      <div class="flex-1 overflow-y-auto p-4 space-y-4">
+        <!-- Saved Addresses List -->
+        <div>
+          <div class="text-xs font-black text-gray-700 uppercase tracking-wider mb-2">Saved Locations</div>
+          <div id="savedAddressesContainer" class="space-y-2.5">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Add New Address Collapsible Form -->
+        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-xs font-black text-gray-900 uppercase tracking-wider">+ Add New Address</h3>
+            <button type="button" onclick="captureCustomerGps()" class="text-[11px] font-bold text-orange-600 hover:text-orange-700 flex items-center space-x-1">
+              <i class="fa-solid fa-location-crosshairs"></i>
+              <span id="gpsDetectLabel">Use Live GPS</span>
+            </button>
+          </div>
+
+          <form id="newAddressForm" onsubmit="handleSaveAddress(event)" class="space-y-2.5 text-xs">
+            <!-- Tag Selector Pills -->
+            <div class="space-y-1">
+              <label class="font-bold text-gray-700">Save Address As</label>
+              <div class="flex items-center space-x-2" id="newAddrTagGroup">
+                <button type="button" onclick="setNewAddrTag('Home')" id="tagBtnHome" class="tag-pill px-3 py-1.5 rounded-xl border border-orange-600 bg-orange-50 text-orange-700 font-bold flex items-center space-x-1">
+                  <i class="fa-solid fa-house"></i><span>Home</span>
+                </button>
+                <button type="button" onclick="setNewAddrTag('Work')" id="tagBtnWork" class="tag-pill px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold flex items-center space-x-1">
+                  <i class="fa-solid fa-briefcase"></i><span>Work</span>
+                </button>
+                <button type="button" onclick="setNewAddrTag('Other')" id="tagBtnOther" class="tag-pill px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold flex items-center space-x-1">
+                  <i class="fa-solid fa-location-dot"></i><span>Other</span>
+                </button>
+              </div>
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-bold text-gray-700">Flat / House No. / Floor *</label>
+              <input type="text" id="newAddrHouse" placeholder="e.g. Flat 302, 3rd Floor" required
+                class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-bold text-gray-700">Street / Area / Colony *</label>
+              <input type="text" id="newAddrStreet" placeholder="e.g. 100ft Road, Indiranagar" required
+                class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+            </div>
+
+            <div class="space-y-1">
+              <label class="font-bold text-gray-700">Nearby Landmark (Optional)</label>
+              <input type="text" id="newAddrLandmark" placeholder="e.g. Opp Metro Pillar 42"
+                class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+            </div>
+
+            <label class="flex items-center space-x-2 pt-1 cursor-pointer">
+              <input type="checkbox" id="newAddrDefaultToggle" checked class="w-4 h-4 accent-orange-600 rounded">
+              <span class="text-[11px] font-bold text-gray-700">Set as primary delivery address</span>
+            </label>
+
+            <button type="submit" id="saveAddressBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white rounded-xl py-2.5 font-black text-xs transition shadow-md">
+              Save & Deliver Here
+            </button>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: PAST ORDERS & 1-TAP REORDER                             -->
+  <!-- ============================================================== -->
+  <div id="orderHistoryModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-lg max-h-[90vh] rounded-3xl flex flex-col overflow-hidden shadow-2xl">
+      <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-600 flex items-center justify-center font-bold">
+            <i class="fa-solid fa-receipt"></i>
+          </div>
+          <div>
+            <h2 class="font-black text-base text-gray-900">Past Orders & Receipts</h2>
+            <p class="text-xs text-gray-500">Repeat favorite orders in 1-tap</p>
+          </div>
+        </div>
+        <button onclick="closeOrderHistoryModal()" class="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center hover:bg-gray-100">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div id="orderHistoryList" class="flex-1 overflow-y-auto p-4 space-y-3">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- MODAL: ORDER RATING & STREET COMPLIMENTS                       -->
+  <!-- ============================================================== -->
+  <div id="ratingModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white w-full max-w-md rounded-3xl p-5 space-y-4 shadow-2xl">
+      <div class="flex items-center justify-between">
+        <div>
+          <h3 class="font-extrabold text-base text-gray-900">Rate Your Food Experience</h3>
+          <p id="ratingModalSubtitle" class="text-xs text-gray-500">How were your street bites?</p>
+        </div>
+        <button onclick="closeRatingModal()" class="text-gray-400 hover:text-gray-600">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <!-- Interactive 5-Star Widget -->
+      <div class="text-center py-2 space-y-1">
+        <div class="flex justify-center space-x-2 text-2xl text-amber-400" id="starRatingContainer">
+          <i class="fa-solid fa-star cursor-pointer hover:scale-125 transition" onclick="setStarRating(1)"></i>
+          <i class="fa-solid fa-star cursor-pointer hover:scale-125 transition" onclick="setStarRating(2)"></i>
+          <i class="fa-solid fa-star cursor-pointer hover:scale-125 transition" onclick="setStarRating(3)"></i>
+          <i class="fa-solid fa-star cursor-pointer hover:scale-125 transition" onclick="setStarRating(4)"></i>
+          <i class="fa-solid fa-star cursor-pointer hover:scale-125 transition" onclick="setStarRating(5)"></i>
+        </div>
+        <div id="starRatingLabel" class="text-xs font-black text-amber-600 uppercase tracking-wide">Excellent (5 Stars)</div>
+      </div>
+
+      <!-- Street Compliments Pills -->
+      <div class="space-y-1.5">
+        <label class="text-xs font-bold text-gray-700">What did you love most?</label>
+        <div class="flex flex-wrap gap-1.5" id="complimentsContainer">
+          <button type="button" onclick="toggleCompliment(this, 'Crispy Puris')" class="compliment-pill px-2.5 py-1 rounded-xl text-xs font-bold border border-gray-200 bg-gray-50 text-gray-700 hover:border-orange-500">🥟 Crispy Puris</button>
+          <button type="button" onclick="toggleCompliment(this, 'Extra Spicy Chutney')" class="compliment-pill px-2.5 py-1 rounded-xl text-xs font-bold border border-gray-200 bg-gray-50 text-gray-700 hover:border-orange-500">🌶️ Spicy Chutney</button>
+          <button type="button" onclick="toggleCompliment(this, 'Piping Hot')" class="compliment-pill px-2.5 py-1 rounded-xl text-xs font-bold border border-gray-200 bg-gray-50 text-gray-700 hover:border-orange-500">🔥 Piping Hot</button>
+          <button type="button" onclick="toggleCompliment(this, 'Clean & Hygienic')" class="compliment-pill px-2.5 py-1 rounded-xl text-xs font-bold border border-gray-200 bg-gray-50 text-gray-700 hover:border-orange-500">🧼 Clean & Hygienic</button>
+          <button type="button" onclick="toggleCompliment(this, 'Eco Dona Packing')" class="compliment-pill px-2.5 py-1 rounded-xl text-xs font-bold border border-gray-200 bg-gray-50 text-gray-700 hover:border-orange-500">🍃 Eco Dona</button>
+          <button type="button" onclick="toggleCompliment(this, 'Fast Delivery')" class="compliment-pill px-2.5 py-1 rounded-xl text-xs font-bold border border-gray-200 bg-gray-50 text-gray-700 hover:border-orange-500">🛵 Fast Delivery</button>
+        </div>
+      </div>
+
+      <!-- Optional Comment Box -->
+      <div class="space-y-1 text-xs">
+        <label class="font-bold text-gray-700">Comments for the Cart Owner (Optional)</label>
+        <textarea id="ratingCommentInput" rows="2" placeholder="Write a note to the street chef..."
+          class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 text-xs focus:outline-none focus:ring-2 focus:ring-orange-500"></textarea>
+      </div>
+
+      <button type="button" onclick="handleSubmitRating()" class="w-full bg-orange-600 hover:bg-orange-700 text-white rounded-xl py-3 font-black text-xs transition shadow-md">
+        Submit Rating & Review
+      </button>
+    </div>
+  </div>
+
+  <!-- Bottom Persistent Floating Cart Bar (for Customer View) -->
+  <div id="stickyBottomCart" class="hidden sticky bottom-3 z-30 max-w-4xl mx-auto px-4 w-full">
+    <button onclick="openCartDrawer()" class="w-full bg-orange-600 text-white rounded-2xl py-3 px-4 flex items-center justify-between font-bold text-sm shadow-xl shadow-orange-600/30 hover:bg-orange-700 transition">
+      <div class="flex items-center space-x-2">
+        <span id="stickyCartBadge" class="bg-white/20 px-2 py-0.5 rounded-lg text-xs">1 ITEM</span>
+        <span id="stickyCartTotal">₹140</span>
+      </div>
+      <div class="flex items-center space-x-1">
+        <span>Proceed to Cart</span>
+        <i class="fa-solid fa-arrow-right text-xs"></i>
+      </div>
+    </button>
+  </div>
+
+  <!-- Client-side Logic Script -->
+  <script src="/app.js"></script>
+</body>
+</html>

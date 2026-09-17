@@ -1,0 +1,14 @@
+{
+  "users": [],
+  "stalls": [],
+  "menu_items": [],
+  "orders": [],
+  "riders": [],
+  "otps": {},
+  "settings": {
+    "platformUpi": "thelaexpress@icici",
+    "platformCommissionPct": 10,
+    "riderPayoutFlat": 40,
+    "deliveryRadiusKm": 2.5
+  }
+}
