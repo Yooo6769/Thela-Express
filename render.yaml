@@ -1,9 +1,9 @@
-﻿services:
+services:
   - type: web
     name: thela-express
     env: node
     plan: free
-    buildCommand: cd server && npm install
+    buildCommand: npm install && cd server && npm install
     startCommand: node server/src/server.js
     envVars:
       - key: NODE_ENV
