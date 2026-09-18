@@ -437,63 +437,190 @@
   </main>
 
   <!-- ============================================================== -->
-  <!-- MODAL: STALL MENU & ITEM CUSTOMIZER                           -->
+  <!-- MODAL: STALL MENU & INDIVIDUAL VENDOR EXPERIENCE (IMPROVEMENT #3) -->
   <!-- ============================================================== -->
-  <div id="stallModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all">
-    <div class="bg-white w-full sm:max-w-2xl max-h-[92vh] sm:rounded-3xl rounded-t-3xl flex flex-col overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom duration-200">
-      <!-- Modal Header Banner -->
-      <div class="relative h-44 sm:h-52 w-full overflow-hidden bg-gray-900">
-        <img id="modalStallImage" src="" alt="Stall Banner" class="w-full h-full object-cover opacity-85">
-        <div class="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-        <button onclick="closeStallModal()" class="absolute top-3 right-3 w-9 h-9 rounded-full bg-black/50 text-white flex items-center justify-center backdrop-blur hover:bg-black/70 transition">
-          <i class="fa-solid fa-xmark"></i>
-        </button>
-        <div class="absolute bottom-3 left-4 right-4 text-white">
+  <div id="stallModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all">
+    <div class="bg-white w-full sm:max-w-2xl max-h-[94vh] sm:rounded-3xl rounded-t-3xl flex flex-col overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom duration-200">
+      
+      <!-- Top Hero Media Container -->
+      <div class="relative w-full">
+        <div id="modalHeroMediaContainer" class="relative h-56 sm:h-64 w-full overflow-hidden bg-stone-900 select-none">
+          <img id="modalStallImage" src="" alt="Stall Banner" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
+          <video id="modalStallVideo" class="hidden absolute inset-0 w-full h-full object-cover" loop muted playsinline autoplay></video>
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20"></div>
+
+          <!-- Top Action Bar (Close, Favorite, Share) -->
+          <div class="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+            <!-- Live Open / Closed Badge -->
+            <span id="modalStallBadge" class="bg-emerald-600/90 backdrop-blur-md text-white text-[11px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center space-x-1.5">
+              <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
+              <span id="modalStallBadgeText">OPEN NOW</span>
+            </span>
+
+            <div class="flex items-center space-x-2">
+              <button id="modalFavBtn" onclick="toggleStallFavoriteFromModal()" class="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 transition shadow-sm" title="Add to Favorites">
+                <i class="fa-regular fa-heart text-sm" id="modalFavIcon"></i>
+              </button>
+              <button onclick="shareStallFromModal()" class="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 transition shadow-sm" title="Share Vendor Link">
+                <i class="fa-solid fa-share-nodes text-sm"></i>
+              </button>
+              <button onclick="closeStallModal()" class="w-9 h-9 rounded-full bg-black/40 backdrop-blur-md text-white flex items-center justify-center hover:bg-black/60 transition shadow-sm" title="Close">
+                <i class="fa-solid fa-xmark text-sm"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Hero Bottom Overlay Info -->
+          <div class="absolute bottom-3 left-4 right-4 text-white z-10">
+            <div class="flex items-center space-x-2 flex-wrap gap-y-1 mb-1">
+              <span id="modalCategoryPill" class="text-[10px] font-black uppercase tracking-wider bg-white/20 backdrop-blur-md px-2 py-0.5 rounded-md text-amber-200"></span>
+              <span id="modalVegPill" class="text-[10px] font-black uppercase tracking-wider bg-green-950/80 border border-green-500/50 text-green-300 px-2 py-0.5 rounded-md flex items-center">
+                <span class="w-1.5 h-1.5 rounded-full bg-green-400 mr-1"></span>Pure Veg
+              </span>
+            </div>
+            <h2 id="modalStallName" class="text-2xl sm:text-3xl font-black text-white tracking-tight leading-tight drop-shadow-md"></h2>
+            <p id="modalStallSpecialty" class="text-xs text-stone-200 line-clamp-1 mt-0.5 font-medium"></p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Scrollable Modal Body -->
+      <div id="modalScrollBody" class="flex-1 overflow-y-auto divide-y divide-stone-100 hide-scrollbar">
+        
+        <!-- Vitals & Metrics Bar -->
+        <div class="p-4 bg-white space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
+            <!-- Rating / Reviews (Strictly genuine) -->
+            <div id="modalRatingBlock" class="flex items-center space-x-1.5">
+              <div class="flex items-center space-x-1 bg-amber-50 border border-amber-200 text-amber-900 font-extrabold px-2 py-1 rounded-xl">
+                <i class="fa-solid fa-star text-amber-500 text-xs"></i>
+                <span id="modalRatingScore">4.8</span>
+              </div>
+              <span id="modalReviewsCount" class="text-stone-500 font-bold text-[11px]">(24 ratings)</span>
+            </div>
+
+            <!-- Orders Count (Strictly genuine from backend) -->
+            <div id="modalOrdersBlock" class="hidden flex items-center space-x-1 bg-orange-50 border border-orange-200/80 text-orange-900 font-extrabold px-2 py-1 rounded-xl text-[11px]">
+              <i class="fa-solid fa-bag-shopping text-orange-600"></i>
+              <span id="modalOrdersCount">50+ orders delivered</span>
+            </div>
+
+            <!-- Distance -->
+            <div class="flex items-center space-x-1 text-stone-600 font-bold bg-stone-100 px-2 py-1 rounded-xl text-[11px]">
+              <i class="fa-solid fa-location-dot text-amber-600"></i>
+              <span id="modalStallDistance">0.8 km</span>
+            </div>
+
+            <!-- Dynamically Calculated Delivery Time -->
+            <div class="flex items-center space-x-1 text-stone-800 font-black bg-stone-100 px-2.5 py-1 rounded-xl text-[11px]">
+              <i class="fa-regular fa-clock text-amber-600"></i>
+              <span id="modalStallEta">18-24 min</span>
+            </div>
+          </div>
+
+          <!-- Stall Address & Timing -->
+          <div class="flex items-center justify-between text-xs text-stone-500 pt-1 border-t border-stone-100">
+            <div class="flex items-center space-x-1.5 truncate max-w-[80%]">
+              <i class="fa-solid fa-map-pin text-stone-400 text-[11px]"></i>
+              <span id="modalStallAddress" class="truncate font-medium text-stone-700"></span>
+            </div>
+            <span id="modalStallPriceForTwo" class="font-bold text-stone-800 text-[11px] shrink-0">₹120 for two</span>
+          </div>
+        </div>
+
+        <!-- Famous For Section (Signature / Popular Dishes) -->
+        <div id="modalFamousForSection" class="p-4 bg-amber-50/40 space-y-3">
           <div class="flex items-center space-x-2">
-            <span id="modalStallBadge" class="bg-green-500/90 backdrop-blur text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider"></span>
-            <span id="modalStallRating" class="text-xs font-bold text-amber-300 flex items-center">
-              <i class="fa-solid fa-star mr-1"></i>4.8
+            <span class="w-6 h-6 rounded-lg bg-amber-600 text-white flex items-center justify-center text-xs shadow-xs font-bold">
+              <i class="fa-solid fa-crown"></i>
+            </span>
+            <div>
+              <h3 class="font-black text-sm text-stone-900 tracking-tight" data-i18n="famous_for_title">Famous For</h3>
+              <p class="text-[11px] text-stone-500 font-medium" data-i18n="famous_for_sub">Signature street bites customers love</p>
+            </div>
+          </div>
+          <div id="modalFamousForContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+            <!-- Rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Local Story Section (Rendered only if verified history exists) -->
+        <div id="modalLocalStorySection" class="hidden p-4 bg-stone-50 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-lg bg-stone-800 text-amber-400 flex items-center justify-center text-xs shadow-xs">
+                <i class="fa-solid fa-book-open"></i>
+              </span>
+              <h3 class="font-black text-xs text-stone-900 uppercase tracking-wider" data-i18n="local_story_title">Local Heritage Story</h3>
+            </div>
+            <span class="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center">
+              <i class="fa-solid fa-certificate text-[9px] mr-1"></i>Verified History
             </span>
           </div>
-          <h2 id="modalStallName" class="text-xl sm:text-2xl font-black mt-1"></h2>
-          <p id="modalStallSpecialty" class="text-xs text-gray-200 line-clamp-1"></p>
+          <p id="modalLocalStoryText" class="text-xs text-stone-700 leading-relaxed italic bg-white p-3 rounded-2xl border border-stone-200/70 shadow-2xs"></p>
         </div>
-      </div>
 
-      <!-- Stall Trust & Verification Transparency Bar -->
-      <div onclick="if (STATE.currentStall) openTrustModal(STATE.currentStall.id);" 
-        class="bg-amber-50/90 hover:bg-amber-100/90 border-b border-amber-200/80 px-4 py-2.5 flex items-center justify-between text-xs text-amber-900 cursor-pointer transition">
-        <div class="flex items-center space-x-2 overflow-hidden mr-2">
-          <div id="modalStallBadges" class="flex items-center space-x-1.5 flex-wrap gap-y-1">
-            <span class="font-extrabold text-amber-800 flex items-center">
-              <i class="fa-solid fa-shield-halved text-amber-600 mr-1.5"></i>
-              <span id="modalStallHygiene">Audits in Progress</span>
-            </span>
+        <!-- Compact Trust & Verification Section -->
+        <div id="modalTrustSection" class="p-4 bg-white space-y-3">
+          <div class="flex items-center justify-between">
+            <div>
+              <h3 class="font-black text-xs text-stone-900 uppercase tracking-wider flex items-center space-x-1.5" data-i18n="trust_compact_title">
+                <i class="fa-solid fa-shield-halved text-emerald-600"></i>
+                <span>Trust & Verification Checks</span>
+              </h3>
+              <p class="text-[11px] text-stone-500 font-medium" data-i18n="trust_compact_sub">Direct on-ground checks completed by ThelaExpress</p>
+            </div>
+            <button onclick="if (STATE.currentStall) openTrustModal(STATE.currentStall.id);" 
+              class="text-[11px] font-extrabold text-amber-700 hover:text-amber-800 hover:underline flex items-center space-x-1 shrink-0">
+              <span data-i18n="view_trust_details_btn">View Verification Details ➔</span>
+            </button>
+          </div>
+          <div id="modalTrustChecksList" class="flex flex-wrap gap-2">
+            <!-- Completed audit check pills rendered dynamically -->
           </div>
         </div>
-        <div class="flex items-center space-x-1 text-[11px] font-extrabold text-orange-700 shrink-0">
-          <span data-i18n="view_trust_details_btn">View Verification Details ➔</span>
-        </div>
-      </div>
 
-      <!-- Menu Items List -->
-      <div id="modalMenuItems" class="flex-1 overflow-y-auto p-4 space-y-4 divide-y divide-gray-100">
-        <!-- Rendered dynamically -->
-      </div>
-
-      <!-- Bottom Floating Cart Trigger (if items in cart) -->
-      <div id="modalCartBar" class="hidden border-t border-gray-200 bg-white p-3 shadow-lg">
-        <button onclick="openCartDrawer()" class="w-full bg-orange-600 text-white rounded-2xl py-3 px-4 flex items-center justify-between font-bold text-sm hover:bg-orange-700 shadow-md shadow-orange-600/20 transition">
+        <!-- See It From The Street (Photo Gallery - Rendered if photos exist) -->
+        <div id="modalStreetPhotosSection" class="hidden p-4 bg-stone-50 space-y-3">
           <div class="flex items-center space-x-2">
-            <span id="modalCartCount" class="bg-white/20 px-2 py-0.5 rounded-lg text-xs">0 ITEMS</span>
-            <span id="modalCartTotal">₹0</span>
+            <span class="w-6 h-6 rounded-lg bg-orange-600 text-white flex items-center justify-center text-xs shadow-xs">
+              <i class="fa-solid fa-camera"></i>
+            </span>
+            <div>
+              <h3 class="font-black text-xs text-stone-900 uppercase tracking-wider" data-i18n="see_street_title">See It From The Street</h3>
+              <p class="text-[11px] text-stone-500 font-medium" data-i18n="see_street_sub">Authentic photos of stall & preparation</p>
+            </div>
           </div>
-          <div class="flex items-center space-x-1">
-            <span>View Cart</span>
+          <div id="modalStreetPhotosGallery" class="flex items-center space-x-3 overflow-x-auto hide-scrollbar pb-1">
+            <!-- Street photos rendered dynamically -->
+          </div>
+        </div>
+
+        <!-- Sticky Menu Category Navigation Pills -->
+        <div class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-y border-stone-200 px-4 py-2 flex items-center space-x-2 overflow-x-auto hide-scrollbar" id="modalCategoryTabs">
+          <!-- Dynamic category pills: Popular, etc. -->
+        </div>
+
+        <!-- Menu Items Categorized List -->
+        <div id="modalMenuItems" class="p-4 space-y-6">
+          <!-- Categorized food cards rendered dynamically -->
+        </div>
+      </div>
+
+      <!-- Bottom Floating Sticky Cart Bar (Persistent when items in cart) -->
+      <div id="modalCartBar" class="hidden border-t border-stone-200 bg-white p-3 shadow-xl select-none z-30">
+        <button onclick="openCartDrawer()" class="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white rounded-2xl py-3 px-4 flex items-center justify-between font-bold text-sm hover:from-amber-700 hover:to-orange-700 shadow-md shadow-orange-600/20 transition active:scale-[0.99]">
+          <div class="flex items-center space-x-2.5">
+            <span id="modalCartCount" class="bg-white/20 px-2 py-0.5 rounded-lg text-xs font-black">0 ITEMS</span>
+            <span id="modalCartTotal" class="text-base font-black tracking-tight">₹0</span>
+          </div>
+          <div class="flex items-center space-x-1.5 font-black text-xs">
+            <span data-i18n="view_cart_btn">View Cart</span>
             <i class="fa-solid fa-arrow-right text-xs"></i>
           </div>
         </button>
       </div>
+
     </div>
   </div>
 

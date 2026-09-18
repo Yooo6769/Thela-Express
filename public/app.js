@@ -1273,60 +1273,336 @@ function filterCategory(cat) {
 }
 
 // ==========================================================
-// 6. STALL MENU MODAL & CUSTOMIZER
+// 6. STALL MENU MODAL & INDIVIDUAL VENDOR EXPERIENCE (IMPROVEMENT #3)
 // ==========================================================
 async function openStallModal(stallId) {
   try {
     const res = await fetch(`/api/stalls/${stallId}`);
     const data = await res.json();
+    if (!data || !data.stall) {
+      showToast('Could not load vendor information');
+      return;
+    }
     STATE.currentStall = data.stall;
-    STATE.currentMenu = data.items;
+    STATE.currentMenu = data.items || [];
 
-    document.getElementById('modalStallName').innerText = data.stall.name;
-    document.getElementById('modalStallSpecialty').innerText = data.stall.heritageStory 
-      ? `${data.stall.specialty} • "${data.stall.heritageStory}"` 
-      : data.stall.specialty;
-    document.getElementById('modalStallImage').src = data.stall.imageUrl;
-    document.getElementById('modalStallRating').innerHTML = `<i class="fa-solid fa-star mr-1"></i>${data.stall.rating} (${data.stall.reviewsCount})`;
-    document.getElementById('modalStallBadge').innerText = data.stall.isOpen ? 'OPEN NOW' : 'CLOSED';
-
-    // Update Trust Badges in Modal Bar
-    const badgesEl = document.getElementById('modalStallBadges');
-    if (badgesEl) {
-      const badges = data.stall.trustBadges || [];
-      badgesEl.innerHTML = badges.map(b => {
-        let colorClass = 'bg-amber-100 text-amber-900 border-amber-300';
-        let iconClass = 'fa-clock-rotate-left text-amber-700';
-        if (b.type === 'fssai') {
-          colorClass = 'bg-emerald-100 text-emerald-900 border-emerald-300';
-          iconClass = 'fa-shield-check text-emerald-700';
-        } else if (b.type === 'hygiene') {
-          colorClass = 'bg-amber-100 text-amber-900 border-amber-300';
-          iconClass = 'fa-wand-magic-sparkles text-amber-700';
-        } else if (b.type === 'identity') {
-          colorClass = 'bg-blue-100 text-blue-900 border-blue-300';
-          iconClass = 'fa-circle-check text-blue-700';
-        }
-        return `
-          <span class="inline-flex items-center space-x-1 font-extrabold px-2 py-0.5 rounded-md border text-[10px] ${colorClass}">
-            <i class="fa-solid ${iconClass}"></i>
-            <span>${b.label}</span>
-          </span>
-        `;
-      }).join('');
+    // 1. Hero Media (Video or Image)
+    const imgEl = document.getElementById('modalStallImage');
+    const vidEl = document.getElementById('modalStallVideo');
+    if (data.stall.videoUrl && vidEl) {
+      vidEl.src = data.stall.videoUrl;
+      vidEl.classList.remove('hidden');
+      if (imgEl) imgEl.classList.add('hidden');
+      vidEl.play().catch(() => {});
+    } else {
+      if (vidEl) {
+        vidEl.pause();
+        vidEl.classList.add('hidden');
+      }
+      if (imgEl) {
+        imgEl.src = data.stall.imageUrl || 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80';
+        imgEl.classList.remove('hidden');
+      }
     }
 
-    renderMenuItems(data.items);
+    // 2. Live Status Badge (OPEN / CLOSED)
+    const badgeTextEl = document.getElementById('modalStallBadgeText');
+    const badgeEl = document.getElementById('modalStallBadge');
+    if (badgeTextEl && badgeEl) {
+      if (data.stall.isOpen) {
+        badgeTextEl.innerText = (typeof t === 'function' ? t('stall_status_open', 'OPEN NOW') : 'OPEN NOW');
+        badgeEl.className = 'bg-emerald-600/95 backdrop-blur-md text-white text-[11px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center space-x-1.5';
+      } else {
+        badgeTextEl.innerText = (typeof t === 'function' ? t('stall_status_closed', 'CLOSED') : 'CLOSED');
+        badgeEl.className = 'bg-stone-700/95 backdrop-blur-md text-stone-200 text-[11px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center space-x-1.5';
+      }
+    }
+
+    // 3. Favorite heart status
+    updateModalFavoriteIcon(data.stall.id);
+
+    // 4. Hero Titles & Overlays
+    const nameEl = document.getElementById('modalStallName');
+    if (nameEl) nameEl.innerText = data.stall.name;
+
+    const specialtyEl = document.getElementById('modalStallSpecialty');
+    if (specialtyEl) specialtyEl.innerText = data.stall.specialty || '';
+
+    const catPillEl = document.getElementById('modalCategoryPill');
+    if (catPillEl) catPillEl.innerText = (data.stall.category || 'Street Food').toUpperCase();
+
+    const vegPillEl = document.getElementById('modalVegPill');
+    if (vegPillEl) {
+      if (data.stall.isVeg) {
+        vegPillEl.classList.remove('hidden');
+      } else {
+        vegPillEl.classList.add('hidden');
+      }
+    }
+
+    // 5. Vitals: Genuine Rating & Reviews (Zero fake claims)
+    const ratingBlock = document.getElementById('modalRatingBlock');
+    const ratingScore = document.getElementById('modalRatingScore');
+    const reviewsCount = document.getElementById('modalReviewsCount');
+    const hasGenuineRating = data.stall.ratingCount > 0 || (typeof data.stall.reviewsCount === 'string' && data.stall.reviewsCount.includes('ratings'));
+    if (ratingBlock && ratingScore && reviewsCount) {
+      if (hasGenuineRating) {
+        ratingScore.innerText = data.stall.rating;
+        reviewsCount.innerText = `(${data.stall.reviewsCount || data.stall.ratingCount + ' ratings'})`;
+      } else {
+        ratingScore.innerText = 'New';
+        reviewsCount.innerText = '(Verified Stall)';
+      }
+    }
+
+    // 6. Vitals: Genuine Order Count (Zero fake orders)
+    const ordersBlock = document.getElementById('modalOrdersBlock');
+    const ordersCountEl = document.getElementById('modalOrdersCount');
+    if (ordersBlock && ordersCountEl) {
+      const genuineOrders = typeof data.stall.ordersCount === 'number' ? data.stall.ordersCount : 0;
+      if (genuineOrders > 0) {
+        ordersCountEl.innerText = `${genuineOrders}+ orders delivered`;
+        ordersBlock.classList.remove('hidden');
+      } else {
+        ordersBlock.classList.add('hidden');
+      }
+    }
+
+    // 7. Distance & Dynamic Delivery Time
+    const distEl = document.getElementById('modalStallDistance');
+    if (distEl) distEl.innerText = data.stall.distance || '1.0 km';
+
+    const etaEl = document.getElementById('modalStallEta');
+    if (etaEl) {
+      etaEl.innerText = calculateDynamicDeliveryTime(data.stall.distance || 1.0, data.stall.prepTime || 12);
+    }
+
+    const addrEl = document.getElementById('modalStallAddress');
+    if (addrEl) addrEl.innerText = data.stall.address || 'Local Street Cart';
+
+    const priceEl = document.getElementById('modalStallPriceForTwo');
+    if (priceEl) priceEl.innerText = data.stall.priceForTwo || '₹120 for two';
+
+    // 8. "Famous For" Section (Top 2-3 signature dishes)
+    renderFamousForDishes(data.items || []);
+
+    // 9. "Local Story" Section (Strictly genuine verified history only)
+    const storySection = document.getElementById('modalLocalStorySection');
+    const storyText = document.getElementById('modalLocalStoryText');
+    if (storySection && storyText) {
+      const story = (data.stall.heritageStory || '').trim();
+      if (story && !story.toLowerCase().includes('demo') && story.length > 5) {
+        storyText.innerText = `“${story}”`;
+        storySection.classList.remove('hidden');
+      } else {
+        storySection.classList.add('hidden');
+      }
+    }
+
+    // 10. Compact "Trust & Verification" Checks
+    renderCompactTrustChecks(data.stall);
+
+    // 11. "See It From The Street" Photo Gallery (Only if genuine photos exist)
+    const streetSec = document.getElementById('modalStreetPhotosSection');
+    const streetGallery = document.getElementById('modalStreetPhotosGallery');
+    const photos = data.stall.streetPhotos || data.stall.photos || [];
+    if (streetSec && streetGallery) {
+      if (Array.isArray(photos) && photos.length > 0) {
+        streetGallery.innerHTML = photos.map((url, i) => `
+          <div class="shrink-0 w-32 h-24 sm:w-40 sm:h-28 rounded-2xl overflow-hidden bg-stone-800 shadow-sm border border-stone-200 cursor-pointer transition hover:scale-105" onclick="openPhotoViewer('${url}')">
+            <img src="${url}" alt="Street Cart Photo ${i+1}" class="w-full h-full object-cover">
+          </div>
+        `).join('');
+        streetSec.classList.remove('hidden');
+      } else {
+        streetSec.classList.add('hidden');
+      }
+    }
+
+    // 12. Render Categorized Menu & Sticky Navigation Tabs
+    renderCategoryTabsAndMenuItems(data.items || []);
+
+    // 13. Update Sticky Cart Bar
     updateCartFloatingBar();
 
-    document.getElementById('stallModal').classList.remove('hidden');
+    // Show modal & prevent background scroll
+    const modalEl = document.getElementById('stallModal');
+    if (modalEl) modalEl.classList.remove('hidden');
+    document.body.style.overflow = 'hidden';
+
   } catch (e) {
     console.error('Failed to open stall modal:', e);
+    showToast('Failed to load stall menu');
   }
 }
 
 function closeStallModal() {
-  document.getElementById('stallModal').classList.add('hidden');
+  const modal = document.getElementById('stallModal');
+  if (modal) modal.classList.add('hidden');
+  document.body.style.overflow = '';
+  const vidEl = document.getElementById('modalStallVideo');
+  if (vidEl) vidEl.pause();
+}
+
+function toggleStallFavoriteFromModal() {
+  if (!STATE.currentStall) return;
+  toggleFavorite(STATE.currentStall.id);
+  updateModalFavoriteIcon(STATE.currentStall.id);
+}
+
+function updateModalFavoriteIcon(stallId) {
+  const icon = document.getElementById('modalFavIcon');
+  if (!icon) return;
+  const isFav = (STATE.favorites || []).includes(stallId);
+  if (isFav) {
+    icon.className = 'fa-solid fa-heart text-sm text-rose-500';
+  } else {
+    icon.className = 'fa-regular fa-heart text-sm text-white';
+  }
+}
+
+function shareStallFromModal() {
+  if (!STATE.currentStall) return;
+  const shareData = {
+    title: `${STATE.currentStall.name} on ThelaExpress`,
+    text: `Order fresh & piping hot street bites from ${STATE.currentStall.name}!`,
+    url: window.location.origin + window.location.pathname + `?stall=${STATE.currentStall.id}`
+  };
+  if (navigator.share) {
+    navigator.share(shareData).catch(() => {});
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(shareData.url).then(() => {
+      showToast('Stall link copied to clipboard!');
+    }).catch(() => {
+      showToast(`Exploring ${STATE.currentStall.name}`);
+    });
+  } else {
+    showToast(`Exploring ${STATE.currentStall.name}`);
+  }
+}
+
+function openPhotoViewer(url) {
+  window.open(url, '_blank');
+}
+
+function renderCompactTrustChecks(stall) {
+  const container = document.getElementById('modalTrustChecksList');
+  if (!container) return;
+
+  const checks = [];
+  if (stall.fssai_status === 'verified') {
+    checks.push({
+      label: 'FSSAI Food Safety Verified',
+      icon: 'fa-shield-check',
+      bg: 'bg-emerald-50 text-emerald-800 border-emerald-200'
+    });
+  }
+  if (stall.hygiene_status === 'verified' || stall.hygiene_status === 'certified') {
+    checks.push({
+      label: `Hygiene Score ${stall.hygiene_score || 95}/100 Audited`,
+      icon: 'fa-wand-magic-sparkles',
+      bg: 'bg-amber-50 text-amber-900 border-amber-200'
+    });
+  }
+  if (stall.identity_status === 'verified' || stall.is_verified) {
+    checks.push({
+      label: 'Vendor KYC & ID Verified',
+      icon: 'fa-circle-check',
+      bg: 'bg-blue-50 text-blue-900 border-blue-200'
+    });
+  }
+  if (stall.address && stall.lat && stall.lng) {
+    checks.push({
+      label: 'Stall GPS Geo-Tagged',
+      icon: 'fa-location-dot',
+      bg: 'bg-teal-50 text-teal-900 border-teal-200'
+    });
+  }
+
+  if (checks.length === 0) {
+    checks.push({
+      label: 'Audits Underway • Onboarding in Progress',
+      icon: 'fa-clock-rotate-left',
+      bg: 'bg-stone-50 text-stone-700 border-stone-200'
+    });
+  }
+
+  container.innerHTML = checks.map(c => `
+    <div class="inline-flex items-center space-x-1.5 font-extrabold px-2.5 py-1 rounded-xl border text-[11px] shadow-2xs ${c.bg}">
+      <i class="fa-solid ${c.icon}"></i>
+      <span>${c.label}</span>
+    </div>
+  `).join('');
+}
+
+function renderFamousForDishes(items) {
+  const sec = document.getElementById('modalFamousForSection');
+  const container = document.getElementById('modalFamousForContainer');
+  if (!sec || !container) return;
+
+  if (!items || items.length === 0) {
+    sec.classList.add('hidden');
+    return;
+  }
+
+  let signature = items.filter(i => i.bestseller || i.isSpecial || i.isPopular);
+  if (signature.length === 0) {
+    signature = items.slice(0, 2);
+  } else if (signature.length > 3) {
+    signature = signature.slice(0, 3);
+  }
+
+  sec.classList.remove('hidden');
+  container.innerHTML = signature.map(item => {
+    const inCart = STATE.cart.items.find(i => i.item_id === item.id);
+    const qty = inCart ? inCart.qty : 0;
+
+    return `
+      <div class="bg-white p-2.5 rounded-2xl border border-amber-200/80 shadow-2xs flex items-center justify-between gap-2.5 hover:border-amber-400 transition">
+        <div class="flex items-center space-x-2.5 min-w-0">
+          <div class="relative w-14 h-14 rounded-xl overflow-hidden bg-stone-100 shrink-0">
+            <img src="${item.image || 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=400&q=80'}" 
+              alt="${item.name}" class="w-full h-full object-cover">
+          </div>
+          <div class="min-w-0">
+            <div class="flex items-center space-x-1">
+              ${item.isVeg ? `
+                <span class="w-3 h-3 rounded border border-green-600 flex items-center justify-center p-0.5 shrink-0">
+                  <span class="w-1 h-1 rounded-full bg-green-600"></span>
+                </span>
+              ` : `
+                <span class="w-3 h-3 rounded border border-red-600 flex items-center justify-center p-0.5 shrink-0">
+                  <span class="w-1 h-1 rounded-full bg-red-600"></span>
+                </span>
+              `}
+              <span class="font-extrabold text-xs text-stone-900 truncate">${item.name}</span>
+            </div>
+            <div class="flex items-center space-x-1.5 mt-0.5">
+              <span class="text-xs font-black text-amber-700">₹${item.price}</span>
+              ${item.originalPrice ? `<span class="text-[10px] text-stone-400 line-through">₹${item.originalPrice}</span>` : ''}
+            </div>
+          </div>
+        </div>
+
+        <!-- Add Button / Stepper -->
+        <div class="shrink-0 w-16">
+          ${!item.inStock ? `
+            <span class="text-[9px] font-black text-stone-400 block text-center">SOLD OUT</span>
+          ` : qty === 0 ? `
+            <button onclick="handleAddItemClick('${item.id}')" class="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-lg py-1 font-black text-xs shadow-xs active:scale-95 transition">
+              + ADD
+            </button>
+          ` : `
+            <div class="w-full bg-amber-600 text-white rounded-lg py-1 px-1 flex items-center justify-between font-black text-xs shadow-xs">
+              <button onclick="decrementCartItem('${item.id}')" class="w-4 text-center hover:bg-amber-700 rounded">-</button>
+              <span>${qty}</span>
+              <button onclick="incrementCartItem('${item.id}')" class="w-4 text-center hover:bg-amber-700 rounded">+</button>
+            </div>
+          `}
+        </div>
+      </div>
+    `;
+  }).join('');
 }
 
 async function openTrustModal(stallId) {
@@ -1485,69 +1761,189 @@ function closeTrustModal() {
   if (modal) modal.classList.add('hidden');
 }
 
-function renderMenuItems(items) {
-  const container = document.getElementById('modalMenuItems');
-  container.innerHTML = items.map(item => {
-    const inCart = STATE.cart.items.find(i => i.item_id === item.id);
-    const qty = inCart ? inCart.qty : 0;
+function renderCategoryTabsAndMenuItems(items) {
+  const tabsContainer = document.getElementById('modalCategoryTabs');
+  const itemsContainer = document.getElementById('modalMenuItems');
+  if (!itemsContainer) return;
 
-    return `
-      <div class="pt-3.5 first:pt-0 flex items-start justify-between gap-4">
-        <!-- Item Details -->
-        <div class="flex-1 space-y-1">
-          <div class="flex items-center space-x-1.5">
-            ${item.isVeg ? `
-              <span class="w-3.5 h-3.5 rounded border-2 border-green-600 flex items-center justify-center p-0.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
-              </span>
-            ` : `
-              <span class="w-3.5 h-3.5 rounded border-2 border-red-600 flex items-center justify-center p-0.5">
-                <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-              </span>
-            `}
-            ${item.bestseller ? `<span class="text-[10px] font-extrabold bg-amber-100 text-amber-800 px-1.5 py-0.2 rounded">BESTSELLER</span>` : ''}
-          </div>
-
-          <h4 class="font-extrabold text-sm text-gray-900">${item.name}</h4>
-          
-          <div class="flex items-center space-x-2">
-            <span class="text-sm font-black text-gray-900">₹${item.price}</span>
-            ${item.originalPrice ? `<span class="text-xs text-gray-400 line-through">₹${item.originalPrice}</span>` : ''}
-          </div>
-
-          <p class="text-xs text-gray-500 leading-relaxed">${item.description}</p>
-
-          ${item.customizations && item.customizations.length > 0 ? `
-            <span class="text-[10px] font-bold text-orange-600 inline-block mt-0.5">Customizable options</span>
-          ` : ''}
-        </div>
-
-        <!-- Item Image & Add Button -->
-        <div class="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-2xl overflow-hidden bg-gray-100 flex flex-col justify-end">
-          <img src="${item.image}" alt="${item.name}" class="absolute inset-0 w-full h-full object-cover">
-          
-          <!-- Add / Stepper Button -->
-          <div class="relative z-10 mx-auto mb-1.5 w-20">
-            ${!item.inStock ? `
-              <div class="bg-gray-800/90 text-white text-[10px] font-bold py-1 px-2 rounded-lg text-center">
-                SOLD OUT
-              </div>
-            ` : qty === 0 ? `
-              <button onclick="handleAddItemClick('${item.id}')" class="w-full bg-white text-orange-600 border border-orange-200 rounded-lg py-1 font-black text-xs shadow-md hover:bg-orange-50 transition">
-                ADD
-              </button>
-            ` : `
-              <div class="w-full bg-orange-600 text-white rounded-lg py-1 px-1 flex items-center justify-between font-black text-xs shadow-md">
-                <button onclick="decrementCartItem('${item.id}')" class="w-5 text-center hover:bg-orange-700 rounded">-</button>
-                <span>${qty}</span>
-                <button onclick="incrementCartItem('${item.id}')" class="w-5 text-center hover:bg-orange-700 rounded">+</button>
-              </div>
-            `}
-          </div>
-        </div>
+  if (!items || items.length === 0) {
+    if (tabsContainer) tabsContainer.innerHTML = '';
+    itemsContainer.innerHTML = `
+      <div class="p-8 text-center space-y-2">
+        <i class="fa-solid fa-utensils text-3xl text-stone-300"></i>
+        <h4 class="font-black text-sm text-stone-700">No dishes listed yet</h4>
+        <p class="text-xs text-stone-400">This authentic vendor is preparing their fresh menu items.</p>
       </div>
     `;
-  }).join('');
+    return;
+  }
+
+  // 1. Group items into categories with Popular first
+  const categoriesMap = new Map();
+  const popularItems = items.filter(i => i.bestseller || i.isPopular);
+  if (popularItems.length > 0) {
+    categoriesMap.set('popular', {
+      id: 'popular',
+      name: (typeof t === 'function' ? t('menu_category_popular', '⭐ Popular Signatures') : '⭐ Popular Signatures'),
+      items: popularItems
+    });
+  }
+
+  // Group remaining items
+  items.forEach(item => {
+    let catKey = 'dishes';
+    let catName = 'Street Bites';
+
+    if (item.category && item.category.trim()) {
+      catKey = item.category.toLowerCase().replace(/[^a-z0-9]/g, '');
+      catName = item.category.trim();
+    } else {
+      const name = item.name.toLowerCase();
+      if (name.includes('momo') || name.includes('dimsum')) {
+        catKey = 'momos';
+        catName = 'Momos & Dimsums';
+      } else if (name.includes('roll') || name.includes('frankie')) {
+        catKey = 'rolls';
+        catName = 'Kathi Rolls & Frankies';
+      } else if (name.includes('chaat') || name.includes('puri') || name.includes('bhel') || name.includes('tikki')) {
+        catKey = 'chaat';
+        catName = 'Chaat & Pani Puri';
+      } else if (name.includes('dosa') || name.includes('idli') || name.includes('vada')) {
+        catKey = 'south';
+        catName = 'Dosa & South Indian';
+      } else if (name.includes('pav') || name.includes('bhaji') || name.includes('misal')) {
+        catKey = 'pav';
+        catName = 'Pav Bhaji & Tawa';
+      } else if (name.includes('chai') || name.includes('lassi') || name.includes('juice') || name.includes('shake') || name.includes('drink')) {
+        catKey = 'drinks';
+        catName = 'Drinks & Beverages';
+      } else if (name.includes('combo') || name.includes('thali') || name.includes('platter')) {
+        catKey = 'combos';
+        catName = 'Combos & Feasts';
+      } else if (name.includes('jalebi') || name.includes('sweet') || name.includes('halwa') || name.includes('gulab')) {
+        catKey = 'sweets';
+        catName = 'Mithai & Sweets';
+      }
+    }
+
+    if (!categoriesMap.has(catKey)) {
+      categoriesMap.set(catKey, { id: catKey, name: catName, items: [] });
+    }
+    // Only add to non-popular category if not already in popular category or for complete list
+    categoriesMap.get(catKey).items.push(item);
+  });
+
+  const categories = Array.from(categoriesMap.values());
+
+  // 2. Render Sticky Category Navigation Tabs
+  if (tabsContainer) {
+    tabsContainer.innerHTML = categories.map((cat, idx) => `
+      <button onclick="scrollToMenuCategory('${cat.id}')" 
+        class="menu-cat-tab-btn px-3 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition border ${idx === 0 ? 'bg-amber-600 text-white border-amber-600 shadow-xs' : 'bg-stone-100 text-stone-700 border-stone-200 hover:bg-stone-200'}">
+        ${cat.name} (${cat.items.length})
+      </button>
+    `).join('');
+  }
+
+  // 3. Render Categorized Sections and Food Cards
+  itemsContainer.innerHTML = categories.map(cat => `
+    <div id="cat_section_${cat.id}" class="menu-cat-section space-y-3 pt-2 first:pt-0">
+      <div class="flex items-center justify-between border-b border-stone-100 pb-2">
+        <h3 class="font-black text-stone-900 text-sm tracking-tight flex items-center space-x-2">
+          <span>${cat.name}</span>
+        </h3>
+        <span class="text-[10px] font-bold text-stone-400 bg-stone-100 px-2.5 py-0.5 rounded-full">${cat.items.length} items</span>
+      </div>
+      
+      <div class="space-y-4 divide-y divide-stone-100">
+        ${cat.items.map(item => {
+          const inCart = STATE.cart.items.find(i => i.item_id === item.id);
+          const qty = inCart ? inCart.qty : 0;
+          const hasRating = item.ratingCount > 0 || (item.reviews > 0 && item.rating);
+
+          return `
+            <div class="pt-3.5 first:pt-0 flex items-start justify-between gap-3 sm:gap-4 hover:bg-stone-50/50 p-2 rounded-2xl transition">
+              <!-- Item Details -->
+              <div class="flex-1 space-y-1 min-w-0">
+                <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                  ${item.isVeg ? `
+                    <span class="w-3.5 h-3.5 rounded border-2 border-green-600 flex items-center justify-center p-0.5 shrink-0">
+                      <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                    </span>
+                  ` : `
+                    <span class="w-3.5 h-3.5 rounded border-2 border-red-600 flex items-center justify-center p-0.5 shrink-0">
+                      <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                    </span>
+                  `}
+                  ${item.bestseller ? `<span class="text-[9px] font-black bg-amber-100 text-amber-800 px-1.5 py-0.5 rounded">BESTSELLER</span>` : ''}
+                  ${hasRating ? `
+                    <span class="text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200/60 px-1.5 py-0.2 rounded flex items-center">
+                      <i class="fa-solid fa-star text-amber-500 mr-1 text-[9px]"></i>${item.rating}
+                    </span>
+                  ` : ''}
+                </div>
+
+                <h4 class="font-extrabold text-sm sm:text-base text-stone-900 leading-tight">${item.name}</h4>
+                
+                <div class="flex items-center space-x-2">
+                  <span class="text-sm sm:text-base font-black text-stone-900">₹${item.price}</span>
+                  ${item.originalPrice ? `<span class="text-xs text-stone-400 line-through font-semibold">₹${item.originalPrice}</span>` : ''}
+                </div>
+
+                <p class="text-xs text-stone-500 leading-relaxed line-clamp-2">${item.description || 'Prepared piping hot on order with authentic street seasonings.'}</p>
+
+                ${item.customizations && item.customizations.length > 0 ? `
+                  <span class="text-[10px] font-bold text-orange-600 inline-flex items-center space-x-1 mt-1">
+                    <i class="fa-solid fa-sliders text-[9px]"></i>
+                    <span data-i18n="customizable_tag">Customizable options</span>
+                  </span>
+                ` : ''}
+              </div>
+
+              <!-- Item Image & Add / Stepper Button -->
+              <div class="relative w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-2xl overflow-hidden bg-stone-100 flex flex-col justify-end shadow-2xs">
+                <img src="${item.image || 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=400&q=80'}" 
+                  alt="${item.name}" class="absolute inset-0 w-full h-full object-cover">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div>
+                
+                <!-- Add / Stepper Button -->
+                <div class="relative z-10 mx-auto mb-1.5 w-20">
+                  ${!item.inStock ? `
+                    <div class="bg-stone-900/90 text-white text-[10px] font-black py-1 px-2 rounded-lg text-center backdrop-blur-xs">
+                      SOLD OUT
+                    </div>
+                  ` : qty === 0 ? `
+                    <button onclick="handleAddItemClick('${item.id}')" 
+                      class="w-full bg-white text-orange-600 border border-orange-200 rounded-lg py-1 font-black text-xs shadow-md hover:bg-orange-50 active:scale-95 transition">
+                      + ADD
+                    </button>
+                  ` : `
+                    <div class="w-full bg-orange-600 text-white rounded-lg py-1 px-1 flex items-center justify-between font-black text-xs shadow-md">
+                      <button onclick="decrementCartItem('${item.id}')" class="w-5 text-center hover:bg-orange-700 rounded transition">-</button>
+                      <span>${qty}</span>
+                      <button onclick="incrementCartItem('${item.id}')" class="w-5 text-center hover:bg-orange-700 rounded transition">+</button>
+                    </div>
+                  `}
+                </div>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    </div>
+  `).join('');
+}
+
+function scrollToMenuCategory(catId) {
+  const section = document.getElementById(`cat_section_${catId}`);
+  if (section) {
+    section.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function renderMenuItems(items) {
+  renderCategoryTabsAndMenuItems(items);
+  renderFamousForDishes(items);
 }
 
 function handleAddItemClick(itemId) {

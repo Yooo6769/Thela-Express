@@ -348,7 +348,30 @@ const en = {
   legend_badge: "Heritage Cart",
   latenight_badge: "Late Night Pick",
   gem_badge: "Hidden Gem",
-  deliver_to: "Deliver to"
+  deliver_to: "Deliver to",
+
+  // Improvement #3: Stall Discovery & Categorized Menu
+  famous_for_title: "Famous For",
+  famous_for_sub: "Signature street bites customers love",
+  local_story_title: "Local Heritage Story",
+  local_story_verified: "Verified Street Partner",
+  trust_compact_title: "Trust & Safety Verification",
+  trust_compact_sub: "Direct on-ground checks completed by ThelaExpress",
+  trust_compact_fssai: "FSSAI Food Safety",
+  trust_compact_hygiene: "Hygiene Audited",
+  trust_compact_identity: "Vendor KYC Verified",
+  trust_compact_location: "Geo-Location Confirmed",
+  see_street_title: "See It From The Street",
+  see_street_sub: "Authentic photos of stall & preparation",
+  menu_category_popular: "⭐ Popular Signatures",
+  menu_category_all: "All Dishes",
+  stall_status_open: "OPEN NOW",
+  stall_status_closed: "CLOSED",
+  stall_new_badge: "New on ThelaExpress",
+  add_to_cart_btn: "ADD",
+  view_cart_btn: "View Cart",
+  customizable_tag: "Customizable",
+  orders_delivered_suffix: "orders delivered"
 };
 
 // Hindi Dictionary

@@ -249,10 +249,26 @@ class Database {
     if (!stall) return null;
     const badges = this.computeTrustBadges(stall);
     const primaryBadge = badges.find(b => b.type !== 'pending') || badges[0];
+    
+    // Genuine completed orders count from real platform orders
+    const ordersCount = (this.data.orders || []).filter(o => o.stall_id === stall.id && o.status === 'DELIVERED').length;
+    
+    // Real verified checks list
+    const completedChecks = [];
+    if (stall.fssai_status === 'verified') completedChecks.push({ key: 'fssai', label: 'FSSAI License Verified', icon: 'fa-shield-check', color: 'emerald' });
+    if (stall.hygiene_status === 'verified' || stall.hygiene_status === 'certified') completedChecks.push({ key: 'hygiene', label: 'Thela Hygiene Audited', icon: 'fa-sparkles', color: 'amber' });
+    if (stall.identity_status === 'verified' || stall.is_verified) completedChecks.push({ key: 'identity', label: 'Vendor KYC & ID Verified', icon: 'fa-circle-check', color: 'blue' });
+    if (stall.lat && stall.lng && stall.address) completedChecks.push({ key: 'location', label: 'Geo-Location Verified', icon: 'fa-location-dot', color: 'teal' });
+
     return {
       ...stall,
       trustBadges: badges,
-      hygieneBadge: primaryBadge ? primaryBadge.label : 'Audits in Progress'
+      hygieneBadge: primaryBadge ? primaryBadge.label : 'Audits in Progress',
+      ordersCount: ordersCount,
+      completedChecks: completedChecks,
+      streetPhotos: stall.streetPhotos || stall.photos || [],
+      famousDishes: stall.famousDishes || [],
+      dynamicDelivery: this.estimateDynamicDelivery(stall.distance || 1.0)
     };
   }
 
