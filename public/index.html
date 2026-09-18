@@ -61,27 +61,40 @@
     .bounce-subtle {
       animation: bounce-subtle 2s infinite;
     }
+    .snap-x-mandatory {
+      scroll-snap-type: x mandatory;
+      -webkit-overflow-scrolling: touch;
+    }
+    .snap-start {
+      scroll-snap-align: start;
+    }
+    .food-hero-card {
+      transition: all 0.22s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    .food-hero-card:hover {
+      transform: translateY(-3px);
+    }
   </style>
 </head>
-<body class="bg-gray-50 text-gray-900 min-h-screen flex flex-col antialiased select-none md:select-auto">
+<body class="bg-[#faf8f5] text-stone-900 min-h-screen flex flex-col antialiased select-none md:select-auto">
 
-  <!-- Top App Navigation & Ecosystem Switcher -->
-  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur border-b border-gray-200 shadow-sm transition-all">
+  <!-- Top App Navigation & Clean Minimal Location Bar -->
+  <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200/80 shadow-xs transition-all">
     <div class="max-w-4xl mx-auto px-4 py-2.5 flex items-center justify-between">
-      <!-- Brand Logo -->
-      <div class="flex items-center space-x-2.5 cursor-pointer" onclick="switchView('customer')">
-        <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-orange-500 to-amber-600 flex items-center justify-center text-white shadow-md shadow-orange-500/20">
-          <i class="fa-solid fa-utensils text-lg"></i>
+      <!-- Brand Logo & Delivery Location Picker -->
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="switchView('customer')">
+        <div class="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-600 via-orange-600 to-amber-700 flex items-center justify-center text-white shadow-md shadow-amber-600/20 shrink-0">
+          <i class="fa-solid fa-utensils text-base"></i>
         </div>
         <div>
           <div class="flex items-center space-x-1.5">
-            <span class="font-extrabold text-lg tracking-tight text-gray-900">Thela<span class="text-orange-600">Express</span></span>
-            <span class="text-[10px] font-bold bg-green-100 text-green-700 px-1.5 py-0.5 rounded-full uppercase tracking-wider">LIVE</span>
+            <span class="font-black text-lg tracking-tight text-stone-900">Thela<span class="text-amber-600">Express</span></span>
+            <span class="text-[9px] font-black bg-emerald-100 text-emerald-800 px-1.5 py-0.2 rounded-full uppercase tracking-wider">LIVE</span>
           </div>
-          <div class="text-[11px] text-gray-500 font-medium flex items-center cursor-pointer hover:text-orange-600 transition" onclick="openAddressDrawer()" title="Click to select or change delivery address">
-            <i class="fa-solid fa-location-dot text-orange-500 mr-1"></i>
-            <span id="headerLocation" class="font-bold text-gray-800 underline decoration-orange-300 underline-offset-2 max-w-[170px] sm:max-w-[260px] truncate">Select Delivery Location</span>
-            <i class="fa-solid fa-chevron-down text-[8px] ml-1 text-gray-400"></i>
+          <div class="text-[11px] text-stone-500 font-medium flex items-center cursor-pointer hover:text-amber-600 transition" onclick="event.stopPropagation(); openAddressDrawer();" title="Click to select or change delivery address">
+            <i class="fa-solid fa-location-dot text-amber-600 mr-1 text-xs"></i>
+            <span id="headerLocation" class="font-bold text-stone-800 underline decoration-amber-300 underline-offset-2 max-w-[160px] sm:max-w-[240px] truncate" data-i18n="select_location">Select Delivery Location</span>
+            <i class="fa-solid fa-chevron-down text-[8px] ml-1 text-stone-400"></i>
           </div>
         </div>
       </div>
@@ -93,22 +106,22 @@
 
         <!-- Quick Pure Veg Filter Toggle -->
         <button id="vegFilterBtn" onclick="toggleVegFilter()" 
-          class="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:border-gray-300 transition shadow-sm whitespace-nowrap">
-          <span class="w-3.5 h-3.5 rounded border-2 border-green-600 flex items-center justify-center p-0.5">
-            <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+          class="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-stone-200 bg-white text-xs font-bold text-stone-700 hover:border-emerald-500 transition shadow-xs whitespace-nowrap">
+          <span class="w-3.5 h-3.5 rounded border-2 border-emerald-600 flex items-center justify-center p-0.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-emerald-600"></span>
           </span>
           <span class="hidden sm:inline font-bold" data-i18n="pure_veg">Pure Veg</span>
         </button>
 
         <!-- Header Cart Button -->
-        <button id="headerCartBtn" onclick="openCartDrawer()" class="relative px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-orange-600 hover:bg-orange-700 text-white flex items-center space-x-1.5 font-bold text-xs shadow-md shadow-orange-600/20 transition">
+        <button id="headerCartBtn" onclick="openCartDrawer()" class="relative px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-amber-600 hover:bg-amber-700 text-white flex items-center space-x-1.5 font-bold text-xs shadow-md shadow-amber-600/20 transition">
           <i class="fa-solid fa-basket-shopping text-xs"></i>
           <span id="headerCartTotal">₹0</span>
-          <span id="headerCartBadge" class="hidden ml-1 px-1.5 py-0.2 bg-white text-orange-600 rounded-full text-[10px] font-black">0</span>
+          <span id="headerCartBadge" class="hidden ml-1 px-1.5 py-0.2 bg-white text-amber-700 rounded-full text-[10px] font-black">0</span>
         </button>
 
         <!-- Auth / Profile Button -->
-        <button id="authBtn" onclick="handleAuthBtnClick()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-orange-50 text-orange-600 border border-orange-200 flex items-center justify-center font-bold text-sm hover:bg-orange-100 transition shadow-sm" title="My Profile & Addresses">
+        <button id="authBtn" onclick="handleAuthBtnClick()" class="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-amber-50 text-amber-700 border border-amber-200 flex items-center justify-center font-bold text-sm hover:bg-amber-100 transition shadow-xs" title="My Profile & Addresses">
           <i class="fa-regular fa-user"></i>
         </button>
       </div>
@@ -116,93 +129,306 @@
   </header>
 
   <!-- ============================================================== -->
-  <!-- VIEW 1: CUSTOMER APP (Clean, Modern Food Delivery Experience) -->
+  <!-- VIEW 1: CUSTOMER APP (Modern, Food-First Street Discovery)      -->
   <!-- ============================================================== -->
-  <main id="viewCustomer" class="flex-1 max-w-4xl w-full mx-auto px-4 py-4 space-y-5">
+  <main id="viewCustomer" class="flex-1 max-w-4xl w-full mx-auto px-4 py-4 space-y-6">
     
-    <!-- Hero Banner / Hyperlocal Quality Assurance -->
-    <div class="relative overflow-hidden rounded-2xl bg-gradient-to-r from-orange-600 via-amber-500 to-yellow-500 text-white p-5 shadow-lg shadow-orange-500/15">
-      <div class="relative z-10 max-w-lg space-y-2">
-        <div class="inline-flex items-center space-x-1.5 bg-black/20 backdrop-blur px-2.5 py-1 rounded-full text-xs font-semibold">
-          <i class="fa-solid fa-shield-halved text-amber-300"></i>
-          <span data-i18n="hero_badge">Authentic Street Thelas • Verified FSSAI & Hygiene Audited</span>
+    <!-- Hero Craving & Search Hub -->
+    <div class="pt-1 pb-1 space-y-3">
+      <div>
+        <h1 class="text-2xl sm:text-3xl font-black text-stone-900 tracking-tight" data-i18n="search_craving_title">
+          What are you craving today?
+        </h1>
+        <p class="text-xs sm:text-sm text-stone-500 mt-0.5" data-i18n="hero_desc">
+          Direct from iconic heritage thelas in your neighborhood. Delivered fresh & piping hot in thermal insulated bags.
+        </p>
+      </div>
+
+      <!-- Prominent Search Bar -->
+      <div class="relative group">
+        <div class="absolute inset-y-0 left-0 pl-3.5 flex items-center pointer-events-none text-stone-400 group-focus-within:text-amber-600 transition">
+          <i class="fa-solid fa-magnifying-glass text-sm"></i>
         </div>
-        <h1 class="text-2xl sm:text-3xl font-extrabold tracking-tight" data-i18n-html="hero_title">Authentic Street Food.<br>Zero Hygiene Compromise.</h1>
-        <p class="text-xs sm:text-sm text-orange-100" data-i18n="hero_desc">Direct from iconic heritage thelas in Indiranagar. Delivered in thermal insulated boxes within 15 mins.</p>
-      </div>
-      <!-- Decorative Indian Street Graphic Accent -->
-      <div class="absolute -right-6 -bottom-6 w-36 h-36 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
-      <div class="absolute right-4 bottom-2 text-7xl opacity-20 pointer-events-none">
-        <i class="fa-solid fa-bowl-rice"></i>
+        <input type="text" id="searchInput" oninput="handleSearch()" 
+          data-i18n-placeholder="search_placeholder_craving" 
+          placeholder="Search by dish, thela, cuisine, or street..." 
+          class="w-full bg-white border border-stone-200 rounded-2xl pl-10 pr-24 py-3 text-sm font-medium text-stone-900 placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-amber-500/30 focus:border-amber-500 shadow-xs hover:border-stone-300 transition">
+        <div class="absolute inset-y-0 right-1.5 flex items-center space-x-1">
+          <button id="searchClearBtn" onclick="clearSearch()" class="hidden px-2 py-1 text-xs text-stone-400 hover:text-stone-600 transition" title="Clear search">
+            <i class="fa-solid fa-xmark text-sm"></i>
+          </button>
+          <button onclick="handleSearch()" class="px-3 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-bold shadow-xs transition flex items-center space-x-1">
+            <span>Explore</span>
+          </button>
+        </div>
       </div>
     </div>
 
-    <!-- Search & Veg Filter Bar -->
-    <div class="flex items-center space-x-3">
-      <div class="relative flex-1">
-        <i class="fa-solid fa-magnifying-glass absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400 text-sm"></i>
-        <input type="text" id="searchInput" oninput="handleSearch()" data-i18n-placeholder="search_placeholder" placeholder="Search dishes or street food..." 
-          class="w-full bg-white border border-gray-200 rounded-xl pl-10 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-orange-500/20 focus:border-orange-500 shadow-sm transition">
+    <!-- Quick Craving Filter Chips Bar -->
+    <div class="relative">
+      <div id="categoriesPillsContainer" class="flex items-center space-x-2 overflow-x-auto hide-scrollbar py-1 text-xs snap-x">
+        <button onclick="filterCategory('all')" class="cat-pill active px-4 py-2 rounded-xl bg-stone-900 text-white font-bold whitespace-nowrap shadow-xs transition flex items-center space-x-1.5">
+          <span>🍽️</span>
+          <span data-i18n="craving_all">All Street Eats</span>
+        </button>
+        <button onclick="filterCategory('favorites')" id="favPillBtn" class="cat-pill px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-bold whitespace-nowrap hover:bg-amber-50 transition shadow-xs flex items-center space-x-1.5">
+          <i class="fa-solid fa-heart text-red-500"></i>
+          <span data-i18n="favorites_tab">Favorites</span>
+          <span id="favCountBadge" class="ml-1 bg-stone-100 text-stone-700 px-1.5 py-0.2 rounded-full text-[10px] font-black">0</span>
+        </button>
+        <button onclick="filterCategory('chaat')" class="cat-pill px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-bold whitespace-nowrap hover:bg-amber-50 transition shadow-xs flex items-center space-x-1.5">
+          <span>🥔</span>
+          <span data-i18n="craving_golgappe">Golgappe & Chaat</span>
+        </button>
+        <button onclick="filterCategory('vadapav')" class="cat-pill px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-bold whitespace-nowrap hover:bg-amber-50 transition shadow-xs flex items-center space-x-1.5">
+          <span>🍔</span>
+          <span>Mumbai Vada Pav</span>
+        </button>
+        <button onclick="filterCategory('pavbhaji')" class="cat-pill px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-bold whitespace-nowrap hover:bg-amber-50 transition shadow-xs flex items-center space-x-1.5">
+          <span>🧈</span>
+          <span data-i18n="craving_pavbhaji">Butter Pav Bhaji</span>
+        </button>
+        <button onclick="filterCategory('momos')" class="cat-pill px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-bold whitespace-nowrap hover:bg-amber-50 transition shadow-xs flex items-center space-x-1.5">
+          <span>🥟</span>
+          <span data-i18n="craving_momos">Steamed Momos</span>
+        </button>
+        <button onclick="filterCategory('south')" class="cat-pill px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-bold whitespace-nowrap hover:bg-amber-50 transition shadow-xs flex items-center space-x-1.5">
+          <span>🥞</span>
+          <span data-i18n="craving_dosa">Crispy Benne Dosa</span>
+        </button>
+        <button onclick="filterCategory('rolls')" class="cat-pill px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-bold whitespace-nowrap hover:bg-amber-50 transition shadow-xs flex items-center space-x-1.5">
+          <span>🌯</span>
+          <span data-i18n="craving_rolls">Kathi Rolls</span>
+        </button>
+        <button onclick="scrollToDiscoverySection('secUnder100')" class="cat-pill px-4 py-2 rounded-xl bg-white border border-emerald-200 text-emerald-700 font-bold whitespace-nowrap hover:bg-emerald-50 transition shadow-xs flex items-center space-x-1.5">
+          <span>💰</span>
+          <span data-i18n="craving_under100">Under ₹100</span>
+        </button>
+        <button onclick="scrollToDiscoverySection('secLegends')" class="cat-pill px-4 py-2 rounded-xl bg-white border border-amber-200 text-amber-800 font-bold whitespace-nowrap hover:bg-amber-50 transition shadow-xs flex items-center space-x-1.5">
+          <span>👑</span>
+          <span data-i18n="craving_legends">Local Legends</span>
+        </button>
+        <button onclick="scrollToDiscoverySection('secLateNight')" class="cat-pill px-4 py-2 rounded-xl bg-white border border-indigo-200 text-indigo-700 font-bold whitespace-nowrap hover:bg-indigo-50 transition shadow-xs flex items-center space-x-1.5">
+          <span>🌙</span>
+          <span data-i18n="craving_latenight">Late Night</span>
+        </button>
+        <button onclick="scrollToDiscoverySection('secHiddenGems')" class="cat-pill px-4 py-2 rounded-xl bg-white border border-purple-200 text-purple-700 font-bold whitespace-nowrap hover:bg-purple-50 transition shadow-xs flex items-center space-x-1.5">
+          <span>💎</span>
+          <span data-i18n="craving_hiddengems">Hidden Gems</span>
+        </button>
       </div>
-      <!-- Pure Veg Toggle -->
-      <button id="vegFilterBtn" onclick="toggleVegFilter()" class="flex items-center space-x-1.5 px-3 py-2.5 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-700 hover:border-green-500 transition shadow-sm whitespace-nowrap">
-        <span class="w-3.5 h-3.5 rounded-sm border-2 border-green-600 flex items-center justify-center p-0.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
-        </span>
-        <span class="hidden sm:inline">Pure Veg</span>
-      </button>
-    </div>
-
-    <!-- Category Pills -->
-    <div id="categoriesPillsContainer" class="flex items-center space-x-2 overflow-x-auto hide-scrollbar pb-1">
-      <button onclick="filterCategory('all')" class="cat-pill active px-4 py-2 rounded-full bg-orange-600 text-white font-bold text-xs whitespace-nowrap shadow-sm transition">
-        🍽️ All Stalls
-      </button>
-      <button onclick="filterCategory('favorites')" id="favPillBtn" class="cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm">
-        ❤️ Favorites (<span id="favCountBadge">0</span>)
-      </button>
-      <button onclick="filterCategory('chaat')" class="cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm">
-        🥔 Chaat & Pani Puri
-      </button>
-      <button onclick="filterCategory('vadapav')" class="cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm">
-        🍔 Mumbai Vada Pav
-      </button>
-      <button onclick="filterCategory('pavbhaji')" class="cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm">
-        🍲 Pav Bhaji
-      </button>
-      <button onclick="filterCategory('momos')" class="cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm">
-        🥟 Tibetan Momos
-      </button>
-      <button onclick="filterCategory('south')" class="cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm">
-        🥞 Benne Dosa
-      </button>
     </div>
 
     <!-- Active Orders Live Bar (If any active orders) -->
     <div id="activeOrdersBar" class="hidden space-y-2"></div>
 
-    <!-- Stalls Catalog Grid -->
-    <div>
-      <div class="flex items-center justify-between mb-3">
-        <h2 class="text-base font-extrabold text-gray-900 tracking-tight">Verified Street Thelas Near You</h2>
-        <span id="stallsCount" class="text-xs text-gray-500 font-medium">Loading authentic carts...</span>
+    <!-- ============================================================== -->
+    <!-- 6 HORIZONTAL DISCOVERY SECTIONS                                -->
+    <!-- ============================================================== -->
+
+    <!-- Section 1: Trending Near You -->
+    <section id="secTrending" class="space-y-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="w-2.5 h-2.5 rounded-full bg-amber-500 animate-pulse"></span>
+            <h2 class="text-lg font-black text-stone-900 tracking-tight" data-i18n="sec_trending_title">
+              Trending Near You
+            </h2>
+          </div>
+          <p class="text-xs text-stone-500 mt-0.5" data-i18n="sec_trending_sub">
+            Sizzling street food carts buzzing with live customer orders
+          </p>
+        </div>
+        <div class="flex items-center space-x-1">
+          <button onclick="scrollDiscovery('secTrendingTrack', -280)" class="hidden sm:flex w-7 h-7 rounded-full bg-white border border-stone-200 shadow-xs items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-amber-600 transition" title="Scroll left">
+            <i class="fa-solid fa-chevron-left text-xs"></i>
+          </button>
+          <button onclick="scrollDiscovery('secTrendingTrack', 280)" class="hidden sm:flex w-7 h-7 rounded-full bg-white border border-stone-200 shadow-xs items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-amber-600 transition" title="Scroll right">
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
+        </div>
       </div>
+      <div id="secTrendingTrack" class="flex space-x-4 overflow-x-auto hide-scrollbar pb-3 pt-1 px-0.5 snap-x snap-x-mandatory">
+        <!-- Rendered dynamically via renderDiscoverySections -->
+      </div>
+    </section>
+
+    <!-- Section 2: Popular Street Food -->
+    <section id="secPopular" class="space-y-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-star text-amber-500 text-sm"></i>
+            <h2 class="text-lg font-black text-stone-900 tracking-tight" data-i18n="sec_popular_title">
+              Popular Street Food
+            </h2>
+          </div>
+          <p class="text-xs text-stone-500 mt-0.5" data-i18n="sec_popular_sub">
+            Iconic neighborhood crowd-pleasers you must try
+          </p>
+        </div>
+        <div class="flex items-center space-x-1">
+          <button onclick="scrollDiscovery('secPopularTrack', -280)" class="hidden sm:flex w-7 h-7 rounded-full bg-white border border-stone-200 shadow-xs items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-amber-600 transition" title="Scroll left">
+            <i class="fa-solid fa-chevron-left text-xs"></i>
+          </button>
+          <button onclick="scrollDiscovery('secPopularTrack', 280)" class="hidden sm:flex w-7 h-7 rounded-full bg-white border border-stone-200 shadow-xs items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-amber-600 transition" title="Scroll right">
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+      <div id="secPopularTrack" class="flex space-x-4 overflow-x-auto hide-scrollbar pb-3 pt-1 px-0.5 snap-x snap-x-mandatory">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- Section 3: Under ₹100 -->
+    <section id="secUnder100" class="space-y-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center space-x-2">
+            <span class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-black uppercase">Budget Bites</span>
+            <h2 class="text-lg font-black text-stone-900 tracking-tight" data-i18n="sec_under100_title">
+              Pocket-Friendly Bites (Under ₹100)
+            </h2>
+          </div>
+          <p class="text-xs text-stone-500 mt-0.5" data-i18n="sec_under100_sub">
+            Flavor-packed authentic street bites that won't break the bank
+          </p>
+        </div>
+        <div class="flex items-center space-x-1">
+          <button onclick="scrollDiscovery('secUnder100Track', -280)" class="hidden sm:flex w-7 h-7 rounded-full bg-white border border-stone-200 shadow-xs items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-amber-600 transition" title="Scroll left">
+            <i class="fa-solid fa-chevron-left text-xs"></i>
+          </button>
+          <button onclick="scrollDiscovery('secUnder100Track', 280)" class="hidden sm:flex w-7 h-7 rounded-full bg-white border border-stone-200 shadow-xs items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-amber-600 transition" title="Scroll right">
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+      <div id="secUnder100Track" class="flex space-x-4 overflow-x-auto hide-scrollbar pb-3 pt-1 px-0.5 snap-x snap-x-mandatory">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- Section 4: Local Legends & Heritage Thelas -->
+    <section id="secLegends" class="space-y-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-crown text-amber-500 text-sm"></i>
+            <h2 class="text-lg font-black text-stone-900 tracking-tight" data-i18n="sec_legends_title">
+              Local Legends & Heritage Thelas
+            </h2>
+          </div>
+          <p class="text-xs text-stone-500 mt-0.5" data-i18n="sec_legends_sub">
+            Decades of authentic secret recipes and generational mastery
+          </p>
+        </div>
+        <div class="flex items-center space-x-1">
+          <button onclick="scrollDiscovery('secLegendsTrack', -280)" class="hidden sm:flex w-7 h-7 rounded-full bg-white border border-stone-200 shadow-xs items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-amber-600 transition" title="Scroll left">
+            <i class="fa-solid fa-chevron-left text-xs"></i>
+          </button>
+          <button onclick="scrollDiscovery('secLegendsTrack', 280)" class="hidden sm:flex w-7 h-7 rounded-full bg-white border border-stone-200 shadow-xs items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-amber-600 transition" title="Scroll right">
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+      <div id="secLegendsTrack" class="flex space-x-4 overflow-x-auto hide-scrollbar pb-3 pt-1 px-0.5 snap-x snap-x-mandatory">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- Section 5: Late Night Cravings -->
+    <section id="secLateNight" class="space-y-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-moon text-indigo-500 text-sm"></i>
+            <h2 class="text-lg font-black text-stone-900 tracking-tight" data-i18n="sec_latenight_title">
+              Late Night Cravings
+            </h2>
+          </div>
+          <p class="text-xs text-stone-500 mt-0.5" data-i18n="sec_latenight_sub">
+            Steaming hot midnight rolls, spicy noodles & comfort bites
+          </p>
+        </div>
+        <div class="flex items-center space-x-1">
+          <button onclick="scrollDiscovery('secLateNightTrack', -280)" class="hidden sm:flex w-7 h-7 rounded-full bg-white border border-stone-200 shadow-xs items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-amber-600 transition" title="Scroll left">
+            <i class="fa-solid fa-chevron-left text-xs"></i>
+          </button>
+          <button onclick="scrollDiscovery('secLateNightTrack', 280)" class="hidden sm:flex w-7 h-7 rounded-full bg-white border border-stone-200 shadow-xs items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-amber-600 transition" title="Scroll right">
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+      <div id="secLateNightTrack" class="flex space-x-4 overflow-x-auto hide-scrollbar pb-3 pt-1 px-0.5 snap-x snap-x-mandatory">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- Section 6: Hidden Street Gems -->
+    <section id="secHiddenGems" class="space-y-3">
+      <div class="flex items-center justify-between">
+        <div>
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-gem text-purple-500 text-sm"></i>
+            <h2 class="text-lg font-black text-stone-900 tracking-tight" data-i18n="sec_hiddengems_title">
+              Hidden Street Gems
+            </h2>
+          </div>
+          <p class="text-xs text-stone-500 mt-0.5" data-i18n="sec_hiddengems_sub">
+            Secret alleyway thelas discovered by true food connoisseurs
+          </p>
+        </div>
+        <div class="flex items-center space-x-1">
+          <button onclick="scrollDiscovery('secHiddenGemsTrack', -280)" class="hidden sm:flex w-7 h-7 rounded-full bg-white border border-stone-200 shadow-xs items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-amber-600 transition" title="Scroll left">
+            <i class="fa-solid fa-chevron-left text-xs"></i>
+          </button>
+          <button onclick="scrollDiscovery('secHiddenGemsTrack', 280)" class="hidden sm:flex w-7 h-7 rounded-full bg-white border border-stone-200 shadow-xs items-center justify-center text-stone-500 hover:bg-stone-50 hover:text-amber-600 transition" title="Scroll right">
+            <i class="fa-solid fa-chevron-right text-xs"></i>
+          </button>
+        </div>
+      </div>
+      <div id="secHiddenGemsTrack" class="flex space-x-4 overflow-x-auto hide-scrollbar pb-3 pt-1 px-0.5 snap-x snap-x-mandatory">
+        <!-- Rendered dynamically -->
+      </div>
+    </section>
+
+    <!-- ============================================================== -->
+    <!-- ALL STREET THELAS CATALOG GRID                                -->
+    <!-- ============================================================== -->
+    <section id="secAllStalls" class="pt-2 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <h2 class="text-lg font-black text-stone-900 tracking-tight" data-i18n="sec_allstalls_title">
+            All Verified Street Thelas
+          </h2>
+          <p class="text-xs text-stone-500 mt-0.5" data-i18n="sec_allstalls_sub">
+            Authentic local food carts in your neighborhood
+          </p>
+        </div>
+        <span id="stallsCount" class="text-xs text-stone-500 font-bold bg-stone-100 px-2.5 py-1 rounded-full">
+          Loading authentic carts...
+        </span>
+      </div>
+      
+      <!-- Streamlined Food-First Grid -->
       <div id="stallsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Rendered dynamically -->
       </div>
-    </div>
+    </section>
 
     <!-- Partner App Callout -->
-    <div class="bg-gradient-to-r from-gray-900 to-slate-800 text-white rounded-3xl p-5 shadow-sm space-y-3">
+    <div class="bg-gradient-to-r from-stone-900 via-stone-800 to-amber-950 text-white rounded-3xl p-5 shadow-sm space-y-3">
       <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
         <div>
-          <h3 class="font-extrabold text-base text-white">Own a Street Cart or Want to Deliver?</h3>
-          <p class="text-xs text-gray-400 mt-0.5">Access Kitchen Display System (KDS) & Delivery Fleet on the unified Partner App.</p>
+          <h3 class="font-black text-base text-white">Own a Street Cart or Want to Deliver?</h3>
+          <p class="text-xs text-stone-300 mt-0.5">Access Kitchen Display System (KDS) & Delivery Fleet on the unified Partner App.</p>
         </div>
-        <div class="flex flex-wrap items-center gap-2 text-xs font-bold">
-          <a href="/partner.html" class="px-4 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white transition flex items-center space-x-2 shadow-md">
+        <div class="flex flex-wrap items-center gap-2 text-xs font-bold shrink-0">
+          <a href="/partner.html" class="px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 text-white transition flex items-center space-x-2 shadow-md">
             <i class="fa-solid fa-store"></i>
-            <span>Open Partner App (Vendors & Fleet) ➔</span>
+            <span>Open Partner App ➔</span>
           </a>
         </div>
       </div>

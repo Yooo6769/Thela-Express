@@ -55,7 +55,10 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.addEventListener('thela_language_changed', () => {
-    if (STATE.stalls) renderStalls(STATE.stalls);
+    if (STATE.stalls) {
+      renderDiscoverySections(STATE.stalls);
+      renderStalls(STATE.stalls);
+    }
     if (typeof loadCategories === 'function') loadCategories();
   });
 });
@@ -373,8 +376,628 @@ function switchView(viewName) {
 }
 
 // ==========================================================
-// 5. CUSTOMER VIEW LOGIC (Catalog, Filter, Search)
+// 5. CUSTOMER VIEW LOGIC (Craving Hub, Discovery & Catalog)
 // ==========================================================
+
+function calculateDynamicDeliveryTime(distanceKm, prepMin = 13) {
+  const km = typeof distanceKm === 'number' ? distanceKm : (parseFloat(distanceKm) || 1.1);
+  const transitMin = Math.round(km * 5.5);
+  const totalMin = Math.max(16, prepMin + transitMin);
+  const lower = Math.max(15, totalMin - 3);
+  const upper = totalMin + 4;
+  return `${lower}-${upper} min`;
+}
+
+function scrollDiscovery(trackId, delta) {
+  const track = document.getElementById(trackId);
+  if (track) {
+    track.scrollBy({ left: delta, behavior: 'smooth' });
+  }
+}
+
+function scrollToDiscoverySection(sectionId) {
+  const el = document.getElementById(sectionId);
+  if (el) {
+    el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+}
+
+function clearSearch() {
+  const input = document.getElementById('searchInput');
+  const btn = document.getElementById('searchClearBtn');
+  if (input) input.value = '';
+  if (btn) btn.classList.add('hidden');
+  loadStalls();
+}
+
+function handleSearch() {
+  const input = document.getElementById('searchInput');
+  const btn = document.getElementById('searchClearBtn');
+  if (input && btn) {
+    btn.classList.toggle('hidden', !input.value.trim());
+  }
+  loadStalls();
+}
+
+const CURATED_DISCOVERY = {
+  trending: [
+    {
+      id: 'spotlight_trending_1',
+      name: 'Nizam Royal Kathi Rolls',
+      specialty: 'Double Egg Paneer / Chicken Kathi Roll',
+      rating: '4.9',
+      reviewsCount: '380+',
+      priceForTwo: 140,
+      distance: '0.8 km',
+      prepMin: 12,
+      isVeg: false,
+      badgeText: 'Sizzling #1',
+      badgeIcon: '🔥',
+      badgeColor: 'bg-amber-500/90 text-white',
+      category: 'rolls',
+      image: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_trending_2',
+      name: 'Sharma Ji Chaat & Golgappa',
+      specialty: 'Hing Water Pani Puri & Dahi Papdi',
+      rating: '4.8',
+      reviewsCount: '520+',
+      priceForTwo: 90,
+      distance: '0.6 km',
+      prepMin: 10,
+      isVeg: true,
+      badgeText: 'High Demand',
+      badgeIcon: '⚡',
+      badgeColor: 'bg-orange-500/90 text-white',
+      category: 'chaat',
+      image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_trending_3',
+      name: 'Sardar Butter Pav Bhaji',
+      specialty: 'Extra Butter Tawa Pav Bhaji & Masala Pav',
+      rating: '4.9',
+      reviewsCount: '440+',
+      priceForTwo: 130,
+      distance: '1.1 km',
+      prepMin: 14,
+      isVeg: true,
+      badgeText: 'Live Buzz',
+      badgeIcon: '🧈',
+      badgeColor: 'bg-amber-600/90 text-white',
+      category: 'pavbhaji',
+      image: 'https://images.unsplash.com/photo-1626132647523-66f5bf380027?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_trending_4',
+      name: 'Sri Krishna Benne Masala Dosa',
+      specialty: 'Crispy Butter Podi Dosa & Coconut Chutney',
+      rating: '4.9',
+      reviewsCount: '710+',
+      priceForTwo: 110,
+      distance: '0.9 km',
+      prepMin: 12,
+      isVeg: true,
+      badgeText: 'Top Pick',
+      badgeIcon: '⭐',
+      badgeColor: 'bg-emerald-600/90 text-white',
+      category: 'south',
+      image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=700&q=80'
+    }
+  ],
+  popular: [
+    {
+      id: 'spotlight_popular_1',
+      name: 'Babu Bhai Mumbai Vada Pav',
+      specialty: 'Crispy Batata Vada with Fried Green Chili',
+      rating: '4.9',
+      reviewsCount: '890+',
+      priceForTwo: 60,
+      distance: '0.5 km',
+      prepMin: 10,
+      isVeg: true,
+      badgeText: 'Street Icon',
+      badgeIcon: '🍔',
+      badgeColor: 'bg-orange-600/90 text-white',
+      category: 'vadapav',
+      image: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_popular_2',
+      name: 'Tibetan Steamed Himalayan Momos',
+      specialty: 'Darjeeling Veg & Juicy Chicken Momos',
+      rating: '4.8',
+      reviewsCount: '490+',
+      priceForTwo: 120,
+      distance: '0.8 km',
+      prepMin: 13,
+      isVeg: false,
+      badgeText: 'Crowd Favorite',
+      badgeIcon: '🥟',
+      badgeColor: 'bg-amber-600/90 text-white',
+      category: 'momos',
+      image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_popular_3',
+      name: 'Amritsari Chur Chur Kulcha',
+      specialty: 'Stuffed Paneer Kulcha & Pindi Chole',
+      rating: '4.8',
+      reviewsCount: '360+',
+      priceForTwo: 150,
+      distance: '1.3 km',
+      prepMin: 15,
+      isVeg: true,
+      badgeText: 'Popular Feast',
+      badgeIcon: '🫓',
+      badgeColor: 'bg-amber-500/90 text-white',
+      category: 'parathas',
+      image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_popular_4',
+      name: 'Old Delhi Jalebi & Rabri Depot',
+      specialty: 'Hot Desi Ghee Jalebi with Thick Malai Rabri',
+      rating: '4.9',
+      reviewsCount: '670+',
+      priceForTwo: 100,
+      distance: '1.0 km',
+      prepMin: 10,
+      isVeg: true,
+      badgeText: 'Sweet Classic',
+      badgeIcon: '🍯',
+      badgeColor: 'bg-yellow-600/90 text-white',
+      category: 'sweets',
+      image: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=700&q=80'
+    }
+  ],
+  under100: [
+    {
+      id: 'spotlight_budget_1',
+      name: 'Chandu Ke Khasta Kachori',
+      specialty: 'Hing Moong Dal Kachori with Spicy Aloo Jhol',
+      rating: '4.7',
+      reviewsCount: '310+',
+      priceForTwo: 50,
+      distance: '0.6 km',
+      prepMin: 10,
+      isVeg: true,
+      badgeText: 'Under ₹100',
+      badgeIcon: '💰',
+      badgeColor: 'bg-emerald-600/90 text-white',
+      category: 'samosa',
+      image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_budget_2',
+      name: 'Gupta Brothers Dahi Sev Puri',
+      specialty: 'Crisp Puri layered with Spiced Curd & Sev',
+      rating: '4.8',
+      reviewsCount: '280+',
+      priceForTwo: 70,
+      distance: '0.7 km',
+      prepMin: 11,
+      isVeg: true,
+      badgeText: '₹40 Onwards',
+      badgeIcon: '🏷️',
+      badgeColor: 'bg-emerald-700/90 text-white',
+      category: 'chaat',
+      image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_budget_3',
+      name: 'Irani Bun Maska & Kadak Chai',
+      specialty: 'Soft Bun Maska with Cardamom Malai Chai',
+      rating: '4.8',
+      reviewsCount: '330+',
+      priceForTwo: 60,
+      distance: '0.9 km',
+      prepMin: 8,
+      isVeg: true,
+      badgeText: 'Pocket Bite',
+      badgeIcon: '☕',
+      badgeColor: 'bg-amber-600/90 text-white',
+      category: 'beverages',
+      image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_budget_4',
+      name: 'Steamed Sweet Corn Masala',
+      specialty: 'Warm Butter Lemon Chaat Corn in Cup',
+      rating: '4.7',
+      reviewsCount: '190+',
+      priceForTwo: 50,
+      distance: '0.4 km',
+      prepMin: 7,
+      isVeg: true,
+      badgeText: 'Super Saver',
+      badgeIcon: '🌽',
+      badgeColor: 'bg-emerald-600/90 text-white',
+      category: 'chaat',
+      image: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=700&q=80'
+    }
+  ],
+  legends: [
+    {
+      id: 'spotlight_legend_1',
+      name: 'Moti Ram & Sons (Est. 1984)',
+      specialty: '40-Year Generational Chole Kulche Recipe',
+      rating: '4.9',
+      reviewsCount: '980+',
+      priceForTwo: 120,
+      distance: '1.2 km',
+      prepMin: 14,
+      isVeg: true,
+      badgeText: '40 Yrs Legend',
+      badgeIcon: '👑',
+      badgeColor: 'bg-yellow-600/95 text-white',
+      category: 'parathas',
+      image: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_legend_2',
+      name: 'Hazratbal Charcoal Kebab & Frankie',
+      specialty: 'Slow Smoked Galouti & Mutton Seekh Rolls',
+      rating: '4.9',
+      reviewsCount: '760+',
+      priceForTwo: 160,
+      distance: '1.5 km',
+      prepMin: 16,
+      isVeg: false,
+      badgeText: 'Generational Recipe',
+      badgeIcon: '🏆',
+      badgeColor: 'bg-stone-900/90 text-amber-300 border border-amber-400/40',
+      category: 'rolls',
+      image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_legend_3',
+      name: 'Annapoorna Tiffin Room (Est. 1991)',
+      specialty: 'Steaming Ghee Podi Button Idlis & Medu Vada',
+      rating: '4.9',
+      reviewsCount: '1200+',
+      priceForTwo: 80,
+      distance: '0.8 km',
+      prepMin: 10,
+      isVeg: true,
+      badgeText: '33 Yrs Heritage',
+      badgeIcon: '👑',
+      badgeColor: 'bg-amber-600/90 text-white',
+      category: 'south',
+      image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_legend_4',
+      name: 'Laxman Tawa Pulao (Est. 1996)',
+      specialty: 'Mumbai Style Slow-Roasted Butter Masala Pulao',
+      rating: '4.8',
+      reviewsCount: '580+',
+      priceForTwo: 130,
+      distance: '1.0 km',
+      prepMin: 13,
+      isVeg: true,
+      badgeText: 'Master Thela',
+      badgeIcon: '⭐',
+      badgeColor: 'bg-amber-700/90 text-white',
+      category: 'pavbhaji',
+      image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=700&q=80'
+    }
+  ],
+  latenight: [
+    {
+      id: 'spotlight_late_1',
+      name: 'Midnight Kathi Frankie Junction',
+      specialty: 'Sizzling Paneer Bhurji & Spicy Chicken Frankie',
+      rating: '4.8',
+      reviewsCount: '480+',
+      priceForTwo: 140,
+      distance: '1.1 km',
+      prepMin: 12,
+      isVeg: false,
+      badgeText: 'Open Till 3 AM',
+      badgeIcon: '🌙',
+      badgeColor: 'bg-indigo-900/90 text-indigo-100 border border-indigo-500/40',
+      category: 'rolls',
+      image: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_late_2',
+      name: 'Desi Hakka Wok & Schezwan Noodles',
+      specialty: 'Roadside Schezwan Chowmein with Garlic Chili Dip',
+      rating: '4.7',
+      reviewsCount: '390+',
+      priceForTwo: 120,
+      distance: '0.9 km',
+      prepMin: 13,
+      isVeg: true,
+      badgeText: 'Midnight Wok',
+      badgeIcon: '🍜',
+      badgeColor: 'bg-indigo-800/90 text-white',
+      category: 'chinese',
+      image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_late_3',
+      name: 'Night Owl Double Cheese Maggi',
+      specialty: 'Piping Hot Butter Cheese Maggi & Chai',
+      rating: '4.8',
+      reviewsCount: '340+',
+      priceForTwo: 90,
+      distance: '0.6 km',
+      prepMin: 9,
+      isVeg: true,
+      badgeText: 'Midnight Comfort',
+      badgeIcon: '🧀',
+      badgeColor: 'bg-purple-900/90 text-purple-100',
+      category: 'chaat',
+      image: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_late_4',
+      name: 'Kesar Badam Kadhai Doodh',
+      specialty: 'Boiling Copper Kadhai Saffron Milk & Malai',
+      rating: '4.9',
+      reviewsCount: '410+',
+      priceForTwo: 80,
+      distance: '0.8 km',
+      prepMin: 8,
+      isVeg: true,
+      badgeText: 'Midnight Warmth',
+      badgeIcon: '🥛',
+      badgeColor: 'bg-amber-700/90 text-white',
+      category: 'beverages',
+      image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=700&q=80'
+    }
+  ],
+  hiddengems: [
+    {
+      id: 'spotlight_gem_1',
+      name: 'Alleyway Handmade Matka Kulfi',
+      specialty: 'Slow-Cooked Pistachio Malai Matka Kulfi',
+      rating: '4.9',
+      reviewsCount: '230+',
+      priceForTwo: 90,
+      distance: '0.7 km',
+      prepMin: 8,
+      isVeg: true,
+      badgeText: 'Foodie Secret',
+      badgeIcon: '💎',
+      badgeColor: 'bg-purple-700/90 text-white',
+      category: 'sweets',
+      image: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_gem_2',
+      name: 'Pahari Tingmo & Tibetan Shyabhale',
+      specialty: 'Crispy Deep-Fried Tibetan Meat / Paneer Pastry',
+      rating: '4.8',
+      reviewsCount: '190+',
+      priceForTwo: 130,
+      distance: '1.2 km',
+      prepMin: 14,
+      isVeg: false,
+      badgeText: 'Hidden Alley',
+      badgeIcon: '🏔️',
+      badgeColor: 'bg-purple-800/90 text-white',
+      category: 'momos',
+      image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_gem_3',
+      name: 'Nagpur Saoji Tarri Poha Stall',
+      specialty: 'Spicy Chana Curry on Steamed Poha with Sev',
+      rating: '4.8',
+      reviewsCount: '260+',
+      priceForTwo: 70,
+      distance: '0.9 km',
+      prepMin: 9,
+      isVeg: true,
+      badgeText: 'Regional Master',
+      badgeIcon: '🌶️',
+      badgeColor: 'bg-red-700/90 text-white',
+      category: 'chaat',
+      image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=700&q=80'
+    },
+    {
+      id: 'spotlight_gem_4',
+      name: 'Banarasi Tamatar Chaat Haven',
+      specialty: 'Hot Tangy Ghee Tomato Mash with Crispy Namakpare',
+      rating: '4.9',
+      reviewsCount: '340+',
+      priceForTwo: 80,
+      distance: '1.4 km',
+      prepMin: 12,
+      isVeg: true,
+      badgeText: 'Artisan Thela',
+      badgeIcon: '🍅',
+      badgeColor: 'bg-amber-600/90 text-white',
+      category: 'chaat',
+      image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=700&q=80'
+    }
+  ]
+};
+
+function renderDiscoverySections(stalls) {
+  const sections = [
+    { key: 'trending', trackId: 'secTrendingTrack', defaultBadge: '🔥 Trending' },
+    { key: 'popular', trackId: 'secPopularTrack', defaultBadge: '⭐ Popular' },
+    { key: 'under100', trackId: 'secUnder100Track', defaultBadge: '💰 Under ₹100' },
+    { key: 'legends', trackId: 'secLegendsTrack', defaultBadge: '👑 Legend' },
+    { key: 'latenight', trackId: 'secLateNightTrack', defaultBadge: '🌙 Late Night' },
+    { key: 'hiddengems', trackId: 'secHiddenGemsTrack', defaultBadge: '💎 Gem' }
+  ];
+
+  const tr = (k, fb) => (typeof t === 'function' ? t(k, fb) : fb);
+
+  sections.forEach(({ key, trackId, defaultBadge }) => {
+    const track = document.getElementById(trackId);
+    if (!track) return;
+
+    // Filter matching live stalls from DB
+    let matchingStalls = [];
+    if (Array.isArray(stalls) && stalls.length > 0) {
+      if (key === 'trending') {
+        matchingStalls = stalls.filter(s => parseFloat(s.rating) >= 4.6);
+      } else if (key === 'popular') {
+        matchingStalls = stalls.filter(s => ['chaat', 'vadapav', 'pavbhaji', 'momos', 'rolls', 'south'].includes(s.category));
+      } else if (key === 'under100') {
+        matchingStalls = stalls.filter(s => (s.priceForTwo && s.priceForTwo <= 100) || (s.items && s.items.some(i => i.price <= 100)));
+      } else if (key === 'legends') {
+        matchingStalls = stalls.filter(s => Boolean(s.heritageStory));
+      } else if (key === 'latenight') {
+        matchingStalls = stalls.filter(s => ['rolls', 'chinese', 'chaat', 'pavbhaji'].includes(s.category) || s.isOpen);
+      } else if (key === 'hiddengems') {
+        matchingStalls = stalls.filter(s => parseFloat(s.rating) >= 4.7);
+      }
+    }
+
+    if (STATE.vegOnly) {
+      matchingStalls = matchingStalls.filter(s => s.isVeg);
+    }
+
+    // Convert matching live stalls to cards
+    const liveCards = matchingStalls.map(s => ({
+      id: s.id,
+      name: s.name,
+      specialty: s.specialty || 'Authentic Street Food',
+      rating: s.rating || '4.8',
+      reviewsCount: s.reviewsCount || '100+',
+      priceForTwo: s.priceForTwo || 120,
+      distance: s.distance || '1.0 km',
+      prepMin: s.prepTime || 13,
+      isVeg: Boolean(s.isVeg),
+      badgeText: defaultBadge,
+      badgeIcon: '',
+      badgeColor: 'bg-stone-900/90 text-white',
+      category: s.category || '',
+      image: s.imageUrl,
+      isRealStall: true
+    }));
+
+    // Curated spotlight fallback cards
+    let curatedCards = (CURATED_DISCOVERY[key] || []);
+    if (STATE.vegOnly) {
+      curatedCards = curatedCards.filter(c => c.isVeg);
+    }
+    const mappedCurated = curatedCards.map(c => ({
+      ...c,
+      isRealStall: false
+    }));
+
+    // Combine: live stalls first, then curated to reach at least 4 items
+    const displayCards = [...liveCards, ...mappedCurated].slice(0, 5);
+
+    track.innerHTML = displayCards.map(card => {
+      const isFav = card.isRealStall && STATE.favorites.includes(card.id);
+      const dynamicEta = calculateDynamicDeliveryTime(card.distance, card.prepMin);
+      const distText = card.distance ? `${card.distance}` : '1.0 km';
+      const priceText = `₹${card.priceForTwo} ${tr('for_two', 'for two')}`;
+
+      return `
+        <div onclick="handleDiscoveryCardClick('${card.id}', ${card.isRealStall}, '${card.category}', '${card.name.replace(/'/g, "\\'")}')"
+          class="shrink-0 w-64 sm:w-72 bg-white rounded-3xl border border-stone-200/90 overflow-hidden shadow-xs hover:shadow-xl hover:border-amber-300 transition-all duration-300 cursor-pointer group flex flex-col snap-start">
+          
+          <!-- Food Hero Photo (Dominant visual hero) -->
+          <div class="relative h-44 sm:h-48 w-full overflow-hidden bg-stone-100">
+            <img src="${card.image}" alt="${card.name}" class="w-full h-full object-cover group-hover:scale-106 transition-transform duration-500 ease-out" loading="lazy">
+            
+            <!-- Gradient Overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent pointer-events-none"></div>
+
+            <!-- Top-Left Badge -->
+            <div class="absolute top-2.5 left-2.5">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider backdrop-blur shadow-md ${card.badgeColor}">
+                ${card.badgeIcon ? card.badgeIcon + ' ' : ''}${card.badgeText}
+              </span>
+            </div>
+
+            <!-- Top-Right Favorite Heart -->
+            <button onclick="event.stopPropagation(); ${card.isRealStall ? `toggleFavoriteStall('${card.id}')` : `showToast('❤️ Saved to cravings!')`}"
+              class="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/95 backdrop-blur flex items-center justify-center text-xs shadow-md transition hover:scale-110 active:scale-95 z-10"
+              title="Save to favorites">
+              <i class="${isFav ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart text-stone-400 hover:text-red-500'}"></i>
+            </button>
+
+            <!-- Bottom Left ETA Pill -->
+            <div class="absolute bottom-2.5 left-2.5 bg-stone-900/85 backdrop-blur px-2.5 py-1 rounded-lg text-[10px] font-extrabold text-white shadow-sm flex items-center space-x-1">
+              <i class="fa-regular fa-clock text-amber-400"></i>
+              <span>${dynamicEta}</span>
+            </div>
+
+            <!-- Bottom Right Distance Pill -->
+            <div class="absolute bottom-2.5 right-2.5 bg-stone-900/85 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-bold text-stone-200 shadow-sm flex items-center space-x-1">
+              <i class="fa-solid fa-location-dot text-amber-400 text-[9px]"></i>
+              <span>${distText}</span>
+            </div>
+          </div>
+
+          <!-- Clean Card Body -->
+          <div class="p-3.5 flex-1 flex flex-col justify-between space-y-2">
+            <div>
+              <div class="flex items-start justify-between gap-1.5">
+                <h4 class="font-extrabold text-sm text-stone-900 leading-snug group-hover:text-amber-700 transition-colors line-clamp-1">
+                  ${card.name}
+                </h4>
+                <div class="flex items-center space-x-1 shrink-0 mt-0.5">
+                  ${card.isVeg ? `
+                    <span class="w-3.5 h-3.5 rounded border border-green-600 flex items-center justify-center p-0.5" title="Pure Veg">
+                      <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                    </span>
+                  ` : `
+                    <span class="w-3.5 h-3.5 rounded border border-red-600 flex items-center justify-center p-0.5" title="Non-Veg">
+                      <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                    </span>
+                  `}
+                </div>
+              </div>
+              <p class="text-xs text-stone-500 font-medium mt-0.5 line-clamp-1">${card.specialty}</p>
+            </div>
+
+            <div class="pt-2 border-t border-stone-100 flex items-center justify-between text-xs">
+              <div class="flex items-center space-x-1">
+                <span class="bg-amber-50 text-amber-900 font-black text-[10px] px-1.5 py-0.5 rounded flex items-center">
+                  <i class="fa-solid fa-star text-amber-500 mr-1 text-[9px]"></i>${card.rating}
+                </span>
+                <span class="text-[10px] text-stone-400 font-medium">(${card.reviewsCount})</span>
+              </div>
+              <span class="text-xs font-bold text-stone-800">${priceText}</span>
+            </div>
+          </div>
+        </div>
+      `;
+    }).join('');
+  });
+}
+
+function handleDiscoveryCardClick(cardId, isRealStall, category, name) {
+  if (isRealStall && cardId) {
+    openStallModal(cardId);
+    return;
+  }
+  // Check if any real stall matches category or name
+  const matchingStall = (STATE.stalls || []).find(s => 
+    (category && s.category && s.category.toLowerCase().includes(category.toLowerCase())) ||
+    (name && s.specialty && s.specialty.toLowerCase().includes(name.toLowerCase()))
+  );
+  if (matchingStall) {
+    openStallModal(matchingStall.id);
+    return;
+  }
+  // Otherwise filter catalog and scroll down smoothly
+  if (category) {
+    filterCategory(category);
+  } else if (name) {
+    const input = document.getElementById('searchInput');
+    if (input) {
+      input.value = name;
+      handleSearch();
+    }
+  }
+  scrollToDiscoverySection('secAllStalls');
+  showToast(`🔍 Exploring street thelas for "${name}"`);
+}
+
 async function loadStalls() {
   try {
     const params = new URLSearchParams();
@@ -392,6 +1015,7 @@ async function loadStalls() {
       stalls = stalls.filter(s => STATE.favorites.includes(s.id));
     }
     STATE.stalls = stalls;
+    renderDiscoverySections(STATE.stalls);
     renderStalls(STATE.stalls);
     updateVendorStallDropdown();
   } catch (err) {
@@ -402,34 +1026,35 @@ async function loadStalls() {
 function renderStalls(stalls) {
   const container = document.getElementById('stallsGrid');
   const countEl = document.getElementById('stallsCount');
+  const tr = (k, fb) => (typeof t === 'function' ? t(k, fb) : fb);
+
   if (countEl) {
-    countEl.innerText = stalls.length > 0 ? `${stalls.length} iconic street carts` : '0 active stalls';
+    countEl.innerText = stalls.length > 0 ? `${stalls.length} verified carts` : '0 active stalls';
   }
 
   if (stalls.length === 0) {
-    const tr = (k, fb) => (typeof t === 'function' ? t(k, fb) : fb);
     if (STATE.selectedCategory === 'favorites') {
       container.innerHTML = `
-        <div class="col-span-full py-12 text-center text-gray-500 bg-white rounded-3xl border border-gray-200 p-6">
-          <i class="fa-regular fa-heart text-3xl text-gray-300 mb-2"></i>
-          <p class="font-bold text-sm text-gray-800">${tr('no_favorites_title', 'No favorite stalls saved yet')}</p>
-          <p class="text-xs text-gray-400 mt-1">${tr('no_favorites_desc', 'Tap the heart icon on any stall to add it here')}</p>
+        <div class="col-span-full py-12 text-center text-stone-500 bg-white rounded-3xl border border-stone-200 p-6">
+          <i class="fa-regular fa-heart text-3xl text-stone-300 mb-2"></i>
+          <p class="font-bold text-sm text-stone-800">${tr('no_favorites_title', 'No favorite stalls saved yet')}</p>
+          <p class="text-xs text-stone-400 mt-1">${tr('no_favorites_desc', 'Tap the heart icon on any stall to add it here')}</p>
         </div>
       `;
     } else {
       container.innerHTML = `
-        <div class="col-span-full py-12 text-center bg-white rounded-3xl border-2 border-dashed border-orange-200 p-6 space-y-3">
-          <div class="w-14 h-14 mx-auto rounded-2xl bg-orange-50 text-orange-600 flex items-center justify-center text-2xl">
+        <div class="col-span-full py-12 text-center bg-white rounded-3xl border-2 border-dashed border-amber-200 p-6 space-y-3">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center text-2xl shadow-xs">
             <i class="fa-solid fa-store"></i>
           </div>
           <div>
-            <h3 class="font-black text-base text-gray-900">${tr('no_stalls_title', 'No Street Stalls Live Yet')}</h3>
-            <p class="text-xs text-gray-500 mt-1 max-w-md mx-auto">
+            <h3 class="font-black text-base text-stone-900">${tr('no_stalls_title', 'No Street Stalls Live Yet')}</h3>
+            <p class="text-xs text-stone-500 mt-1 max-w-md mx-auto">
               ${tr('no_stalls_desc', 'All demo food carts have been removed. Are you a local street vendor or food cart owner? Register your cart in 2 minutes and start receiving live customer orders!')}
             </p>
           </div>
           <div class="pt-2">
-            <a href="/onboard-vendor.html" class="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-orange-600 hover:bg-orange-700 text-white text-xs font-black shadow-md shadow-orange-600/20 transition">
+            <a href="/onboard-vendor.html" class="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black shadow-md shadow-amber-600/20 transition">
               <i class="fa-solid fa-plus-circle"></i>
               <span>${tr('register_stall_btn', 'Register Real Street Stall Now ➔')}</span>
             </a>
@@ -440,98 +1065,126 @@ function renderStalls(stalls) {
     return;
   }
 
-  container.innerHTML = stalls.map(stall => `
-    <div onclick="openStallModal('${stall.id}')" 
-      class="bg-white rounded-2xl border border-gray-200/80 overflow-hidden shadow-sm hover:shadow-md hover:border-orange-200 transition-all cursor-pointer flex flex-col group relative">
-      
-      <!-- Stall Photo Banner -->
-      <div class="relative h-40 w-full overflow-hidden bg-gray-100">
-        <img src="${stall.imageUrl}" alt="${stall.name}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300">
+  container.innerHTML = stalls.map(stall => {
+    const isFav = STATE.favorites.includes(stall.id);
+    const dynamicEta = calculateDynamicDeliveryTime(stall.distance || 1.1, stall.prepTime || 13);
+    const distText = stall.distance ? `${stall.distance} away` : '1.0 km away';
+    const priceTwo = stall.priceForTwo ? `₹${stall.priceForTwo}` : '₹120';
+
+    // Primary trust badge
+    const badges = stall.trustBadges || [];
+    let badgeHtml = `
+      <span class="inline-flex items-center space-x-1 text-stone-600 bg-stone-100 border border-stone-200 px-2 py-0.5 rounded-md text-[10px] font-bold" onclick="event.stopPropagation(); openTrustModal('${stall.id}');">
+        <i class="fa-solid fa-clock-rotate-left text-stone-400"></i>
+        <span>${tr('badge_audits_in_progress', 'Audits in Progress')}</span>
+      </span>
+    `;
+    const fssaiBadge = badges.find(b => b.type === 'fssai');
+    const hygieneBadge = badges.find(b => b.type === 'hygiene');
+    if (fssaiBadge) {
+      badgeHtml = `
+        <span class="inline-flex items-center space-x-1 text-emerald-800 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-md text-[10px] font-bold shadow-xs hover:scale-105 transition" onclick="event.stopPropagation(); openTrustModal('${stall.id}');" title="Click to view verified FSSAI credentials">
+          <i class="fa-solid fa-shield-check text-emerald-600"></i>
+          <span>${fssaiBadge.label || tr('badge_fssai_verified', 'FSSAI Verified')}</span>
+        </span>
+      `;
+    } else if (hygieneBadge) {
+      badgeHtml = `
+        <span class="inline-flex items-center space-x-1 text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-md text-[10px] font-bold shadow-xs hover:scale-105 transition" onclick="event.stopPropagation(); openTrustModal('${stall.id}');" title="Click to view hygiene inspection report">
+          <i class="fa-solid fa-wand-magic-sparkles text-amber-600"></i>
+          <span>${hygieneBadge.label || tr('badge_hygiene_verified', 'Thela Hygiene Verified')}</span>
+        </span>
+      `;
+    }
+
+    return `
+      <div onclick="openStallModal('${stall.id}')" 
+        class="food-hero-card bg-white rounded-3xl border border-stone-200/90 overflow-hidden shadow-xs hover:shadow-xl hover:border-amber-300 transition-all cursor-pointer flex flex-col group relative">
         
-        <!-- Status & Delivery Tags -->
-        <div class="absolute top-2.5 left-2.5 flex flex-wrap gap-1.5">
-          ${stall.isOpen 
-            ? `<span class="bg-emerald-600/95 backdrop-blur text-white text-[10px] font-black px-2 py-0.5 rounded-full flex items-center shadow-sm">
-                <span class="w-1.5 h-1.5 rounded-full bg-white mr-1.5 animate-pulse"></span>OPEN NOW
-              </span>`
-            : `<span class="bg-gray-800/95 backdrop-blur text-gray-200 text-[10px] font-black px-2 py-0.5 rounded-full">CLOSED</span>`
-          }
-          <span class="bg-white/95 backdrop-blur text-gray-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full shadow-sm flex items-center">
-            <i class="fa-regular fa-clock text-orange-500 mr-1"></i>${stall.deliveryTime}
-          </span>
-        </div>
+        <!-- Large Food Hero Image (65%+ visual weight) -->
+        <div class="relative h-48 sm:h-52 w-full overflow-hidden bg-stone-100">
+          <img src="${stall.imageUrl}" alt="${stall.name}" class="w-full h-full object-cover group-hover:scale-106 transition-transform duration-500 ease-out" loading="lazy">
+          
+          <!-- Gradient Top Scrim -->
+          <div class="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-black/20 pointer-events-none"></div>
 
-        <!-- Favorite Heart Bookmark Button -->
-        <button onclick="event.stopPropagation(); toggleFavoriteStall('${stall.id}')" 
-          class="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/95 backdrop-blur flex items-center justify-center text-sm shadow-md transition hover:scale-110 active:scale-95 z-10"
-          title="${STATE.favorites.includes(stall.id) ? 'Remove from favorites' : 'Save as favorite'}">
-          <i class="${STATE.favorites.includes(stall.id) ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart text-gray-400 hover:text-red-500'}"></i>
-        </button>
-
-        <!-- Rating Pill -->
-        <div class="absolute bottom-2.5 right-2.5 bg-white/95 backdrop-blur px-2 py-0.5 rounded-lg text-xs font-black text-gray-900 shadow-sm flex items-center space-x-1">
-          <i class="fa-solid fa-star text-amber-500"></i>
-          <span>${stall.rating}</span>
-          <span class="text-[10px] text-gray-400">(${stall.reviewsCount})</span>
-        </div>
-
-        ${stall.discount ? `
-          <div class="absolute bottom-2.5 left-2.5 bg-orange-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-md shadow-sm">
-            ${stall.discount}
+          <!-- Top-Left: Open / Closed Badge & Dynamic Delivery ETA -->
+          <div class="absolute top-3 left-3 flex items-center space-x-1.5">
+            ${stall.isOpen 
+              ? `<span class="bg-emerald-600/95 backdrop-blur text-white text-[10px] font-black px-2.5 py-1 rounded-full flex items-center shadow-md">
+                  <span class="w-1.5 h-1.5 rounded-full bg-white mr-1.5 animate-pulse"></span>OPEN
+                </span>`
+              : `<span class="bg-stone-900/90 backdrop-blur text-stone-200 text-[10px] font-black px-2.5 py-1 rounded-full shadow-md">CLOSED</span>`
+            }
+            <span class="bg-white/95 backdrop-blur text-stone-900 text-[10px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center">
+              <i class="fa-regular fa-clock text-amber-600 mr-1 text-xs"></i>${dynamicEta}
+            </span>
           </div>
-        ` : ''}
-      </div>
 
-      <!-- Stall Info Body -->
-      <div class="p-3.5 flex-1 flex flex-col justify-between space-y-2">
-        <div>
-          <div class="flex items-start justify-between">
-            <h3 class="font-extrabold text-base text-gray-900 leading-tight group-hover:text-orange-600 transition-colors">
-              ${stall.name}
-            </h3>
-            ${stall.isVeg ? `
-              <span class="w-4 h-4 rounded border-2 border-green-600 flex items-center justify-center p-0.5 ml-1 shrink-0" title="Pure Veg Stall">
-                <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+          <!-- Top-Right: Favorite Heart Button -->
+          <button onclick="event.stopPropagation(); toggleFavoriteStall('${stall.id}')" 
+            class="absolute top-3 right-3 w-8 h-8 rounded-full bg-white/95 backdrop-blur flex items-center justify-center text-xs shadow-md transition hover:scale-110 active:scale-95 z-10"
+            title="${isFav ? 'Remove from favorites' : 'Save as favorite'}">
+            <i class="${isFav ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart text-stone-400 hover:text-red-500'}"></i>
+          </button>
+
+          <!-- Bottom Overlays: Distance & Discount -->
+          <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
+            ${stall.discount ? `
+              <span class="bg-amber-600 text-white text-[10px] font-black px-2 py-0.5 rounded-md shadow-sm">
+                ${stall.discount}
               </span>
-            ` : `
-              <span class="w-4 h-4 rounded border-2 border-red-600 flex items-center justify-center p-0.5 ml-1 shrink-0" title="Non-Veg Available">
-                <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-              </span>
-            `}
+            ` : '<span></span>'}
+            <span class="bg-stone-900/80 backdrop-blur text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-sm flex items-center space-x-1">
+              <i class="fa-solid fa-location-dot text-amber-400 text-[9px]"></i>
+              <span>${distText}</span>
+            </span>
           </div>
-          <p class="text-xs text-gray-600 font-medium mt-0.5 line-clamp-1">${stall.specialty}</p>
-          <p class="text-[11px] text-gray-400 italic line-clamp-1 mt-0.5">"${stall.heritageStory}"</p>
         </div>
 
-        <!-- Trust Badges (Clickable to view full inspection dossier) -->
-        <div class="pt-2 border-t border-gray-100 flex items-center justify-between text-[11px]">
-          <div class="flex items-center space-x-1 flex-wrap gap-y-1" onclick="event.stopPropagation(); openTrustModal('${stall.id}');">
-            ${(stall.trustBadges || []).map(b => {
-              let colorClass = 'bg-gray-100 text-gray-700 border-gray-200';
-              let iconClass = 'fa-clock-rotate-left text-gray-500';
-              if (b.type === 'fssai') {
-                colorClass = 'bg-emerald-50 text-emerald-800 border-emerald-200';
-                iconClass = 'fa-shield-check text-emerald-600';
-              } else if (b.type === 'hygiene') {
-                colorClass = 'bg-amber-50 text-amber-800 border-amber-200';
-                iconClass = 'fa-wand-magic-sparkles text-amber-600';
-              } else if (b.type === 'identity') {
-                colorClass = 'bg-blue-50 text-blue-800 border-blue-200';
-                iconClass = 'fa-circle-check text-blue-600';
-              }
-              return `
-                <span class="inline-flex items-center space-x-1 font-extrabold px-2 py-0.5 rounded-md border text-[10px] shadow-sm hover:scale-105 active:scale-95 transition ${colorClass}" title="Click to view full inspection report">
-                  <i class="fa-solid ${iconClass}"></i>
-                  <span>${b.label}</span>
-                </span>
-              `;
-            }).join('')}
+        <!-- Streamlined Food-First Card Body (No Clutter, Clean Hierarchy) -->
+        <div class="p-4 flex-1 flex flex-col justify-between space-y-2.5">
+          <div>
+            <div class="flex items-start justify-between gap-2">
+              <h3 class="font-black text-base text-stone-900 leading-snug group-hover:text-amber-700 transition-colors line-clamp-1">
+                ${stall.name}
+              </h3>
+              <div class="flex items-center space-x-1 shrink-0 mt-0.5">
+                ${stall.isVeg ? `
+                  <span class="w-3.5 h-3.5 rounded border border-green-600 flex items-center justify-center p-0.5" title="Pure Veg Stall">
+                    <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+                  </span>
+                ` : `
+                  <span class="w-3.5 h-3.5 rounded border border-red-600 flex items-center justify-center p-0.5" title="Non-Veg Available">
+                    <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                  </span>
+                `}
+              </div>
+            </div>
+            
+            <div class="flex items-center justify-between text-xs text-stone-500 font-medium mt-1">
+              <p class="line-clamp-1 flex-1 mr-2">${stall.specialty || 'Authentic Street Food'}</p>
+              <span class="font-bold text-stone-800 shrink-0">${priceTwo} ${tr('for_two', 'for two')}</span>
+            </div>
           </div>
-          <span class="font-bold text-gray-500 shrink-0 ml-2">${stall.distance} away</span>
+
+          <!-- Bottom Row: Star Rating & Trust Badge -->
+          <div class="pt-2 border-t border-stone-100 flex items-center justify-between text-xs">
+            <div class="flex items-center space-x-1.5">
+              <span class="bg-amber-50 border border-amber-200 text-amber-900 font-black text-[11px] px-2 py-0.5 rounded-lg flex items-center">
+                <i class="fa-solid fa-star text-amber-500 mr-1 text-[10px]"></i>${stall.rating}
+              </span>
+              <span class="text-[11px] text-stone-400 font-medium">(${stall.reviewsCount || 0})</span>
+            </div>
+            
+            <div>
+              ${badgeHtml}
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 async function toggleFavoriteStall(stallId) {
@@ -558,16 +1211,14 @@ async function toggleFavoriteStall(stallId) {
   }
 }
 
-function handleSearch() {
-  loadStalls();
-}
-
 function toggleVegFilter() {
   STATE.vegOnly = !STATE.vegOnly;
   const btn = document.getElementById('vegFilterBtn');
-  btn.classList.toggle('border-green-600', STATE.vegOnly);
-  btn.classList.toggle('bg-green-50', STATE.vegOnly);
-  btn.classList.toggle('text-green-800', STATE.vegOnly);
+  if (btn) {
+    btn.classList.toggle('border-emerald-600', STATE.vegOnly);
+    btn.classList.toggle('bg-emerald-50', STATE.vegOnly);
+    btn.classList.toggle('text-emerald-800', STATE.vegOnly);
+  }
   loadStalls();
 }
 
@@ -576,57 +1227,42 @@ async function loadCategories() {
     const res = await fetch('/api/stalls/categories');
     const data = await res.json();
     STATE.categories = data.categories || [];
-    renderCategories(STATE.categories);
+    appendVendorCategories(STATE.categories);
   } catch (e) {
     console.warn('Failed to load categories:', e);
   }
 }
 
-function renderCategories(categories) {
+function appendVendorCategories(categories) {
   const container = document.getElementById('categoriesPillsContainer');
-  if (!container || !categories || categories.length === 0) return;
-
-  container.innerHTML = categories.map(cat => {
-    const isActive = STATE.selectedCategory.toLowerCase() === cat.id.toLowerCase();
-    const btnClass = isActive 
-      ? 'cat-pill active px-4 py-2 rounded-full bg-orange-600 text-white font-bold text-xs whitespace-nowrap shadow-sm transition'
-      : 'cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm';
-    
-    return `
-      <button onclick="filterCategory('${cat.id}')" class="${btnClass}">
-        ${cat.icon || '🍲'} ${cat.name}
-      </button>
-    `;
-  }).join('');
+  if (!container || !categories) return;
+  
+  const existingCats = new Set(['all', 'favorites', 'chaat', 'vadapav', 'pavbhaji', 'momos', 'south', 'rolls']);
+  
+  categories.forEach(cat => {
+    if (!existingCats.has(cat.id.toLowerCase())) {
+      existingCats.add(cat.id.toLowerCase());
+      const btn = document.createElement('button');
+      btn.onclick = () => filterCategory(cat.id);
+      btn.className = 'cat-pill px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-bold whitespace-nowrap hover:bg-amber-50 transition shadow-xs flex items-center space-x-1.5';
+      btn.innerHTML = `<span>${cat.icon || '🍲'}</span><span>${cat.name}</span>`;
+      container.appendChild(btn);
+    }
+  });
 }
 
 function filterCategory(cat) {
   STATE.selectedCategory = cat;
-  const favBtn = document.getElementById('favCatPill');
-  if (favBtn) {
-    if (cat === 'favorites') {
-      favBtn.className = 'cat-pill active px-4 py-2 rounded-full bg-red-500 text-white font-bold text-xs whitespace-nowrap shadow-sm transition flex items-center space-x-1';
-      const badge = document.getElementById('favCountBadge');
-      if (badge) badge.className = 'ml-1 bg-white text-red-600 px-1.5 py-0.5 rounded-full text-[10px] font-black';
-    } else {
-      favBtn.className = 'cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm flex items-center space-x-1';
-      const badge = document.getElementById('favCountBadge');
-      if (badge) badge.className = 'ml-1 bg-red-100 text-red-600 px-1.5 py-0.5 rounded-full text-[10px] font-black';
-    }
-  }
 
-  if (STATE.categories && STATE.categories.length > 0) {
-    renderCategories(STATE.categories);
-  } else {
-    document.querySelectorAll('.cat-pill:not(#favCatPill)').forEach(btn => {
-      const isThis = btn.getAttribute('onclick')?.includes(`'${cat}'`);
-      if (isThis) {
-        btn.className = 'cat-pill active px-4 py-2 rounded-full bg-orange-600 text-white font-bold text-xs whitespace-nowrap shadow-sm transition';
-      } else {
-        btn.className = 'cat-pill px-4 py-2 rounded-full bg-white border border-gray-200 text-gray-700 font-bold text-xs whitespace-nowrap hover:bg-orange-50 transition shadow-sm';
-      }
-    });
-  }
+  document.querySelectorAll('.cat-pill').forEach(btn => {
+    const onclickAttr = btn.getAttribute('onclick') || '';
+    if (onclickAttr.includes(`filterCategory('${cat}')`) || onclickAttr.includes(`filterCategory("${cat}")`)) {
+      btn.className = 'cat-pill active px-4 py-2 rounded-xl bg-stone-900 text-white font-bold whitespace-nowrap shadow-xs transition flex items-center space-x-1.5';
+    } else {
+      btn.className = 'cat-pill px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-bold whitespace-nowrap hover:bg-amber-50 transition shadow-xs flex items-center space-x-1.5';
+    }
+  });
+
   loadStalls();
 }
 
@@ -641,7 +1277,9 @@ async function openStallModal(stallId) {
     STATE.currentMenu = data.items;
 
     document.getElementById('modalStallName').innerText = data.stall.name;
-    document.getElementById('modalStallSpecialty').innerText = data.stall.specialty;
+    document.getElementById('modalStallSpecialty').innerText = data.stall.heritageStory 
+      ? `${data.stall.specialty} • "${data.stall.heritageStory}"` 
+      : data.stall.specialty;
     document.getElementById('modalStallImage').src = data.stall.imageUrl;
     document.getElementById('modalStallRating').innerHTML = `<i class="fa-solid fa-star mr-1"></i>${data.stall.rating} (${data.stall.reviewsCount})`;
     document.getElementById('modalStallBadge').innerText = data.stall.isOpen ? 'OPEN NOW' : 'CLOSED';

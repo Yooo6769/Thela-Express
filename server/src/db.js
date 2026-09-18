@@ -236,6 +236,15 @@ class Database {
     return badges;
   }
 
+  estimateDynamicDelivery(distanceKm = 1.0, prepMin = 14) {
+    const km = typeof distanceKm === 'number' ? distanceKm : (parseFloat(distanceKm) || 1.0);
+    const travelMin = Math.round(km * 6);
+    const totalMin = prepMin + travelMin;
+    const lower = Math.max(16, totalMin - 3);
+    const upper = totalMin + 5;
+    return `${lower}-${upper} min`;
+  }
+
   formatStallForPublic(stall) {
     if (!stall) return null;
     const badges = this.computeTrustBadges(stall);
@@ -459,6 +468,8 @@ class Database {
   registerStall(stallData, menuItems = []) {
     const stallId = `stall_${Date.now()}`;
     const hasFssai = Boolean(stallData.fssai_number && stallData.fssai_number.trim());
+    const distVal = parseFloat(stallData.distance) || (0.7 + (Math.random() * 1.5));
+    const dynamicDelivery = this.estimateDynamicDelivery(distVal);
     const newStall = {
       id: stallId,
       owner_name: stallData.owner_name || 'Vendor Partner',
@@ -467,8 +478,8 @@ class Database {
       category: stallData.category || 'chaat',
       rating: 5.0,
       reviewsCount: '1 (New)',
-      deliveryTime: '15-20 min',
-      distance: '0.9 km',
+      deliveryTime: dynamicDelivery,
+      distance: `${distVal.toFixed(1)} km`,
       lat: parseFloat(stallData.lat) || 12.9725,
       lng: parseFloat(stallData.lng) || 77.6408,
       specialty: stallData.specialty || 'Authentic Street Special',
