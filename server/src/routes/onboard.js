@@ -40,7 +40,8 @@ router.post('/vendor', (req, res) => {
     upi_id: upi_id || `${cleanPhone}@upi`,
     fssai_number: fssai_number || '',
     isVeg: isVeg !== undefined ? isVeg : true,
-    imageUrl: imageUrl || 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80'
+    imageUrl: imageUrl || 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80',
+    hygieneHighlights: req.body.hygieneHighlights || []
   }, menu_items || []);
 
   console.log(`[ONBOARD] Real Stall registered: ${result.stall.name} (${result.stall.id}) by ${cleanPhone}`);

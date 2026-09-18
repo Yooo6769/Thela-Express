@@ -108,7 +108,8 @@
                 <th class="p-3" data-i18n="th_stall_name">Stall Name & Category</th>
                 <th class="p-3" data-i18n="th_owner_contact">Owner Contact</th>
                 <th class="p-3" data-i18n="th_location">Location / Landmark</th>
-                <th class="p-3" data-i18n="th_fssai_hygiene">FSSAI / Hygiene</th>
+                <th class="p-3" data-i18n="th_fssai_status">FSSAI Status</th>
+                <th class="p-3" data-i18n="th_hygiene_status">Hygiene Audit</th>
                 <th class="p-3" data-i18n="th_store_status">Store Status</th>
                 <th class="p-3 text-right" data-i18n="th_actions">Actions</th>
               </tr>
@@ -270,6 +271,169 @@
       </div>
     </section>
 
+    <!-- Modal: Vendor Verification & Hygiene Audit Console -->
+    <div id="adminAuditModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-gray-800 border border-gray-700 max-w-xl w-full rounded-3xl p-6 shadow-2xl space-y-4 max-h-[90vh] overflow-y-auto">
+        
+        <!-- Modal Header -->
+        <div class="flex items-start justify-between border-b border-gray-700 pb-3">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="w-6 h-6 rounded-lg bg-amber-500/20 text-amber-400 flex items-center justify-center text-xs">
+                <i class="fa-solid fa-clipboard-check"></i>
+              </span>
+              <h3 class="text-base font-black text-white" id="modalStallTitle">Stall Verification Audit</h3>
+            </div>
+            <p class="text-xs text-gray-400 mt-0.5" id="modalStallSubtitle">Manage FSSAI license checks and on-ground hygiene inspections</p>
+          </div>
+          <button type="button" onclick="closeAuditModal()" class="w-8 h-8 rounded-full bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center text-sm transition">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <!-- Segmented Tabs -->
+        <div class="bg-gray-900 p-1 rounded-xl flex items-center text-xs font-bold border border-gray-700">
+          <button type="button" id="btnAuditTabFssai" onclick="switchAuditTab('fssai')" class="flex-1 py-1.5 rounded-lg bg-orange-600 text-white transition">
+            <i class="fa-solid fa-file-shield mr-1"></i>FSSAI Review
+          </button>
+          <button type="button" id="btnAuditTabHygiene" onclick="switchAuditTab('hygiene')" class="flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition">
+            <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>Hygiene Audit
+          </button>
+          <button type="button" id="btnAuditTabIdentity" onclick="switchAuditTab('identity')" class="flex-1 py-1.5 rounded-lg text-gray-400 hover:text-white transition">
+            <i class="fa-solid fa-id-card mr-1"></i>Identity & GPS
+          </button>
+        </div>
+
+        <!-- TAB 1: FSSAI Verification -->
+        <div id="auditPaneFssai" class="space-y-3 text-xs">
+          <div class="space-y-1">
+            <label class="font-bold text-gray-300">FSSAI License / Registration Number</label>
+            <input type="text" id="auditFssaiNumber" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-mono font-bold text-white focus:ring-2 focus:ring-orange-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="font-bold text-gray-300">Verification Status</label>
+              <select id="auditFssaiStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-bold text-white focus:ring-2 focus:ring-orange-500">
+                <option value="submitted">Submitted (Under Review)</option>
+                <option value="under_verification">Under Verification</option>
+                <option value="verified">Verified ✓ (Grant Badge)</option>
+                <option value="rejected">Rejected (Action Required)</option>
+                <option value="expired">Expired License</option>
+              </select>
+            </div>
+            <div class="space-y-1">
+              <label class="font-bold text-gray-300">Valid Through / Expiry Date</label>
+              <input type="date" id="auditFssaiExpiry" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-bold text-white focus:ring-2 focus:ring-orange-500">
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-gray-300">Rejection Reason / Corrections Needed (If rejected)</label>
+            <input type="text" id="auditFssaiRejectionReason" placeholder="e.g. Name mismatch on FoSCoS portal" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-gray-300 focus:ring-2 focus:ring-orange-500">
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-gray-300">Internal Review Notes</label>
+            <input type="text" id="auditFssaiNotes" placeholder="e.g. Verified via FSSAI central database" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-gray-300 focus:ring-2 focus:ring-orange-500">
+          </div>
+
+          <button type="button" onclick="submitFssaiVerification()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-2.5 font-bold text-xs transition">
+            Save FSSAI Status & Update Badges
+          </button>
+        </div>
+
+        <!-- TAB 2: Hygiene Inspection -->
+        <div id="auditPaneHygiene" class="hidden space-y-3 text-xs">
+          <div class="grid grid-cols-2 gap-3">
+            <div class="space-y-1">
+              <label class="font-bold text-gray-300">Hygiene Inspection Verdict</label>
+              <select id="auditHygieneStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-bold text-white focus:ring-2 focus:ring-orange-500">
+                <option value="not_inspected">Not Inspected (Pending)</option>
+                <option value="scheduled">Inspection Scheduled</option>
+                <option value="verified">Hygiene Verified ★ (Grant Badge)</option>
+                <option value="failed">Inspection Failed</option>
+                <option value="revoked">Certification Revoked</option>
+              </select>
+            </div>
+            <div class="space-y-1">
+              <label class="font-bold text-gray-300">Hygiene Score (0 - 100)</label>
+              <input type="number" id="auditHygieneScore" min="0" max="100" value="95" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-bold text-white focus:ring-2 focus:ring-orange-500">
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-gray-300">Quality Auditor / Inspector Name</label>
+            <input type="text" id="auditHygieneInspector" value="ThelaExpress Quality Auditor" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-gray-300 focus:ring-2 focus:ring-orange-500">
+          </div>
+
+          <div class="space-y-2 pt-1">
+            <label class="font-bold text-gray-300 block">Physical Audit Checklist Passed On-Site:</label>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-300 font-medium bg-gray-900/60 p-3 rounded-xl border border-gray-700">
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="chkAuditWater" checked class="rounded text-orange-600 focus:ring-orange-500">
+                <span>RO / Mineral Water Checked</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="chkAuditCart" checked class="rounded text-orange-600 focus:ring-orange-500">
+                <span>Covered Glass Cart Installed</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="chkAuditDona" checked class="rounded text-orange-600 focus:ring-orange-500">
+                <span>100% Food-Grade Packaging</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="checkbox" id="chkAuditOil" checked class="rounded text-orange-600 focus:ring-orange-500">
+                <span>Fresh Oil Policy Audited</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer col-span-full">
+                <input type="checkbox" id="chkAuditSanitize" checked class="rounded text-orange-600 focus:ring-orange-500">
+                <span>Cart Sanitization & Waste Bin Verified</span>
+              </label>
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-gray-300">Auditor Observations / Remarks</label>
+            <input type="text" id="auditHygieneNotes" value="On-site physical inspection passed. Food handling hygiene observed." class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-gray-300 focus:ring-2 focus:ring-orange-500">
+          </div>
+
+          <button type="button" onclick="submitHygieneInspection()" class="w-full bg-amber-600 hover:bg-amber-500 text-white rounded-xl py-2.5 font-bold text-xs transition">
+            Record Hygiene Inspection & Update Badge
+          </button>
+        </div>
+
+        <!-- TAB 3: Identity & Location -->
+        <div id="auditPaneIdentity" class="hidden space-y-3 text-xs">
+          <div class="space-y-1">
+            <label class="font-bold text-gray-300">Stall Street Location</label>
+            <div class="p-3 bg-gray-900 rounded-xl text-gray-300 font-mono text-[11px]" id="auditIdentityAddress">
+              Indiranagar 100ft Rd
+            </div>
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-gray-300">Identity & KYC Status</label>
+            <select id="auditIdentityStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-bold text-white focus:ring-2 focus:ring-orange-500">
+              <option value="pending">Pending Verification</option>
+              <option value="verified">Identity Verified ✓</option>
+              <option value="rejected">Rejected / Blacklisted</option>
+            </select>
+          </div>
+
+          <div class="space-y-1">
+            <label class="font-bold text-gray-300">KYC Notes</label>
+            <input type="text" id="auditIdentityNotes" placeholder="e.g. Aadhaar / Street Vending Certificate verified" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-gray-300 focus:ring-2 focus:ring-orange-500">
+          </div>
+
+          <button type="button" onclick="submitIdentityVerification()" class="w-full bg-blue-600 hover:bg-blue-500 text-white rounded-xl py-2.5 font-bold text-xs transition">
+            Save Identity Verification
+          </button>
+        </div>
+
+      </div>
+    </div>
+
   </main>
 
   <!-- Multi-Language Localization Engine -->
@@ -335,36 +499,248 @@
       }
     }
 
+    let currentAuditStallId = null;
+
     function renderStallsTable(stalls) {
       const tbody = document.getElementById('stallsTableBody');
-      tbody.innerHTML = stalls.map(s => `
-        <tr class="hover:bg-gray-800/80 transition">
-          <td class="p-3 font-bold text-white">
-            <div>${s.name}</div>
-            <div class="text-[10px] text-gray-400 font-mono capitalize">${s.category} • ${s.priceForTwo || '₹120 for two'}</div>
-          </td>
-          <td class="p-3">
-            <div class="text-gray-300 font-semibold">${s.owner_name || 'Owner'}</div>
-            <div class="text-[11px] text-orange-400 font-mono">+91 ${s.owner_phone}</div>
-          </td>
-          <td class="p-3 text-gray-300">${s.address || 'Indiranagar'}</td>
-          <td class="p-3">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${s.fssai_number ? 'bg-green-900/60 text-green-300' : 'bg-gray-700 text-gray-300'}">
-              ${s.fssai_number ? `FSSAI: ${s.fssai_number}` : 'Audit Audited'}
-            </span>
-          </td>
-          <td class="p-3">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${s.isOpen ? 'bg-emerald-900/60 text-emerald-300' : 'bg-red-900/60 text-red-300'}">
-              ${s.isOpen ? 'OPEN' : 'CLOSED'}
-            </span>
-          </td>
-          <td class="p-3 text-right space-x-1">
-            <a href="/vendor.html?stallId=${s.id}" target="_blank" class="px-2 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[10px] font-bold inline-block">
-              ${t('open_pos_btn', 'Open POS ➔')}
-            </a>
-          </td>
-        </tr>
-      `).join('');
+      if (!stalls || stalls.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">${t('no_stalls_title', 'No stalls registered yet.')}</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = stalls.map(s => {
+        const fStatus = s.fssai_status || (s.fssai_number ? 'submitted' : 'not_submitted');
+        let fBadgeClass = 'bg-gray-700 text-gray-300';
+        let fText = 'Not Submitted';
+        if (fStatus === 'verified') {
+          fBadgeClass = 'bg-emerald-900/60 text-emerald-300 border border-emerald-700/50';
+          fText = 'Verified ✓';
+        } else if (fStatus === 'under_verification') {
+          fBadgeClass = 'bg-blue-900/60 text-blue-300 border border-blue-700/50';
+          fText = 'Under Review';
+        } else if (fStatus === 'rejected') {
+          fBadgeClass = 'bg-red-900/60 text-red-300 border border-red-700/50';
+          fText = 'Action Required';
+        } else if (fStatus === 'submitted') {
+          fBadgeClass = 'bg-amber-900/60 text-amber-300 border border-amber-700/50';
+          fText = 'Submitted';
+        } else if (fStatus === 'expired') {
+          fBadgeClass = 'bg-gray-700 text-gray-400 border border-gray-600';
+          fText = 'Expired';
+        }
+
+        const hStatus = s.hygiene_status || 'not_inspected';
+        let hBadgeClass = 'bg-gray-700 text-gray-300';
+        let hText = 'Pending Audit';
+        if (hStatus === 'verified') {
+          hBadgeClass = 'bg-amber-900/60 text-amber-300 border border-amber-700/50';
+          hText = `Verified (${s.hygiene_score || 95}/100) ★`;
+        } else if (hStatus === 'scheduled') {
+          hBadgeClass = 'bg-blue-900/60 text-blue-300 border border-blue-700/50';
+          hText = 'Scheduled';
+        } else if (hStatus === 'failed') {
+          hBadgeClass = 'bg-red-900/60 text-red-300 border border-red-700/50';
+          hText = 'Audit Failed';
+        }
+
+        return `
+          <tr class="hover:bg-gray-800/80 transition">
+            <td class="p-3 font-bold text-white">
+              <div class="flex items-center space-x-1.5">
+                <span>${s.name}</span>
+                ${s.is_verified ? '<i class="fa-solid fa-circle-check text-blue-400 text-xs" title="Identity Verified"></i>' : ''}
+              </div>
+              <div class="text-[10px] text-gray-400 font-mono capitalize">${s.category} • ${s.priceForTwo || '₹120 for two'}</div>
+            </td>
+            <td class="p-3">
+              <div class="text-gray-300 font-semibold">${s.owner_name || 'Owner'}</div>
+              <div class="text-[11px] text-orange-400 font-mono">+91 ${s.owner_phone}</div>
+            </td>
+            <td class="p-3 text-gray-300 text-xs">${s.address || 'Indiranagar'}</td>
+            <td class="p-3">
+              <div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-black ${fBadgeClass}">
+                  ${fText}
+                </span>
+              </div>
+              <div class="text-[10px] text-gray-400 font-mono mt-0.5">${s.fssai_number ? s.fssai_number : 'No License'}</div>
+            </td>
+            <td class="p-3">
+              <div>
+                <span class="px-2 py-0.5 rounded text-[10px] font-black ${hBadgeClass}">
+                  ${hText}
+                </span>
+              </div>
+              <div class="text-[10px] text-gray-400 mt-0.5">${s.hygiene_inspected_by ? `By: ${s.hygiene_inspected_by}` : 'Self-declared only'}</div>
+            </td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-black ${s.isOpen ? 'bg-emerald-900/60 text-emerald-300' : 'bg-red-900/60 text-red-300'}">
+                ${s.isOpen ? 'OPEN' : 'CLOSED'}
+              </span>
+            </td>
+            <td class="p-3 text-right space-x-1.5 whitespace-nowrap">
+              <button type="button" onclick="openAuditModal('${s.id}')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-[11px] font-black transition inline-flex items-center space-x-1">
+                <i class="fa-solid fa-clipboard-check"></i>
+                <span>Audit & Verify</span>
+              </button>
+              <a href="/partner.html?role=vendor&stallId=${s.id}" target="_blank" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-[10px] font-bold inline-block">
+                POS ➔
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    function openAuditModal(stallId) {
+      const stall = (ADMIN_DATA.stalls || []).find(s => s.id === stallId);
+      if (!stall) return;
+      currentAuditStallId = stall.id;
+
+      document.getElementById('modalStallTitle').innerText = `${stall.name} — Trust & Audit`;
+      document.getElementById('modalStallSubtitle').innerText = `Owner: ${stall.owner_name || 'Vendor'} (+91 ${stall.owner_phone}) • ${stall.address || 'Bengaluru'}`;
+
+      // FSSAI prefill
+      document.getElementById('auditFssaiNumber').value = stall.fssai_number || '';
+      document.getElementById('auditFssaiStatus').value = stall.fssai_status || (stall.fssai_number ? 'submitted' : 'not_submitted');
+      document.getElementById('auditFssaiExpiry').value = stall.fssai_expiry_date || '';
+      document.getElementById('auditFssaiRejectionReason').value = stall.fssai_rejection_reason || '';
+      document.getElementById('auditFssaiNotes').value = stall.fssai_notes || '';
+
+      // Hygiene prefill
+      document.getElementById('auditHygieneStatus').value = stall.hygiene_status || 'not_inspected';
+      document.getElementById('auditHygieneScore').value = stall.hygiene_score || 95;
+      document.getElementById('auditHygieneInspector').value = stall.hygiene_inspected_by || 'ThelaExpress Quality Auditor';
+      document.getElementById('auditHygieneNotes').value = stall.hygiene_notes || 'Physical hygiene standards verified on site.';
+
+      const chk = stall.hygiene_checklist_verified || {};
+      document.getElementById('chkAuditWater').checked = chk.roWater !== false;
+      document.getElementById('chkAuditCart').checked = chk.coveredCart !== false;
+      document.getElementById('chkAuditDona').checked = chk.foodGradePackaging !== false;
+      document.getElementById('chkAuditOil').checked = chk.cleanOilPractice !== false;
+      document.getElementById('chkAuditSanitize').checked = chk.cartSanitization !== false;
+
+      // Identity prefill
+      document.getElementById('auditIdentityAddress').innerText = `${stall.address || 'Street stall location'} (GPS: ${stall.lat || 12.9725}°, ${stall.lng || 77.6408}°)`;
+      document.getElementById('auditIdentityStatus').value = stall.identity_status || (stall.is_verified ? 'verified' : 'pending');
+      document.getElementById('auditIdentityNotes').value = stall.identity_notes || '';
+
+      switchAuditTab('fssai');
+      document.getElementById('adminAuditModal').classList.remove('hidden');
+    }
+
+    function closeAuditModal() {
+      document.getElementById('adminAuditModal').classList.add('hidden');
+      currentAuditStallId = null;
+    }
+
+    function switchAuditTab(tab) {
+      ['fssai', 'hygiene', 'identity'].forEach(t => {
+        const pane = document.getElementById(`auditPane${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        const btn = document.getElementById(`btnAuditTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
+        if (t === tab) {
+          pane?.classList.remove('hidden');
+          btn?.classList.remove('text-gray-400');
+          btn?.classList.add('bg-orange-600', 'text-white');
+        } else {
+          pane?.classList.add('hidden');
+          btn?.classList.remove('bg-orange-600', 'text-white');
+          btn?.classList.add('text-gray-400');
+        }
+      });
+    }
+
+    async function submitFssaiVerification() {
+      if (!currentAuditStallId) return;
+      const payload = {
+        fssaiNumber: document.getElementById('auditFssaiNumber').value.trim(),
+        status: document.getElementById('auditFssaiStatus').value,
+        expiryDate: document.getElementById('auditFssaiExpiry').value,
+        rejectionReason: document.getElementById('auditFssaiRejectionReason').value.trim(),
+        notes: document.getElementById('auditFssaiNotes').value.trim()
+      };
+
+      try {
+        const res = await fetch(`/api/admin/stalls/${currentAuditStallId}/fssai`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('FSSAI status updated successfully!');
+          closeAuditModal();
+          loadAdminData();
+        } else {
+          alert(data.error || 'Failed to update FSSAI');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Server error updating FSSAI');
+      }
+    }
+
+    async function submitHygieneInspection() {
+      if (!currentAuditStallId) return;
+      const payload = {
+        status: document.getElementById('auditHygieneStatus').value,
+        score: parseInt(document.getElementById('auditHygieneScore').value, 10) || 95,
+        inspectedBy: document.getElementById('auditHygieneInspector').value.trim(),
+        checklist: {
+          roWater: document.getElementById('chkAuditWater').checked,
+          coveredCart: document.getElementById('chkAuditCart').checked,
+          foodGradePackaging: document.getElementById('chkAuditDona').checked,
+          cleanOilPractice: document.getElementById('chkAuditOil').checked,
+          cartSanitization: document.getElementById('chkAuditSanitize').checked
+        },
+        notes: document.getElementById('auditHygieneNotes').value.trim()
+      };
+
+      try {
+        const res = await fetch(`/api/admin/stalls/${currentAuditStallId}/hygiene-inspection`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Hygiene inspection recorded successfully!');
+          closeAuditModal();
+          loadAdminData();
+        } else {
+          alert(data.error || 'Failed to record inspection');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Server error recording inspection');
+      }
+    }
+
+    async function submitIdentityVerification() {
+      if (!currentAuditStallId) return;
+      const payload = {
+        status: document.getElementById('auditIdentityStatus').value,
+        notes: document.getElementById('auditIdentityNotes').value.trim()
+      };
+
+      try {
+        const res = await fetch(`/api/admin/stalls/${currentAuditStallId}/identity`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Identity verification saved!');
+          closeAuditModal();
+          loadAdminData();
+        } else {
+          alert(data.error || 'Failed to save identity verification');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Server error updating identity');
+      }
     }
 
     function renderRidersTable(riders) {

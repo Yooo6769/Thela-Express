@@ -128,6 +128,11 @@ function handlePartnerWsMessage(data) {
     case 'ITEM_STOCK_CHANGED':
       loadVendorMenuItems();
       break;
+
+    case 'STALL_VERIFICATION_CHANGED':
+      loadStalls();
+      showToast('🛡️ Stall verification details updated by platform admin');
+      break;
   }
 }
 
@@ -253,6 +258,7 @@ async function loadStalls() {
     }
 
     subscribeToStall(PARTNER_STATE.vendorStallId);
+    updateVendorTrustCard();
     loadVendorOrders();
     loadVendorMenuItems();
   } catch (err) {
@@ -294,8 +300,108 @@ function onVendorStallChange() {
   const select = document.getElementById('vendorStallSelect');
   PARTNER_STATE.vendorStallId = select.value;
   subscribeToStall(PARTNER_STATE.vendorStallId);
+  updateVendorTrustCard();
   loadVendorOrders();
   loadVendorMenuItems();
+}
+
+function updateVendorTrustCard() {
+  const stall = PARTNER_STATE.stalls.find(s => s.id === PARTNER_STATE.vendorStallId);
+  const card = document.getElementById('vendorTrustHubCard');
+  if (!card) return;
+  if (!stall) {
+    card.classList.add('hidden');
+    return;
+  }
+  card.classList.remove('hidden');
+
+  const overallBadge = document.getElementById('vendorTrustOverallBadge');
+  const fssaiBadge = document.getElementById('vendorFssaiBadge');
+  const fssaiNum = document.getElementById('vendorFssaiNum');
+  const fssaiNotes = document.getElementById('vendorFssaiNotes');
+
+  const hygieneBadge = document.getElementById('vendorHygieneBadge');
+  const hygieneScore = document.getElementById('vendorHygieneScore');
+  const hygieneNotes = document.getElementById('vendorHygieneNotes');
+
+  const identityBadge = document.getElementById('vendorIdentityBadge');
+  const addressText = document.getElementById('vendorAddressText');
+
+  // 1. FSSAI
+  const fStatus = stall.fssai_status || (stall.fssai_number ? 'submitted' : 'not_submitted');
+  const fNum = stall.fssai_number || 'Not Provided';
+  if (fssaiNum) fssaiNum.innerText = `No: ${fNum}`;
+
+  if (fStatus === 'verified') {
+    fssaiBadge.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-100 text-emerald-800';
+    fssaiBadge.innerText = 'Verified ✓';
+    fssaiNotes.innerText = `Verified on ${stall.fssai_verified_at ? new Date(stall.fssai_verified_at).toLocaleDateString() : 'Record'}. Valid license.`;
+  } else if (fStatus === 'under_verification') {
+    fssaiBadge.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-100 text-blue-800';
+    fssaiBadge.innerText = 'Under Review';
+    fssaiNotes.innerText = 'Document undergoing validation on FoSCoS portal.';
+  } else if (fStatus === 'rejected') {
+    fssaiBadge.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-red-100 text-red-800';
+    fssaiBadge.innerText = 'Action Required';
+    fssaiNotes.innerText = stall.fssai_rejection_reason || 'Certificate mismatch. Contact admin to correct.';
+  } else if (fStatus === 'expired') {
+    fssaiBadge.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-gray-200 text-gray-800';
+    fssaiBadge.innerText = 'Expired';
+    fssaiNotes.innerText = 'FSSAI License expired. Please renew with FoSCoS.';
+  } else {
+    fssaiBadge.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800';
+    fssaiBadge.innerText = stall.fssai_number ? 'Submitted' : 'Pending Upload';
+    fssaiNotes.innerText = stall.fssai_number ? 'Submitted during onboarding. Awaiting platform review.' : 'No FSSAI number provided. Enter in profile to get verified.';
+  }
+
+  // 2. Hygiene Inspection
+  const hStatus = stall.hygiene_status || 'not_inspected';
+  if (hStatus === 'verified') {
+    hygieneBadge.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-amber-100 text-amber-800';
+    hygieneBadge.innerText = 'Hygiene Certified ★';
+    hygieneScore.innerText = `Score: ${stall.hygiene_score || 95}/100`;
+    hygieneNotes.innerText = `Inspected by ${stall.hygiene_inspected_by || 'Quality Team'} on ${stall.hygiene_verified_at ? new Date(stall.hygiene_verified_at).toLocaleDateString() : 'Record'}.`;
+  } else if (hStatus === 'scheduled') {
+    hygieneBadge.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-blue-100 text-blue-800';
+    hygieneBadge.innerText = 'Inspection Scheduled';
+    hygieneScore.innerText = 'Auditor Assigned';
+    hygieneNotes.innerText = 'Auditor will visit your cart location for physical hygiene check.';
+  } else if (hStatus === 'failed') {
+    hygieneBadge.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-red-100 text-red-800';
+    hygieneBadge.innerText = 'Audit Failed';
+    hygieneScore.innerText = `Score: ${stall.hygiene_score || 'N/A'}`;
+    hygieneNotes.innerText = stall.hygiene_notes || 'Cleanliness standards not met. Fix issues for re-audit.';
+  } else {
+    hygieneBadge.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-gray-200 text-gray-700';
+    hygieneBadge.innerText = 'Pending Physical Audit';
+    hygieneScore.innerText = 'Not Inspected Yet';
+    hygieneNotes.innerText = 'RO water, clean oil & covered cart will be checked during on-ground audit.';
+  }
+
+  // 3. Identity
+  if (addressText) addressText.innerText = stall.address || 'Indiranagar 100ft Rd';
+  if (stall.identity_status === 'verified' || stall.is_verified) {
+    identityBadge.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-100 text-emerald-800';
+    identityBadge.innerText = 'Verified KYC ✓';
+  } else {
+    identityBadge.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-gray-200 text-gray-700';
+    identityBadge.innerText = 'Pending Review';
+  }
+
+  // Overall Trust Banner
+  if (fStatus === 'verified' && hStatus === 'verified') {
+    overallBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800 flex items-center';
+    overallBadge.innerHTML = '<i class="fa-solid fa-crown mr-1 text-amber-500"></i> Thela Gold Standard';
+  } else if (fStatus === 'verified') {
+    overallBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800';
+    overallBadge.innerText = 'FSSAI Verified';
+  } else if (hStatus === 'verified') {
+    overallBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800';
+    overallBadge.innerText = 'Thela Hygiene Verified';
+  } else {
+    overallBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-gray-100 text-gray-700';
+    overallBadge.innerText = 'Audits in Progress';
+  }
 }
 
 async function loadVendorOrders() {

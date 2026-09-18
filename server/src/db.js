@@ -186,15 +186,79 @@ class Database {
     return { isFavorite, favorites: user.favorites };
   }
 
+  computeTrustBadges(stall) {
+    if (!stall) return [];
+    const badges = [];
+    if (stall.fssai_status === 'verified') {
+      badges.push({
+        id: 'fssai_verified',
+        type: 'fssai',
+        label: 'FSSAI Verified',
+        icon: 'fa-shield-check',
+        color: 'emerald',
+        verifiedAt: stall.fssai_verified_at,
+        details: `License #${stall.fssai_number ? (stall.fssai_number.length > 6 ? stall.fssai_number.slice(0, 4) + '••••' + stall.fssai_number.slice(-4) : stall.fssai_number) : 'Verified'}`
+      });
+    }
+    if (stall.hygiene_status === 'verified' || stall.hygiene_status === 'certified') {
+      badges.push({
+        id: 'hygiene_verified',
+        type: 'hygiene',
+        label: 'Thela Hygiene Verified',
+        icon: 'fa-sparkles',
+        color: 'amber',
+        verifiedAt: stall.hygiene_verified_at,
+        score: stall.hygiene_score || 95,
+        details: `Hygiene Score: ${stall.hygiene_score || 95}/100`
+      });
+    }
+    if (stall.identity_status === 'verified' || stall.is_verified) {
+      badges.push({
+        id: 'thela_verified',
+        type: 'identity',
+        label: 'Thela Verified Partner',
+        icon: 'fa-circle-check',
+        color: 'blue',
+        verifiedAt: stall.identity_verified_at,
+        details: 'Physical cart & vendor KYC verified'
+      });
+    }
+    if (badges.length === 0) {
+      badges.push({
+        id: 'under_review',
+        type: 'pending',
+        label: 'Audits in Progress',
+        icon: 'fa-clock-rotate-left',
+        color: 'gray',
+        details: 'Initial onboarding verification underway'
+      });
+    }
+    return badges;
+  }
+
+  formatStallForPublic(stall) {
+    if (!stall) return null;
+    const badges = this.computeTrustBadges(stall);
+    const primaryBadge = badges.find(b => b.type !== 'pending') || badges[0];
+    return {
+      ...stall,
+      trustBadges: badges,
+      hygieneBadge: primaryBadge ? primaryBadge.label : 'Audits in Progress'
+    };
+  }
+
   // Stalls & Categories
   getStalls(category) {
-    if (!category || category === 'all') return this.data.stalls;
-    const target = category.toLowerCase().replace(/[^a-z0-9]/g, '');
-    return this.data.stalls.filter(s => {
-      if (!s.category) return false;
-      const cat = s.category.toLowerCase().replace(/[^a-z0-9]/g, '');
-      return cat === target || s.category.toLowerCase() === category.toLowerCase() || s.category.toLowerCase().includes(category.toLowerCase());
-    });
+    let list = this.data.stalls || [];
+    if (category && category !== 'all') {
+      const target = category.toLowerCase().replace(/[^a-z0-9]/g, '');
+      list = list.filter(s => {
+        if (!s.category) return false;
+        const cat = s.category.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return cat === target || s.category.toLowerCase() === category.toLowerCase() || s.category.toLowerCase().includes(category.toLowerCase());
+      });
+    }
+    return list.map(s => this.formatStallForPublic(s));
   }
 
   getCategories() {
@@ -394,6 +458,7 @@ class Database {
   // Real Vendor Self-Onboarding
   registerStall(stallData, menuItems = []) {
     const stallId = `stall_${Date.now()}`;
+    const hasFssai = Boolean(stallData.fssai_number && stallData.fssai_number.trim());
     const newStall = {
       id: stallId,
       owner_name: stallData.owner_name || 'Vendor Partner',
@@ -408,18 +473,43 @@ class Database {
       lng: parseFloat(stallData.lng) || 77.6408,
       specialty: stallData.specialty || 'Authentic Street Special',
       heritageStory: stallData.heritageStory || 'Newly onboarded authentic street vendor on ThelaExpress.',
-      hygieneScore: 95,
-      hygieneBadge: stallData.fssai_number ? 'FSSAI Registered Cart ★' : 'Thela Hygiene Audited ★',
-      hygieneHighlights: stallData.hygieneHighlights || ['Filtered Clean Water', 'Sanitized Dona/Paper Plates', 'Clean Cart'],
       priceForTwo: stallData.priceForTwo || '₹120 for two',
       discount: stallData.discount || '15% OFF On First Order',
       imageUrl: stallData.imageUrl || 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80',
       upi_id: stallData.upi_id || 'vendor@upi',
-      fssai_number: stallData.fssai_number || '',
       address: stallData.address || 'Indiranagar 100ft Rd',
       isOpen: true,
       isVeg: stallData.isVeg !== undefined ? Boolean(stallData.isVeg) : true,
-      is_verified: true, // auto-approve for seamless real testing, admin can also toggle
+
+      // 1. FSSAI Registration Lifecycle
+      fssai_number: hasFssai ? stallData.fssai_number.trim() : '',
+      fssai_status: hasFssai ? 'submitted' : 'not_submitted', // 'not_submitted' | 'submitted' | 'under_verification' | 'verified' | 'rejected' | 'expired'
+      fssai_verified_at: null,
+      fssai_expiry_date: null,
+      fssai_rejection_reason: null,
+      fssai_notes: '',
+
+      // 2. Thela Express Hygiene Inspection Lifecycle (independent of FSSAI)
+      hygiene_status: 'not_inspected', // 'not_inspected' | 'scheduled' | 'verified' | 'failed' | 'revoked'
+      hygiene_score: null,
+      hygiene_verified_at: null,
+      hygiene_inspected_by: null,
+      hygiene_notes: '',
+      hygiene_checklist_verified: {
+        roWater: false,
+        coveredCart: false,
+        foodGradePackaging: false,
+        cleanOilPractice: false,
+        cartSanitization: false
+      },
+      // Self-declared requirements submitted by vendor (informational, not certified badge)
+      hygiene_self_declaration: stallData.hygieneHighlights || ['RO Clean Water', 'Covered Food Cart', 'Food-Grade Dona'],
+
+      // 3. Vendor Identity & Location KYC
+      identity_status: 'pending', // 'pending' | 'verified' | 'rejected'
+      identity_verified_at: null,
+      is_verified: false,
+
       created_at: new Date().toISOString()
     };
 
@@ -476,14 +566,78 @@ class Database {
     return newRider;
   }
 
-  // Admin Verification Toggles
-  verifyStall(stallId, isApproved) {
+  // Admin Verification & Trust Management
+  updateStallFssai(stallId, { status, fssaiNumber, expiryDate, rejectionReason, notes } = {}) {
     const stall = this.getStallById(stallId);
-    if (stall) {
-      stall.is_verified = isApproved;
-      this.save();
+    if (!stall) return null;
+
+    if (fssaiNumber !== undefined && fssaiNumber.trim()) {
+      stall.fssai_number = fssaiNumber.trim();
     }
-    return stall;
+    if (status) {
+      stall.fssai_status = status;
+      if (status === 'verified') {
+        stall.fssai_verified_at = new Date().toISOString();
+        stall.fssai_rejection_reason = null;
+      } else if (status === 'rejected') {
+        stall.fssai_rejection_reason = rejectionReason || 'Certificate invalid or mismatch with business name.';
+        stall.fssai_verified_at = null;
+      } else if (status === 'expired') {
+        stall.fssai_rejection_reason = 'FSSAI License has expired.';
+      }
+    }
+    if (expiryDate !== undefined) stall.fssai_expiry_date = expiryDate;
+    if (notes !== undefined) stall.fssai_notes = notes;
+
+    this.save();
+    return this.formatStallForPublic(stall);
+  }
+
+  recordHygieneInspection(stallId, { status, score, inspectedBy, checklist, checklistVerified, notes } = {}) {
+    const stall = this.getStallById(stallId);
+    if (!stall) return null;
+
+    if (status) {
+      stall.hygiene_status = status;
+      if (status === 'verified' || status === 'certified') {
+        stall.hygiene_verified_at = new Date().toISOString();
+      } else if (['failed', 'revoked'].includes(status)) {
+        stall.hygiene_verified_at = null;
+      }
+    }
+    if (score !== undefined) stall.hygiene_score = parseInt(score) || 90;
+    if (inspectedBy !== undefined) stall.hygiene_inspected_by = inspectedBy;
+    const finalChecklist = checklistVerified !== undefined ? checklistVerified : checklist;
+    if (finalChecklist !== undefined) {
+      if (Array.isArray(finalChecklist)) {
+        stall.hygiene_checklist_verified = finalChecklist;
+      } else {
+        stall.hygiene_checklist_verified = Object.assign(stall.hygiene_checklist_verified || {}, finalChecklist);
+      }
+    }
+    if (notes !== undefined) stall.hygiene_notes = notes;
+
+    this.save();
+    return this.formatStallForPublic(stall);
+  }
+
+  updateStallIdentity(stallId, { status, notes } = {}) {
+    const stall = this.getStallById(stallId);
+    if (!stall) return null;
+
+    if (status) {
+      stall.identity_status = status;
+      stall.is_verified = (status === 'verified');
+      stall.identity_verified_at = (status === 'verified') ? new Date().toISOString() : null;
+    }
+    if (notes !== undefined) stall.identity_notes = notes;
+
+    this.save();
+    return this.formatStallForPublic(stall);
+  }
+
+  verifyStall(stallId, isApproved) {
+    return this.updateStallIdentity(stallId, { status: isApproved ? 'verified' : 'rejected' });
   }
 
   verifyRider(riderId, isApproved) {

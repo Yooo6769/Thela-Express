@@ -259,6 +259,7 @@ function handleWebSocketMessage(data) {
       break;
 
     case 'STALL_STATUS_CHANGED':
+    case 'STALL_VERIFICATION_CHANGED':
     case 'ITEM_STOCK_CHANGED':
       loadStalls();
       loadCategories();
@@ -502,13 +503,31 @@ function renderStalls(stalls) {
           <p class="text-[11px] text-gray-400 italic line-clamp-1 mt-0.5">"${stall.heritageStory}"</p>
         </div>
 
-        <!-- Hygiene Badge Guarantee -->
+        <!-- Trust Badges (Clickable to view full inspection dossier) -->
         <div class="pt-2 border-t border-gray-100 flex items-center justify-between text-[11px]">
-          <span class="text-amber-800 font-bold bg-amber-50 px-2 py-0.5 rounded-md flex items-center">
-            <i class="fa-solid fa-shield-check text-amber-600 mr-1"></i>
-            ${stall.hygieneBadge}
-          </span>
-          <span class="font-bold text-gray-500">${stall.distance} away</span>
+          <div class="flex items-center space-x-1 flex-wrap gap-y-1" onclick="event.stopPropagation(); openTrustModal('${stall.id}');">
+            ${(stall.trustBadges || []).map(b => {
+              let colorClass = 'bg-gray-100 text-gray-700 border-gray-200';
+              let iconClass = 'fa-clock-rotate-left text-gray-500';
+              if (b.type === 'fssai') {
+                colorClass = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+                iconClass = 'fa-shield-check text-emerald-600';
+              } else if (b.type === 'hygiene') {
+                colorClass = 'bg-amber-50 text-amber-800 border-amber-200';
+                iconClass = 'fa-wand-magic-sparkles text-amber-600';
+              } else if (b.type === 'identity') {
+                colorClass = 'bg-blue-50 text-blue-800 border-blue-200';
+                iconClass = 'fa-circle-check text-blue-600';
+              }
+              return `
+                <span class="inline-flex items-center space-x-1 font-extrabold px-2 py-0.5 rounded-md border text-[10px] shadow-sm hover:scale-105 active:scale-95 transition ${colorClass}" title="Click to view full inspection report">
+                  <i class="fa-solid ${iconClass}"></i>
+                  <span>${b.label}</span>
+                </span>
+              `;
+            }).join('')}
+          </div>
+          <span class="font-bold text-gray-500 shrink-0 ml-2">${stall.distance} away</span>
         </div>
       </div>
     </div>
@@ -626,7 +645,32 @@ async function openStallModal(stallId) {
     document.getElementById('modalStallImage').src = data.stall.imageUrl;
     document.getElementById('modalStallRating').innerHTML = `<i class="fa-solid fa-star mr-1"></i>${data.stall.rating} (${data.stall.reviewsCount})`;
     document.getElementById('modalStallBadge').innerText = data.stall.isOpen ? 'OPEN NOW' : 'CLOSED';
-    document.getElementById('modalStallHygiene').innerText = data.stall.hygieneHighlights.join(' • ');
+
+    // Update Trust Badges in Modal Bar
+    const badgesEl = document.getElementById('modalStallBadges');
+    if (badgesEl) {
+      const badges = data.stall.trustBadges || [];
+      badgesEl.innerHTML = badges.map(b => {
+        let colorClass = 'bg-amber-100 text-amber-900 border-amber-300';
+        let iconClass = 'fa-clock-rotate-left text-amber-700';
+        if (b.type === 'fssai') {
+          colorClass = 'bg-emerald-100 text-emerald-900 border-emerald-300';
+          iconClass = 'fa-shield-check text-emerald-700';
+        } else if (b.type === 'hygiene') {
+          colorClass = 'bg-amber-100 text-amber-900 border-amber-300';
+          iconClass = 'fa-wand-magic-sparkles text-amber-700';
+        } else if (b.type === 'identity') {
+          colorClass = 'bg-blue-100 text-blue-900 border-blue-300';
+          iconClass = 'fa-circle-check text-blue-700';
+        }
+        return `
+          <span class="inline-flex items-center space-x-1 font-extrabold px-2 py-0.5 rounded-md border text-[10px] ${colorClass}">
+            <i class="fa-solid ${iconClass}"></i>
+            <span>${b.label}</span>
+          </span>
+        `;
+      }).join('');
+    }
 
     renderMenuItems(data.items);
     updateCartFloatingBar();
@@ -639,6 +683,162 @@ async function openStallModal(stallId) {
 
 function closeStallModal() {
   document.getElementById('stallModal').classList.add('hidden');
+}
+
+async function openTrustModal(stallId) {
+  try {
+    const res = await fetch(`/api/stalls/${stallId}/trust`);
+    const data = await res.json();
+    if (!data.success) {
+      showToast('Could not load trust details');
+      return;
+    }
+    const { stall, fssai, hygiene, identity, badges } = data;
+    const tr = (k, fb) => (typeof t === 'function' ? t(k, fb) : fb);
+
+    const nameEl = document.getElementById('trustModalStallName');
+    if (nameEl) nameEl.innerText = stall.name;
+
+    const badgesEl = document.getElementById('trustModalBadgesRow');
+    if (badgesEl) {
+      badgesEl.innerHTML = (badges || []).map(b => {
+        let colorClass = 'bg-gray-100 text-gray-700 border-gray-200';
+        let iconClass = 'fa-clock-rotate-left text-gray-500';
+        if (b.type === 'fssai') {
+          colorClass = 'bg-emerald-50 text-emerald-800 border-emerald-200';
+          iconClass = 'fa-shield-check text-emerald-600';
+        } else if (b.type === 'hygiene') {
+          colorClass = 'bg-amber-50 text-amber-800 border-amber-200';
+          iconClass = 'fa-wand-magic-sparkles text-amber-600';
+        } else if (b.type === 'identity') {
+          colorClass = 'bg-blue-50 text-blue-800 border-blue-200';
+          iconClass = 'fa-circle-check text-blue-600';
+        }
+        return `
+          <span class="inline-flex items-center space-x-1.5 font-extrabold px-2.5 py-1 rounded-lg border text-xs shadow-sm ${colorClass}">
+            <i class="fa-solid ${iconClass}"></i>
+            <span>${b.label}</span>
+          </span>
+        `;
+      }).join('');
+    }
+
+    // FSSAI status
+    const fssaiStatusEl = document.getElementById('trustModalFssaiStatus');
+    if (fssaiStatusEl) {
+      let statusClass = 'bg-amber-100 text-amber-800';
+      let statusLabel = tr('fssai_status_submitted', 'Submitted (Under Review)');
+      if (fssai.status === 'verified') {
+        statusClass = 'bg-emerald-100 text-emerald-800';
+        statusLabel = tr('fssai_status_verified', 'Verified FSSAI');
+      } else if (fssai.status === 'rejected') {
+        statusClass = 'bg-red-100 text-red-800';
+        statusLabel = tr('fssai_status_rejected', 'Rejected');
+      } else if (fssai.status === 'expired') {
+        statusClass = 'bg-red-100 text-red-800';
+        statusLabel = tr('fssai_status_expired', 'Expired');
+      }
+      fssaiStatusEl.className = `px-2.5 py-0.5 rounded-full text-[10px] font-black ${statusClass}`;
+      fssaiStatusEl.innerText = statusLabel;
+    }
+
+    const fssaiNoEl = document.getElementById('trustModalFssaiNo');
+    if (fssaiNoEl) fssaiNoEl.innerText = fssai.registrationNumber || 'Not submitted';
+
+    const fssaiDateEl = document.getElementById('trustModalFssaiDate');
+    if (fssaiDateEl) {
+      fssaiDateEl.innerText = fssai.verifiedAt ? new Date(fssai.verifiedAt).toLocaleDateString() : (fssai.status === 'verified' ? 'Verified' : 'Pending Verification');
+    }
+
+    const fssaiNoteWrap = document.getElementById('trustModalFssaiNoteWrapper');
+    const fssaiNoteEl = document.getElementById('trustModalFssaiNote');
+    if (fssai.rejectionReason && fssaiNoteWrap && fssaiNoteEl) {
+      fssaiNoteEl.innerText = `Note: ${fssai.rejectionReason}`;
+      fssaiNoteWrap.classList.remove('hidden');
+    } else if (fssaiNoteWrap) {
+      fssaiNoteWrap.classList.add('hidden');
+    }
+
+    // Hygiene status
+    const hygieneStatusEl = document.getElementById('trustModalHygieneStatus');
+    if (hygieneStatusEl) {
+      let hClass = 'bg-amber-100 text-amber-800';
+      let hLabel = tr('badge_not_inspected', 'Audit Pending');
+      if (hygiene.status === 'certified') {
+        hClass = 'bg-emerald-100 text-emerald-800';
+        hLabel = tr('hygiene_certified', 'Passed & Certified');
+      } else if (hygiene.status === 'needs_improvement') {
+        hClass = 'bg-amber-100 text-amber-800';
+        hLabel = 'Needs Improvement';
+      } else if (hygiene.status === 'failed') {
+        hClass = 'bg-red-100 text-red-800';
+        hLabel = 'Audit Failed';
+      }
+      hygieneStatusEl.className = `px-2.5 py-0.5 rounded-full text-[10px] font-black ${hClass}`;
+      hygieneStatusEl.innerText = hLabel;
+    }
+
+    const hygieneScoreEl = document.getElementById('trustModalHygieneScore');
+    if (hygieneScoreEl) {
+      hygieneScoreEl.innerText = hygiene.score ? `${hygiene.score}/100` : 'Pending';
+    }
+
+    const hygieneAuditorEl = document.getElementById('trustModalHygieneAuditor');
+    if (hygieneAuditorEl) {
+      hygieneAuditorEl.innerText = hygiene.inspectedBy 
+        ? `${hygiene.inspectedBy} (${hygiene.verifiedAt ? new Date(hygiene.verifiedAt).toLocaleDateString() : 'Verified'})` 
+        : 'Physical audit scheduled';
+    }
+
+    // Hygiene Checklist Breakdown
+    const checklistEl = document.getElementById('trustModalChecklistContainer');
+    if (checklistEl) {
+      const verifiedList = hygiene.checklistVerified || [];
+      const selfDeclList = hygiene.selfDeclaration || [];
+      const standardItems = [
+        { label: tr('audit_water', 'RO / Packaged Water Standard'), key: 'ro_water' },
+        { label: tr('audit_covered_cart', 'Covered Food Cart & Sneeze Guards'), key: 'covered_cart' },
+        { label: tr('audit_dona', 'Food-Grade Dona & Eco Packaging'), key: 'food_grade_packaging' },
+        { label: tr('audit_oil', 'Fresh Oil Quality Standard (Zero Reheating)'), key: 'zero_oil_reheat' },
+        { label: tr('audit_sanitization', 'Vendor Cart Sanitization & Aprons'), key: 'clean_aprons' }
+      ];
+
+      checklistEl.innerHTML = standardItems.map(item => {
+        const isVerified = verifiedList.includes(item.key) || verifiedList.some(v => v.toLowerCase().includes(item.key.replace(/_/g, ' ')));
+        const isSelfDeclared = selfDeclList.includes(item.key) || selfDeclList.some(v => v.toLowerCase().includes(item.key.replace(/_/g, ' ')));
+        return `
+          <div class="flex items-center justify-between text-xs py-0.5">
+            <span class="flex items-center space-x-1.5">
+              <i class="fa-solid ${isVerified ? 'fa-circle-check text-emerald-600' : 'fa-circle-dot text-gray-400'} text-xs"></i>
+              <span class="${isVerified ? 'text-gray-800 font-semibold' : 'text-gray-500'}">${item.label}</span>
+            </span>
+            <span class="text-[10px] font-bold ${isVerified ? 'text-emerald-700' : (isSelfDeclared ? 'text-amber-600' : 'text-gray-400')}">
+              ${isVerified ? '✓ Inspected' : (isSelfDeclared ? 'Self-declared' : 'Pending')}
+            </span>
+          </div>
+        `;
+      }).join('');
+    }
+
+    // Address & Location
+    const addressEl = document.getElementById('trustModalAddress');
+    if (addressEl) addressEl.innerText = stall.address || 'Street Vendor Cart';
+
+    const coordsEl = document.getElementById('trustModalCoords');
+    if (coordsEl && stall.location) {
+      coordsEl.innerText = `GPS: ${Number(stall.location.lat).toFixed(4)}° N, ${Number(stall.location.lng).toFixed(4)}° E`;
+    }
+
+    document.getElementById('trustModal').classList.remove('hidden');
+  } catch (err) {
+    console.error('Failed to open trust modal:', err);
+    showToast('Failed to open trust details');
+  }
+}
+
+function closeTrustModal() {
+  const modal = document.getElementById('trustModal');
+  if (modal) modal.classList.add('hidden');
 }
 
 function renderMenuItems(items) {

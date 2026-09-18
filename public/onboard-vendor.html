@@ -165,15 +165,25 @@
         </div>
 
         <div class="space-y-3 text-xs">
+          <div class="p-3 bg-amber-50/80 border border-amber-200 rounded-xl space-y-1 text-amber-900">
+            <div class="flex items-center space-x-1.5 font-extrabold text-[11px]">
+              <i class="fa-solid fa-shield-halved text-orange-600"></i>
+              <span>Verification & Transparency Standards</span>
+            </div>
+            <p class="text-[11px] leading-relaxed text-amber-800">
+              Entering your FSSAI number and selecting readiness criteria registers your stall for verification. Official badges are awarded only after regulatory check and on-ground ThelaExpress hygiene inspection.
+            </p>
+          </div>
+
           <div class="space-y-1">
             <label class="font-bold text-gray-700" data-i18n="fssai_label">FSSAI Registration Number (Optional)</label>
             <input type="text" id="fssaiNumber" data-i18n-placeholder="fssai_placeholder" placeholder="e.g. 21223010000456 (Leave blank if pending)"
               class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
-            <p class="text-[11px] text-gray-400">Basic street food FSSAI registration is ₹100/year and increases customer orders by 3x.</p>
+            <p class="text-[11px] text-gray-500">Will be submitted for platform verification. Unverified numbers do not receive badges.</p>
           </div>
 
           <div class="space-y-2 pt-2">
-            <label class="font-bold text-gray-700 block" data-i18n="hygiene_checklist_label">Hygiene Checklist (Check all that apply)</label>
+            <label class="font-bold text-gray-700 block" data-i18n="hygiene_checklist_label">Hygiene Self-Declaration (Checked during physical audit)</label>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-800 font-medium">
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" id="hygieneWater" checked class="rounded text-orange-600 focus:ring-orange-500">
@@ -192,6 +202,7 @@
                 <span data-i18n="hygiene_clean_oil">Zero-Oil Reheat Certified</span>
               </label>
             </div>
+            <p class="text-[11px] text-gray-400 italic">Self-declaration helps schedule your priority physical inspection by our quality auditor.</p>
           </div>
         </div>
       </div>

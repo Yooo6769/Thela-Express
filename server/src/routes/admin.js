@@ -2,11 +2,13 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const wsManager = require('../websocket');
 
 // GET /api/admin/overview
 router.get('/overview', (req, res) => {
   const stats = db.getPlatformStats();
-  const stalls = db.data.stalls || [];
+  const rawStalls = db.data.stalls || [];
+  const stalls = rawStalls.map(s => db.formatStallForPublic(s));
   const riders = db.data.riders || [];
   const orders = (db.data.orders || []).slice(0, 20); // last 20 orders
 
@@ -19,11 +21,73 @@ router.get('/overview', (req, res) => {
   });
 });
 
-// PATCH /api/admin/stalls/:id/verify
+// PATCH /api/admin/stalls/:id/fssai (Admin FSSAI Verification Lifecycle)
+router.patch('/stalls/:id/fssai', (req, res) => {
+  const { status, fssaiNumber, expiryDate, rejectionReason, notes } = req.body;
+  const stall = db.updateStallFssai(req.params.id, {
+    status,
+    fssaiNumber,
+    expiryDate,
+    rejectionReason,
+    notes
+  });
+
+  if (!stall) return res.status(404).json({ error: 'Stall not found.' });
+
+  wsManager.broadcastAll({
+    type: 'STALL_VERIFICATION_CHANGED',
+    payload: { stallId: stall.id, fssai: stall.fssai_status, trustBadges: stall.trustBadges }
+  });
+
+  res.json({ success: true, message: `FSSAI status updated to ${stall.fssai_status}`, stall });
+});
+
+// POST /api/admin/stalls/:id/hygiene-inspection (Admin Physical/Virtual Cart Hygiene Inspection)
+router.post('/stalls/:id/hygiene-inspection', (req, res) => {
+  const { status, score, inspectedBy, checklist, checklistVerified, notes } = req.body;
+  const stall = db.recordHygieneInspection(req.params.id, {
+    status: status || 'verified',
+    score: score !== undefined ? parseInt(score) : 95,
+    inspectedBy: inspectedBy || 'ThelaExpress Quality Auditor',
+    checklist: checklist,
+    checklistVerified: checklistVerified,
+    notes: notes || 'Stall inspected and approved on site.'
+  });
+
+  if (!stall) return res.status(404).json({ error: 'Stall not found.' });
+
+  wsManager.broadcastAll({
+    type: 'STALL_VERIFICATION_CHANGED',
+    payload: { stallId: stall.id, hygiene: stall.hygiene_status, score: stall.hygiene_score, trustBadges: stall.trustBadges }
+  });
+
+  res.json({ success: true, message: `Hygiene inspection recorded (${stall.hygiene_status})`, stall });
+});
+
+// PATCH /api/admin/stalls/:id/identity (Admin KYC & Location Verification)
+router.patch('/stalls/:id/identity', (req, res) => {
+  const { status, notes } = req.body;
+  const stall = db.updateStallIdentity(req.params.id, { status, notes });
+  if (!stall) return res.status(404).json({ error: 'Stall not found.' });
+
+  wsManager.broadcastAll({
+    type: 'STALL_VERIFICATION_CHANGED',
+    payload: { stallId: stall.id, identity: stall.identity_status, trustBadges: stall.trustBadges }
+  });
+
+  res.json({ success: true, message: `Identity status updated to ${stall.identity_status}`, stall });
+});
+
+// PATCH /api/admin/stalls/:id/verify (Legacy alias)
 router.patch('/stalls/:id/verify', (req, res) => {
   const { isApproved } = req.body;
   const stall = db.verifyStall(req.params.id, Boolean(isApproved));
   if (!stall) return res.status(404).json({ error: 'Stall not found.' });
+
+  wsManager.broadcastAll({
+    type: 'STALL_VERIFICATION_CHANGED',
+    payload: { stallId: stall.id, is_verified: stall.is_verified, trustBadges: stall.trustBadges }
+  });
 
   res.json({ success: true, stall });
 });
