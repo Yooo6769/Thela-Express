@@ -22,14 +22,14 @@
         </div>
         <div>
           <span class="font-extrabold text-base tracking-tight text-gray-900">Thela<span class="text-orange-600">Express</span></span>
-          <span class="text-[10px] text-emerald-700 block font-bold">Rider Partner Portal</span>
+          <span class="text-[10px] text-emerald-700 block font-bold" data-i18n="rider_header_title">Rider Partner Portal</span>
         </div>
       </a>
       <div class="flex items-center space-x-2">
         <div class="langSelectorMount"></div>
         <a href="/" class="text-xs font-bold text-gray-600 hover:text-orange-600 flex items-center space-x-1">
           <i class="fa-solid fa-arrow-left"></i>
-          <span>Customer App</span>
+          <span data-i18n="customer_food_app">Customer App</span>
         </a>
       </div>
     </div>
@@ -41,11 +41,11 @@
     <!-- Hero Banner -->
     <div class="bg-gradient-to-br from-emerald-600 to-teal-700 text-white rounded-3xl p-6 shadow-lg shadow-emerald-600/15 relative overflow-hidden">
       <div class="relative z-10 space-y-2">
-        <span class="bg-black/20 text-emerald-200 text-xs font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+        <span class="bg-black/20 text-emerald-200 text-xs font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider" data-i18n="rider_hero_badge">
           Earn ₹40 Per Street Delivery • Daily UPI Payouts
         </span>
-        <h1 class="text-2xl font-black tracking-tight">Become a Delivery Partner</h1>
-        <p class="text-xs text-emerald-100 leading-relaxed">
+        <h1 class="text-2xl font-black tracking-tight" data-i18n="rider_hero_title">Become a Delivery Partner</h1>
+        <p class="text-xs text-emerald-100 leading-relaxed" data-i18n="rider_hero_desc">
           Deliver authentic hot street food within 1.5 km in your neighborhood. Flexible hours, EV friendly, instant UPI earnings.
         </p>
       </div>
@@ -59,27 +59,27 @@
       
       <!-- Personal Info -->
       <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4 shadow-sm">
-        <h2 class="font-extrabold text-sm text-gray-900 border-b border-gray-100 pb-2.5">Personal & Contact Details</h2>
+        <h2 class="font-extrabold text-sm text-gray-900 border-b border-gray-100 pb-2.5" data-i18n="rider_personal_sec">Personal & Contact Details</h2>
 
         <div class="space-y-3 text-xs">
           <div class="space-y-1">
-            <label class="font-bold text-gray-700">Full Name *</label>
-            <input type="text" id="riderName" required placeholder="Enter your full name"
+            <label class="font-bold text-gray-700" data-i18n="rider_name_label">Full Name *</label>
+            <input type="text" id="riderName" required placeholder="Enter your full name" data-i18n-placeholder="rider_name_placeholder"
               class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
           </div>
 
           <div class="space-y-1">
-            <label class="font-bold text-gray-700">WhatsApp Mobile Number *</label>
+            <label class="font-bold text-gray-700" data-i18n="rider_phone_label">WhatsApp Mobile Number *</label>
             <div class="relative">
               <span class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-gray-500">+91</span>
-              <input type="tel" id="riderPhone" required maxlength="10" placeholder="10-digit WhatsApp number"
+              <input type="tel" id="riderPhone" required maxlength="10" placeholder="10-digit WhatsApp number" data-i18n-placeholder="rider_phone_placeholder"
                 class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-3 p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
             </div>
           </div>
 
           <div class="space-y-1">
-            <label class="font-bold text-gray-700">Primary Delivery Neighborhood / Area *</label>
-            <input type="text" id="riderArea" required placeholder="e.g. Indiranagar / Domlur / Koramangala" value=""
+            <label class="font-bold text-gray-700" data-i18n="operating_area_label">Primary Delivery Neighborhood / Area *</label>
+            <input type="text" id="riderArea" required placeholder="e.g. Indiranagar / Domlur / Koramangala" data-i18n-placeholder="operating_area_placeholder" value=""
               class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
           </div>
         </div>
@@ -87,21 +87,21 @@
 
       <!-- Vehicle Details -->
       <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4 shadow-sm">
-        <h2 class="font-extrabold text-sm text-gray-900 border-b border-gray-100 pb-2.5">Vehicle Information</h2>
+        <h2 class="font-extrabold text-sm text-gray-900 border-b border-gray-100 pb-2.5" data-i18n="rider_vehicle_sec">Vehicle Information</h2>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs">
           <div class="space-y-1">
-            <label class="font-bold text-gray-700">Vehicle Type *</label>
+            <label class="font-bold text-gray-700" data-i18n="vehicle_type_label">Vehicle Type *</label>
             <select id="riderVehicle" class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
-              <option value="Ather 450X (EV)">Electric Scooter (Ather / Ola / Chetak)</option>
-              <option value="Petrol Motorcycle">Petrol Motorcycle / Activa</option>
-              <option value="Bicycle (Eco)">Bicycle / E-Bike</option>
+              <option value="Ather 450X (EV)" data-i18n="vehicle_ev">Electric Scooter (Ather / Ola / Chetak)</option>
+              <option value="Petrol Motorcycle" data-i18n="vehicle_petrol">Petrol Motorcycle / Activa</option>
+              <option value="Bicycle (Eco)" data-i18n="vehicle_cycle">Bicycle / E-Bike</option>
             </select>
           </div>
 
           <div class="space-y-1">
-            <label class="font-bold text-gray-700">Vehicle Number Plate (Optional)</label>
-            <input type="text" id="riderVehicleNum" placeholder="e.g. KA-03-HA-4829"
+            <label class="font-bold text-gray-700" data-i18n="vehicle_num_label">Vehicle Number Plate (Optional)</label>
+            <input type="text" id="riderVehicleNum" placeholder="e.g. KA-03-HA-4829" data-i18n-placeholder="vehicle_num_placeholder"
               class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
           </div>
         </div>
@@ -109,13 +109,13 @@
 
       <!-- Payout UPI ID -->
       <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-3 shadow-sm">
-        <h2 class="font-extrabold text-sm text-gray-900 border-b border-gray-100 pb-2.5">Payout UPI ID (Where We Pay You)</h2>
+        <h2 class="font-extrabold text-sm text-gray-900 border-b border-gray-100 pb-2.5" data-i18n="rider_payout_sec">Payout UPI ID (Where We Pay You)</h2>
 
         <div class="space-y-1 text-xs">
-          <label class="font-bold text-gray-700">Your UPI ID (GPay / PhonePe / Paytm) *</label>
-          <input type="text" id="riderUpi" required placeholder="e.g. 9845099999@upi or ramesh@okhdfcbank"
+          <label class="font-bold text-gray-700" data-i18n="rider_upi_label">Your UPI ID (GPay / PhonePe / Paytm) *</label>
+          <input type="text" id="riderUpi" required placeholder="e.g. 9845099999@upi or ramesh@okhdfcbank" data-i18n-placeholder="rider_upi_placeholder"
             class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
-          <p class="text-[11px] text-emerald-600 font-medium">
+          <p class="text-[11px] text-emerald-600 font-medium" data-i18n-html="rider_payout_desc">
             <i class="fa-solid fa-coins mr-1"></i>You receive ₹40 per verified doorstep delivery directly to this UPI address.
           </p>
         </div>
@@ -123,7 +123,7 @@
 
       <!-- Submit Button -->
       <button type="submit" id="riderSubmitBtn" class="w-full bg-emerald-600 text-white rounded-2xl py-4 font-black text-sm shadow-xl shadow-emerald-600/25 hover:bg-emerald-700 flex items-center justify-center space-x-2 transition">
-        <span>Complete Registration & Open Rider Console</span>
+        <span data-i18n="complete_rider_onboard_btn">Complete Registration & Open Rider Console</span>
         <i class="fa-solid fa-arrow-right"></i>
       </button>
 
@@ -137,20 +137,20 @@
         <i class="fa-solid fa-motorcycle"></i>
       </div>
 
-      <h3 class="text-xl font-black text-gray-900">Partner Account Activated!</h3>
-      <p class="text-xs text-gray-600">You are now registered as a verified ThelaExpress delivery partner. Start picking up food packages from local carts.</p>
+      <h3 class="text-xl font-black text-gray-900" data-i18n="rider_success_title">Partner Account Activated!</h3>
+      <p class="text-xs text-gray-600" data-i18n="rider_success_desc">You are now registered as a verified ThelaExpress delivery partner. Start picking up food packages from local carts.</p>
 
       <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-left space-y-1.5 text-xs">
         <div class="font-bold text-gray-900" id="successRiderName">Delivery Partner</div>
         <div class="text-gray-500" id="successRiderVehicle">Registered Vehicle</div>
-        <div class="text-emerald-700 font-bold">Payout: ₹40.00 / Delivery (Verified with Doorstep OTP)</div>
+        <div class="text-emerald-700 font-bold" data-i18n="rider_payout_rate">Payout: ₹40.00 / Delivery (Verified with Doorstep OTP)</div>
       </div>
 
       <div class="space-y-2 pt-2">
-        <a id="successRiderLink" href="#" class="w-full bg-emerald-600 text-white rounded-xl py-3 font-bold text-xs block hover:bg-emerald-700 shadow-md transition">
+        <a id="successRiderLink" href="#" data-i18n="open_rider_console_btn" class="w-full bg-emerald-600 text-white rounded-xl py-3 font-bold text-xs block hover:bg-emerald-700 shadow-md transition">
           Open Rider Delivery Console ➔
         </a>
-        <a href="/" class="w-full bg-gray-100 text-gray-800 rounded-xl py-2.5 font-bold text-xs block hover:bg-gray-200 transition">
+        <a href="/" data-i18n="return_to_customer_app" class="w-full bg-gray-100 text-gray-800 rounded-xl py-2.5 font-bold text-xs block hover:bg-gray-200 transition">
           Return to Customer App
         </a>
       </div>
@@ -195,7 +195,7 @@
         alert('Could not connect to server.');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<span>Complete Registration & Open Rider Console</span><i class="fa-solid fa-arrow-right ml-2"></i>`;
+        btn.innerHTML = `<span data-i18n="complete_rider_onboard_btn">${t('complete_rider_onboard_btn', 'Complete Registration & Open Rider Console')}</span><i class="fa-solid fa-arrow-right ml-2"></i>`;
       }
     }
   </script>

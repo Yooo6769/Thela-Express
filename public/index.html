@@ -364,15 +364,15 @@
         <!-- Bill Details -->
         <div class="space-y-1.5 text-xs text-gray-600">
           <div class="flex justify-between">
-            <span>Item Total</span>
+            <span data-i18n="item_total">Item Total</span>
             <span id="billSubtotal" class="font-bold text-gray-900">₹0</span>
           </div>
           <div class="flex justify-between">
-            <span>Delivery Fee (Within 1.5 km)</span>
+            <span data-i18n="delivery_fee">Delivery Fee (Within 1.5 km)</span>
             <span class="text-green-600 font-bold">FREE</span>
           </div>
           <div class="flex justify-between">
-            <span>Food-grade Packaging Fee</span>
+            <span data-i18n="platform_fee">Food-grade Packaging Fee</span>
             <span id="billPackagingFee" class="text-gray-900">₹10</span>
           </div>
           <div class="flex justify-between hidden" id="billTipRow">
@@ -380,7 +380,7 @@
             <span id="billTipAmount" class="text-orange-600 font-bold">₹0</span>
           </div>
           <div class="flex justify-between pt-2 border-t border-gray-200 text-sm font-black text-gray-900">
-            <span>To Pay</span>
+            <span data-i18n="grand_total">To Pay</span>
             <span id="billGrandTotal" class="text-orange-600 text-base">₹0</span>
           </div>
         </div>
@@ -396,7 +396,7 @@
 
         <!-- Checkout Action Button -->
         <button id="placeOrderBtn" onclick="handlePlaceOrder()" class="w-full bg-orange-600 text-white rounded-2xl py-3.5 font-black text-sm hover:bg-orange-700 shadow-lg shadow-orange-600/25 flex items-center justify-center space-x-2 transition">
-          <span>Place Order</span>
+          <span data-i18n="place_order_btn">Place Order</span>
           <i class="fa-solid fa-arrow-right"></i>
         </button>
       </div>

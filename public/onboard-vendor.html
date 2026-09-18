@@ -22,14 +22,14 @@
         </div>
         <div>
           <span class="font-extrabold text-base tracking-tight text-gray-900">Thela<span class="text-orange-600">Express</span></span>
-          <span class="text-[10px] text-gray-500 block font-medium">Vendor Partner Portal</span>
+          <span class="text-[10px] text-gray-500 block font-medium" data-i18n="stall_onboarding">Vendor Partner Portal</span>
         </div>
       </a>
       <div class="flex items-center space-x-2">
         <div class="langSelectorMount"></div>
         <a href="/" class="text-xs font-bold text-gray-600 hover:text-orange-600 flex items-center space-x-1">
           <i class="fa-solid fa-arrow-left"></i>
-          <span>Customer App</span>
+          <span data-i18n="customer_food_app">Customer App</span>
         </a>
       </div>
     </div>
@@ -41,11 +41,11 @@
     <!-- Hero / Value Proposition -->
     <div class="bg-gradient-to-br from-orange-600 to-amber-500 text-white rounded-3xl p-6 shadow-lg shadow-orange-600/15 relative overflow-hidden">
       <div class="relative z-10 space-y-2">
-        <span class="bg-black/20 text-amber-200 text-xs font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+        <span class="bg-black/20 text-amber-200 text-xs font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider" data-i18n="onboard_hero_badge">
           0% Registration Fee • Real Daily Payouts
         </span>
-        <h1 class="text-2xl font-black tracking-tight">Onboard Your Street Food Stall</h1>
-        <p class="text-xs text-orange-100 leading-relaxed">
+        <h1 class="text-2xl font-black tracking-tight" data-i18n="onboard_hero_title">Onboard Your Street Food Stall</h1>
+        <p class="text-xs text-orange-100 leading-relaxed" data-i18n="onboard_hero_desc">
           Start receiving live orders from hungry customers nearby. Get your dedicated kitchen audio order bell & doorstep delivery riders.
         </p>
       </div>
@@ -61,34 +61,34 @@
       <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4 shadow-sm">
         <div class="flex items-center space-x-2 border-b border-gray-100 pb-2.5">
           <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-black">1</span>
-          <h2 class="font-extrabold text-sm text-gray-900">Stall & Contact Basics</h2>
+          <h2 class="font-extrabold text-sm text-gray-900" data-i18n="sec1_title">Stall & Contact Basics</h2>
         </div>
 
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3.5 text-xs">
           <div class="space-y-1">
-            <label class="font-bold text-gray-700">Stall / Cart Brand Name *</label>
-            <input type="text" id="stallName" required placeholder="e.g. Gupta Ji Ka Special Chaat"
+            <label class="font-bold text-gray-700" data-i18n="stall_name_label">Stall / Cart Brand Name *</label>
+            <input type="text" id="stallName" required data-i18n-placeholder="stall_name_placeholder" placeholder="e.g. Sharma Ji Chaat Corner"
               class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
           </div>
 
           <div class="space-y-1">
-            <label class="font-bold text-gray-700">Owner Full Name *</label>
-            <input type="text" id="ownerName" required placeholder="e.g. Rameshwar Gupta"
+            <label class="font-bold text-gray-700" data-i18n="owner_name_label">Owner Full Name *</label>
+            <input type="text" id="ownerName" required data-i18n-placeholder="owner_name_placeholder" placeholder="e.g. Ramesh Sharma"
               class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
           </div>
 
           <div class="space-y-1">
-            <label class="font-bold text-gray-700">Owner WhatsApp / Phone Number *</label>
+            <label class="font-bold text-gray-700" data-i18n="owner_phone_label">Owner Mobile Phone Number *</label>
             <div class="relative">
               <span class="absolute left-3 top-1/2 -translate-y-1/2 font-bold text-gray-500">+91</span>
-              <input type="tel" id="ownerPhone" required maxlength="10" placeholder="98450 12345"
+              <input type="tel" id="ownerPhone" required maxlength="10" data-i18n-placeholder="owner_phone_placeholder" placeholder="10-digit mobile phone number"
                 class="w-full bg-gray-50 border border-gray-200 rounded-xl pl-12 pr-3 p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
             </div>
           </div>
 
           <div class="space-y-1">
             <div class="flex items-center justify-between">
-              <label class="font-bold text-gray-700">Food Category *</label>
+              <label class="font-bold text-gray-700" data-i18n="primary_category_label">Food Category *</label>
               <button type="button" onclick="toggleCustomCategoryInput()" id="toggleCatBtn" class="text-[11px] font-bold text-orange-600 hover:text-orange-700">
                 ✍️ Type Custom
               </button>
@@ -127,8 +127,8 @@
         </div>
 
         <div class="space-y-1 text-xs">
-          <label class="font-bold text-gray-700">Signature Dish / Specialty Tagline *</label>
-          <input type="text" id="stallSpecialty" required placeholder="e.g. Authentic Hing Pani Golgappe & Crispy Aloo Tikki"
+          <label class="font-bold text-gray-700" data-i18n="specialty_label">Signature Dish / Specialty Tagline *</label>
+          <input type="text" id="stallSpecialty" required data-i18n-placeholder="specialty_placeholder" placeholder="e.g. Authentic Hing Pani Golgappe & Crispy Aloo Tikki"
             class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
         </div>
       </div>
@@ -137,20 +137,20 @@
       <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4 shadow-sm">
         <div class="flex items-center space-x-2 border-b border-gray-100 pb-2.5">
           <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-black">2</span>
-          <h2 class="font-extrabold text-sm text-gray-900">Exact Street Location (For Rider Pickups)</h2>
+          <h2 class="font-extrabold text-sm text-gray-900" data-i18n="sec2_title">Exact Street Location (For Rider Pickups)</h2>
         </div>
 
         <div class="space-y-3 text-xs">
           <div class="space-y-1">
-            <label class="font-bold text-gray-700">Cart Landmark / Street Address *</label>
-            <input type="text" id="stallAddress" required placeholder="e.g. Near Indiranagar Metro Station, 100ft Road"
+            <label class="font-bold text-gray-700" data-i18n="cart_address_label">Cart Landmark / Street Address *</label>
+            <input type="text" id="stallAddress" required data-i18n-placeholder="cart_address_placeholder" placeholder="e.g. Near Indiranagar Metro Station, 100ft Road"
               class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
           </div>
 
           <div class="flex items-center space-x-2">
             <button type="button" onclick="captureLiveGps()" class="px-3 py-2 bg-gray-100 text-gray-800 rounded-xl text-xs font-bold hover:bg-gray-200 flex items-center space-x-1.5 transition">
               <i class="fa-solid fa-location-crosshairs text-orange-600"></i>
-              <span id="gpsButtonLabel">Detect My GPS Location</span>
+              <span id="gpsButtonLabel" data-i18n="detect_gps_btn">Detect My GPS Location</span>
             </button>
             <span id="gpsCoordsText" class="text-[11px] text-gray-400 font-mono">Default: 12.9725° N, 77.6408° E</span>
           </div>
@@ -161,35 +161,35 @@
       <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4 shadow-sm">
         <div class="flex items-center space-x-2 border-b border-gray-100 pb-2.5">
           <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-black">3</span>
-          <h2 class="font-extrabold text-sm text-gray-900">Hygiene & Trust Standards</h2>
+          <h2 class="font-extrabold text-sm text-gray-900" data-i18n="sec3_title">Hygiene & Trust Standards</h2>
         </div>
 
         <div class="space-y-3 text-xs">
           <div class="space-y-1">
-            <label class="font-bold text-gray-700">FSSAI Registration Number (Optional)</label>
-            <input type="text" id="fssaiNumber" placeholder="e.g. 21223010000456 (Leave blank if pending)"
+            <label class="font-bold text-gray-700" data-i18n="fssai_label">FSSAI Registration Number (Optional)</label>
+            <input type="text" id="fssaiNumber" data-i18n-placeholder="fssai_placeholder" placeholder="e.g. 21223010000456 (Leave blank if pending)"
               class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
             <p class="text-[11px] text-gray-400">Basic street food FSSAI registration is ₹100/year and increases customer orders by 3x.</p>
           </div>
 
           <div class="space-y-2 pt-2">
-            <label class="font-bold text-gray-700 block">Hygiene Checklist (Check all that apply)</label>
+            <label class="font-bold text-gray-700 block" data-i18n="hygiene_checklist_label">Hygiene Checklist (Check all that apply)</label>
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 text-gray-800 font-medium">
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" id="hygieneWater" checked class="rounded text-orange-600 focus:ring-orange-500">
-                <span>RO / Packaged Mineral Water only</span>
+                <span data-i18n="hygiene_ro_water">RO / Packaged Mineral Water only</span>
               </label>
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" id="hygieneCart" checked class="rounded text-orange-600 focus:ring-orange-500">
-                <span>Covered glass food enclosure</span>
+                <span data-i18n="hygiene_glass_cart">Covered Glass Food Cart</span>
               </label>
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" id="hygieneDona" checked class="rounded text-orange-600 focus:ring-orange-500">
-                <span>Food-grade paper plates / dona</span>
+                <span data-i18n="hygiene_dona_paper">Food-Grade Dona & Paper</span>
               </label>
               <label class="flex items-center space-x-2 cursor-pointer">
                 <input type="checkbox" id="hygieneOil" checked class="rounded text-orange-600 focus:ring-orange-500">
-                <span>Zero-oil reuse / fresh oil guarantee</span>
+                <span data-i18n="hygiene_clean_oil">Zero-Oil Reheat Certified</span>
               </label>
             </div>
           </div>
@@ -201,10 +201,10 @@
         <div class="flex items-center justify-between border-b border-gray-100 pb-2.5">
           <div class="flex items-center space-x-2">
             <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-black">4</span>
-            <h2 class="font-extrabold text-sm text-gray-900">Your Menu Dishes & Prices</h2>
+            <h2 class="font-extrabold text-sm text-gray-900" data-i18n="sec4_title">Initial Street Menu Items (Add at least 1)</h2>
           </div>
           <button type="button" onclick="addDishRow()" class="px-2.5 py-1 bg-orange-50 text-orange-600 border border-orange-200 rounded-lg text-xs font-bold hover:bg-orange-100 transition">
-            + Add Dish
+            <span data-i18n="add_dish_btn">+ Add Another Street Dish</span>
           </button>
         </div>
 
@@ -217,12 +217,12 @@
       <div class="bg-white rounded-2xl border border-gray-200 p-5 space-y-4 shadow-sm">
         <div class="flex items-center space-x-2 border-b border-gray-100 pb-2.5">
           <span class="w-6 h-6 rounded-full bg-orange-100 text-orange-700 flex items-center justify-center text-xs font-black">5</span>
-          <h2 class="font-extrabold text-sm text-gray-900">Daily Payout UPI ID (Where You Receive Money)</h2>
+          <h2 class="font-extrabold text-sm text-gray-900" data-i18n="sec5_title">Direct UPI Daily Payouts</h2>
         </div>
 
         <div class="space-y-2 text-xs">
-          <label class="font-bold text-gray-700">Vendor UPI ID (GPay / PhonePe / Paytm / BHIM) *</label>
-          <input type="text" id="vendorUpi" required placeholder="e.g. 9845012345@upi or guptaji@okaxis"
+          <label class="font-bold text-gray-700" data-i18n="upi_label">Vendor UPI ID (For Direct Daily Settlements) *</label>
+          <input type="text" id="vendorUpi" required data-i18n-placeholder="upi_placeholder" placeholder="e.g. yourname@upi, 9876543210@paytm"
             class="w-full bg-gray-50 border border-gray-200 rounded-xl p-2.5 font-mono font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
           <p class="text-[11px] text-emerald-600 font-medium">
             <i class="fa-solid fa-shield-check mr-1"></i>Your earnings are settled directly to this UPI address after delivery.
@@ -232,7 +232,7 @@
 
       <!-- Submit Button -->
       <button type="submit" id="submitBtn" class="w-full bg-orange-600 text-white rounded-2xl py-4 font-black text-sm shadow-xl shadow-orange-600/25 hover:bg-orange-700 flex items-center justify-center space-x-2 transition">
-        <span>Complete Onboarding & Launch Live Kitchen</span>
+        <span data-i18n="complete_vendor_btn">Complete Onboarding & Launch Live Kitchen</span>
         <i class="fa-solid fa-arrow-right"></i>
       </button>
 
@@ -250,114 +250,131 @@
       <p class="text-xs text-gray-600">Your street cart is now live on ThelaExpress. Customers can now discover your stall and place orders!</p>
 
       <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-left space-y-2 text-xs">
-        <div class="font-bold text-gray-900" id="successStallName">Gupta Ji Ka Special Chaat</div>
-        <div class="text-gray-500" id="successStallAddress">Indiranagar 100ft Rd</div>
-        <div class="text-emerald-700 font-bold bg-emerald-50 px-2 py-1 rounded-lg inline-block">
-          Kitchen Order Stream Ready
+        <div>
+          <div class="text-gray-500 font-medium">Registered Stall</div>
+          <div class="font-black text-base text-gray-900" id="successStallName">Gupta Ji Chaat</div>
+        </div>
+        <div>
+          <div class="text-gray-500 font-medium">Address</div>
+          <div class="font-bold text-gray-700" id="successStallAddress">Near Metro Station, Indiranagar</div>
+        </div>
+        <div class="pt-1 text-emerald-700 font-bold">
+          Platform Commission: 10% (You keep 90% of daily GMV)
         </div>
       </div>
 
       <div class="space-y-2 pt-2">
         <a id="successPosLink" href="#" class="w-full bg-orange-600 text-white rounded-xl py-3 font-bold text-xs block hover:bg-orange-700 shadow-md transition">
-          Open Live Kitchen POS Display ➔
+          Open Kitchen Terminal POS ➔
         </a>
         <a href="/" class="w-full bg-gray-100 text-gray-800 rounded-xl py-2.5 font-bold text-xs block hover:bg-gray-200 transition">
-          View on Customer App
+          Go to Customer Food App
         </a>
       </div>
     </div>
   </div>
 
+  <!-- Multi-Language Localization Engine -->
   <script src="/i18n.js"></script>
   <script>
     let capturedLat = 12.9725;
     let capturedLng = 77.6408;
 
-    // Start with a single clean empty dish row for the real vendor to input their own items
     document.addEventListener('DOMContentLoaded', () => {
-      addDishRow('', '', true, '');
+      // Add initial 2 dish inputs
+      addDishRow('Special Pani Puri (6 Pcs)', '40');
+      addDishRow('Aloo Tikki Chaat (Single Plate)', '60');
     });
 
-    function addDishRow(name = '', price = '', isVeg = true, desc = '') {
-      const container = document.getElementById('dishesContainer');
-      const rowId = 'dish_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
+    function toggleCustomCategoryInput(show) {
+      const select = document.getElementById('stallCategory');
+      const wrapper = document.getElementById('customCategoryWrapper');
+      const input = document.getElementById('customCategoryInput');
 
-      const div = document.createElement('div');
-      div.id = rowId;
-      div.className = 'bg-gray-50 border border-gray-200 rounded-xl p-3 space-y-2 relative';
-      div.innerHTML = `
-        <div class="flex items-center justify-between">
-          <div class="flex items-center space-x-2">
-            <select class="dish-veg bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold text-gray-800">
-              <option value="true" ${isVeg ? 'selected' : ''}>🟢 Veg</option>
-              <option value="false" ${!isVeg ? 'selected' : ''}>🔴 Non-Veg</option>
-            </select>
-            <input type="text" class="dish-name bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-xs font-bold w-44 sm:w-56" 
-              placeholder="Dish Name (e.g. Masala Dosa)" value="${name}" required>
-          </div>
-          <div class="flex items-center space-x-2">
-            <span class="text-xs font-bold text-gray-500">₹</span>
-            <input type="number" class="dish-price bg-white border border-gray-200 rounded-lg px-2 py-1 text-xs font-bold w-16 text-right" 
-              placeholder="50" value="${price}" required>
-            <button type="button" onclick="document.getElementById('${rowId}').remove()" class="text-red-500 hover:text-red-700 text-xs px-1">
-              <i class="fa-solid fa-trash"></i>
-            </button>
-          </div>
-        </div>
-        <input type="text" class="dish-desc w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1 text-[11px] text-gray-600" 
-          placeholder="Brief description (e.g. Freshly made with white butter)" value="${desc}">
-      `;
-      container.appendChild(div);
-    }
-
-    function onCategorySelectChange() {
-      const sel = document.getElementById('stallCategory');
-      if (sel.value === '__custom__') {
-        toggleCustomCategoryInput(true);
+      const isShow = show !== undefined ? show : wrapper.classList.contains('hidden');
+      if (isShow) {
+        wrapper.classList.remove('hidden');
+        select.value = '__custom__';
+        input.focus();
+      } else {
+        wrapper.classList.add('hidden');
+        input.value = '';
+        select.value = 'chaat';
       }
     }
 
-    function toggleCustomCategoryInput(show) {
-      const wrapper = document.getElementById('customCategoryWrapper');
-      const sel = document.getElementById('stallCategory');
-      const input = document.getElementById('customCategoryInput');
-      const btn = document.getElementById('toggleCatBtn');
-
-      const willShow = show !== undefined ? show : wrapper.classList.contains('hidden');
-      if (willShow) {
-        wrapper.classList.remove('hidden');
-        input.focus();
-        btn.innerText = '📋 Choose from List';
-        sel.value = '__custom__';
+    function onCategorySelectChange() {
+      const select = document.getElementById('stallCategory');
+      if (select.value === '__custom__') {
+        toggleCustomCategoryInput(true);
       } else {
-        wrapper.classList.add('hidden');
-        btn.innerText = '✍️ Type Custom';
-        if (sel.value === '__custom__') sel.value = 'chaat';
+        toggleCustomCategoryInput(false);
       }
     }
 
     function captureLiveGps() {
       const btn = document.getElementById('gpsButtonLabel');
-      const text = document.getElementById('gpsCoordsText');
+      const coordsText = document.getElementById('gpsCoordsText');
 
-      if (navigator.geolocation) {
-        btn.innerText = 'Detecting GPS...';
-        navigator.geolocation.getCurrentPosition(
-          (pos) => {
-            capturedLat = pos.coords.latitude;
-            capturedLng = pos.coords.longitude;
-            btn.innerText = 'GPS Captured ✓';
-            text.innerText = `${capturedLat.toFixed(4)}° N, ${capturedLng.toFixed(4)}° E`;
-            text.className = 'text-[11px] text-emerald-600 font-bold font-mono';
-          },
-          (err) => {
-            btn.innerText = 'Location Permission Denied';
-            console.warn(err);
-          }
-        );
-      } else {
-        alert('Geolocation not supported on this browser.');
+      if (!navigator.geolocation) {
+        alert('Geolocation is not supported by your browser.');
+        return;
       }
+
+      btn.innerText = 'Detecting...';
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          capturedLat = pos.coords.latitude;
+          capturedLng = pos.coords.longitude;
+          btn.innerText = '✓ Location Locked';
+          coordsText.innerText = `${capturedLat.toFixed(4)}° N, ${capturedLng.toFixed(4)}° E`;
+          coordsText.className = 'text-[11px] text-green-600 font-bold font-mono';
+        },
+        (err) => {
+          console.warn('GPS error:', err);
+          btn.innerText = 'Default GPS Used';
+          coordsText.innerText = '12.9725° N, 77.6408° E (Indiranagar)';
+        },
+        { enableHighAccuracy: true, timeout: 6000 }
+      );
+    }
+
+    let dishCount = 0;
+    function addDishRow(defaultName = '', defaultPrice = '') {
+      dishCount++;
+      const container = document.getElementById('dishesContainer');
+      const row = document.createElement('div');
+      row.className = 'flex items-center space-x-2 bg-gray-50 border border-gray-200/80 rounded-xl p-2.5 text-xs';
+      row.id = `dishRow_${dishCount}`;
+
+      row.innerHTML = `
+        <div class="flex-1">
+          <input type="text" placeholder="Dish Name (e.g. Dahi Puri)" value="${defaultName}" required
+            class="dish-name-input w-full bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-orange-500">
+        </div>
+        <div class="w-24 relative">
+          <span class="absolute left-2.5 top-1/2 -translate-y-1/2 text-gray-400 font-bold">₹</span>
+          <input type="number" placeholder="Price" value="${defaultPrice}" required min="1"
+            class="dish-price-input w-full bg-white border border-gray-200 rounded-lg pl-6 pr-2 py-1.5 font-bold text-gray-800 focus:outline-none focus:ring-1 focus:ring-orange-500">
+        </div>
+        <label class="flex items-center space-x-1 cursor-pointer pr-1">
+          <input type="checkbox" checked class="dish-veg-input rounded text-green-600 focus:ring-green-500">
+          <span class="text-[11px] font-bold text-green-700">Veg</span>
+        </label>
+        <button type="button" onclick="removeDishRow('${row.id}')" class="text-gray-400 hover:text-red-500 px-1 text-sm">
+          <i class="fa-solid fa-trash-can"></i>
+        </button>
+      `;
+      container.appendChild(row);
+    }
+
+    function removeDishRow(rowId) {
+      const container = document.getElementById('dishesContainer');
+      if (container.children.length <= 1) {
+        alert('Please keep at least 1 menu item.');
+        return;
+      }
+      document.getElementById(rowId)?.remove();
     }
 
     async function handleVendorSubmit(e) {
@@ -366,20 +383,14 @@
       btn.disabled = true;
       btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i>Registering Stall...`;
 
-      // Collect dishes
+      // Harvest dishes
       const dishes = [];
       document.querySelectorAll('#dishesContainer > div').forEach(row => {
-        const name = row.querySelector('.dish-name')?.value;
-        const price = row.querySelector('.dish-price')?.value;
-        const isVeg = row.querySelector('.dish-veg')?.value === 'true';
-        const desc = row.querySelector('.dish-desc')?.value;
-        if (name && price) {
-          dishes.push({
-            name: name.trim(),
-            price: parseFloat(price),
-            isVeg: isVeg,
-            description: desc || ''
-          });
+        const name = row.querySelector('.dish-name-input')?.value.trim();
+        const price = parseFloat(row.querySelector('.dish-price-input')?.value || '0');
+        const isVeg = row.querySelector('.dish-veg-input')?.checked ?? true;
+        if (name && price > 0) {
+          dishes.push({ name, price, isVeg, inStock: true });
         }
       });
 

@@ -322,8 +322,8 @@ function renderVendorOrders(orders) {
     container.innerHTML = `
       <div class="py-12 text-center text-gray-400 bg-white rounded-3xl border border-gray-200">
         <i class="fa-solid fa-fire-burner text-3xl text-gray-300 mb-2"></i>
-        <p class="font-black text-sm text-gray-700">Kitchen Tawa is Clean!</p>
-        <p class="text-xs text-gray-400 mt-1">New incoming orders will appear here automatically with bell notification.</p>
+        <p class="font-black text-sm text-gray-700">${t('kitchen_tawa_clean', 'Kitchen Tawa is Clean!')}</p>
+        <p class="text-xs text-gray-400 mt-1">${t('waiting_orders', 'New incoming orders will appear here automatically with bell notification.')}</p>
       </div>
     `;
     return;
@@ -375,24 +375,24 @@ function renderVendorOrders(orders) {
         <div class="pt-2 border-t border-gray-100 flex items-center justify-end space-x-2">
           ${order.status === 'PLACED' ? `
             <button onclick="advanceCookingStage('${order.id}', 'ACCEPTED')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
-              Accept Order
+              ${t('accept_btn', 'Accept Order')}
             </button>
           ` : ''}
           ${['PLACED', 'ACCEPTED'].includes(order.status) ? `
             <button onclick="advanceCookingStage('${order.id}', 'COOKING')" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5">
               <i class="fa-solid fa-fire"></i>
-              <span>Start Cooking</span>
+              <span>${t('start_cooking_btn', 'Start Cooking')}</span>
             </button>
           ` : ''}
           ${order.status === 'COOKING' ? `
             <button onclick="advanceCookingStage('${order.id}', 'READY_FOR_PICKUP')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5">
               <i class="fa-solid fa-box"></i>
-              <span>Packed & Ready</span>
+              <span>${t('packed_ready_btn', 'Packed & Ready')}</span>
             </button>
           ` : ''}
           ${order.status === 'READY_FOR_PICKUP' ? `
             <span class="text-xs text-purple-700 font-bold bg-purple-50 px-3 py-1.5 rounded-xl border border-purple-200">
-              🛵 Waiting for Rider Pickup
+              ${t('waiting_rider', '🛵 Waiting for Rider Pickup')}
             </span>
           ` : ''}
         </div>
@@ -527,8 +527,8 @@ function renderRiderActiveGig(gig) {
     container.innerHTML = `
       <div class="py-10 text-center text-gray-400">
         <i class="fa-solid fa-circle-check text-4xl text-emerald-400 mb-2"></i>
-        <p class="font-extrabold text-sm text-gray-800">You are all caught up!</p>
-        <p class="text-xs text-gray-400 mt-1">Waiting for street stalls to pack fresh orders...</p>
+        <p class="font-extrabold text-sm text-gray-800">${t('rider_caught_up', 'You are all caught up!')}</p>
+        <p class="text-xs text-gray-400 mt-1">${t('rider_waiting_stalls', 'Waiting for street stalls to pack fresh orders...')}</p>
       </div>
     `;
     return;
@@ -537,7 +537,7 @@ function renderRiderActiveGig(gig) {
   container.innerHTML = `
     <div class="flex items-start justify-between border-b border-gray-100 pb-3">
       <div>
-        <span class="text-xs font-black bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">ACTIVE GIG</span>
+        <span class="text-xs font-black bg-orange-100 text-orange-700 px-2 py-0.5 rounded-full">${t('rider_active_gig', 'ACTIVE GIG')}</span>
         <h3 class="font-extrabold text-base text-gray-900 mt-1">Order #${gig.id}</h3>
         <p class="text-xs text-gray-500 font-medium">Pickup from: <strong class="text-gray-800">${gig.stall_name}</strong></p>
       </div>
@@ -569,7 +569,7 @@ function renderRiderActiveGig(gig) {
       ${gig.status === 'READY_FOR_PICKUP' || gig.status === 'COOKING' ? `
         <button onclick="advanceRiderStage('${gig.id}', 'OUT_FOR_DELIVERY')" class="w-full sm:flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center space-x-2">
           <i class="fa-solid fa-motorcycle"></i>
-          <span>Picked Up — Start Delivery Ride</span>
+          <span>${t('rider_pickup_btn', 'Picked Up — Start Delivery Ride')}</span>
         </button>
       ` : ''}
 
@@ -580,10 +580,10 @@ function renderRiderActiveGig(gig) {
             <span class="font-mono font-black text-purple-900">Required OTP: ${gig.otp}</span>
           </div>
           <div class="flex items-center space-x-2">
-            <input type="text" id="riderVerifyOtpInput" placeholder="Enter Customer 4-digit OTP" maxlength="4"
+            <input type="text" id="riderVerifyOtpInput" placeholder="${t('rider_otp_placeholder', 'Enter Customer 4-digit OTP')}" maxlength="4"
               class="flex-1 bg-gray-50 border border-gray-300 rounded-xl px-3 py-2.5 text-xs font-black tracking-widest text-center focus:ring-2 focus:ring-emerald-500">
             <button onclick="verifyDoorstepOtp('${gig.id}')" class="px-5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md transition">
-              Verify & Complete
+              ${t('rider_verify_btn', 'Verify & Complete')}
             </button>
           </div>
         </div>
@@ -641,7 +641,7 @@ function renderRiderTrips(trips) {
   if (!container) return;
 
   if (trips.length === 0) {
-    container.innerHTML = `<div class="py-4 text-center text-gray-400 text-xs">No completed trips yet today.</div>`;
+    container.innerHTML = `<div class="py-4 text-center text-gray-400 text-xs">${t('no_trips_yet', 'No completed trips yet today.')}</div>`;
     return;
   }
 

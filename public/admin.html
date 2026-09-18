@@ -23,9 +23,9 @@
         <div>
           <div class="flex items-center space-x-2">
             <span class="font-extrabold text-lg text-white">Thela<span class="text-orange-500">Express</span></span>
-            <span class="bg-orange-500/20 text-orange-400 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase border border-orange-500/30">Admin HQ</span>
+            <span class="bg-orange-500/20 text-orange-400 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase border border-orange-500/30" data-i18n="platform_hq_admin">Admin HQ</span>
           </div>
-          <p class="text-xs text-gray-400">Platform Operations & Financial Settlement Engine</p>
+          <p class="text-xs text-gray-400" data-i18n="admin_subtitle">Platform Operations & Financial Settlement Engine</p>
         </div>
       </div>
 
@@ -33,12 +33,12 @@
       <div class="flex items-center space-x-2 text-xs font-bold">
         <div class="langSelectorMount"></div>
         <a href="/" target="_blank" class="px-3 py-1.5 bg-gray-700 hover:bg-gray-600 rounded-xl text-gray-200 transition">
-          <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i>Customer App
+          <i class="fa-solid fa-arrow-up-right-from-square mr-1"></i><span data-i18n="customer_food_app">Customer App</span>
         </a>
-        <a href="/onboard-vendor.html" target="_blank" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl transition">
+        <a href="/onboard-vendor.html" target="_blank" class="px-3 py-1.5 bg-orange-600 hover:bg-orange-500 text-white rounded-xl transition" data-i18n="new_stall_reg">
           + Onboard Vendor
         </a>
-        <a href="/onboard-rider.html" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition">
+        <a href="/onboard-rider.html" target="_blank" class="px-3 py-1.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl transition" data-i18n="new_rider_reg">
           + Onboard Rider
         </a>
       </div>
@@ -51,25 +51,25 @@
     <!-- Top KPI Overview Metrics -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
       <div class="bg-gray-800 border border-gray-700/80 rounded-2xl p-4 space-y-1 shadow-sm">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Gross Merchandise Value</div>
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider" data-i18n="total_gmv">Gross Merchandise Value</div>
         <div class="text-2xl font-black text-white" id="statGmv">₹0.00</div>
         <div class="text-[11px] text-emerald-400 font-semibold" id="statDeliveredOrders">0 Delivered Orders</div>
       </div>
 
       <div class="bg-gray-800 border border-gray-700/80 rounded-2xl p-4 space-y-1 shadow-sm">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Platform Cut (10%)</div>
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider" data-i18n="platform_net_revenue">Platform Cut (10%)</div>
         <div class="text-2xl font-black text-orange-400" id="statCommission">₹0.00</div>
-        <div class="text-[11px] text-gray-400">Net platform fee margin</div>
+        <div class="text-[11px] text-gray-400" data-i18n="platform_net_margin">Net platform fee margin</div>
       </div>
 
       <div class="bg-gray-800 border border-gray-700/80 rounded-2xl p-4 space-y-1 shadow-sm">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Active Street Stalls</div>
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider" data-i18n="active_stalls_count">Active Street Stalls</div>
         <div class="text-2xl font-black text-white" id="statStalls">0</div>
         <div class="text-[11px] text-emerald-400 font-semibold" id="statActiveStalls">0 currently open</div>
       </div>
 
       <div class="bg-gray-800 border border-gray-700/80 rounded-2xl p-4 space-y-1 shadow-sm">
-        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider">Active Delivery Fleet</div>
+        <div class="text-xs font-bold text-gray-400 uppercase tracking-wider" data-i18n="active_riders_count">Active Delivery Fleet</div>
         <div class="text-2xl font-black text-white" id="statRiders">0</div>
         <div class="text-[11px] text-emerald-400 font-semibold" id="statActiveRiders">0 on duty</div>
       </div>
@@ -78,19 +78,19 @@
     <!-- Admin Tabs Bar -->
     <div class="flex items-center space-x-2 border-b border-gray-800 pb-2">
       <button onclick="switchAdminTab('stalls')" id="tabBtnStalls" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white transition">
-        🍽️ Stalls & Carts (<span id="countStallsTab">0</span>)
+        🍽️ <span data-i18n="tab_stalls">Stalls & Carts</span> (<span id="countStallsTab">0</span>)
       </button>
       <button onclick="switchAdminTab('riders')" id="tabBtnRiders" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-white transition">
-        🛵 Delivery Fleet (<span id="countRidersTab">0</span>)
+        🛵 <span data-i18n="tab_riders">Delivery Fleet</span> (<span id="countRidersTab">0</span>)
       </button>
       <button onclick="switchAdminTab('orders')" id="tabBtnOrders" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-white transition">
-        📦 Live Order Ledger
+        📦 <span data-i18n="tab_orders">Live Order Ledger</span>
       </button>
       <button onclick="switchAdminTab('payouts')" id="tabBtnPayouts" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-white transition">
-        💰 Payout Settlements (UPI)
+        💰 <span data-i18n="tab_financial">Payout Settlements (UPI)</span>
       </button>
       <button onclick="switchAdminTab('settings')" id="tabBtnSettings" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-white transition">
-        ⚙️ Platform Settings
+        ⚙️ <span data-i18n="tab_settings">Platform Settings</span>
       </button>
     </div>
 
@@ -98,19 +98,19 @@
     <section id="tabContentStalls" class="space-y-4">
       <div class="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden shadow-sm">
         <div class="p-4 border-b border-gray-700 flex justify-between items-center">
-          <h2 class="font-extrabold text-sm text-white">Registered Street Food Stalls</h2>
-          <span class="text-xs text-gray-400">1-click verify & launch vendor kitchen POS</span>
+          <h2 class="font-extrabold text-sm text-white" data-i18n="registered_stalls_title">Registered Street Food Stalls</h2>
+          <span class="text-xs text-gray-400" data-i18n="stalls_subtitle">1-click verify & launch vendor kitchen POS</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
             <thead class="bg-gray-900 text-gray-400 font-bold border-b border-gray-700 uppercase">
               <tr>
-                <th class="p-3">Stall Name & Category</th>
-                <th class="p-3">Owner Contact</th>
-                <th class="p-3">Location / Landmark</th>
-                <th class="p-3">FSSAI / Hygiene</th>
-                <th class="p-3">Store Status</th>
-                <th class="p-3 text-right">Actions</th>
+                <th class="p-3" data-i18n="th_stall_name">Stall Name & Category</th>
+                <th class="p-3" data-i18n="th_owner_contact">Owner Contact</th>
+                <th class="p-3" data-i18n="th_location">Location / Landmark</th>
+                <th class="p-3" data-i18n="th_fssai_hygiene">FSSAI / Hygiene</th>
+                <th class="p-3" data-i18n="th_store_status">Store Status</th>
+                <th class="p-3 text-right" data-i18n="th_actions">Actions</th>
               </tr>
             </thead>
             <tbody id="stallsTableBody" class="divide-y divide-gray-700/60 font-medium text-gray-200">
@@ -125,20 +125,20 @@
     <section id="tabContentRiders" class="hidden space-y-4">
       <div class="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden shadow-sm">
         <div class="p-4 border-b border-gray-700 flex justify-between items-center">
-          <h2 class="font-extrabold text-sm text-white">Registered Delivery Partners</h2>
-          <span class="text-xs text-gray-400">Manage fleet active status & payouts</span>
+          <h2 class="font-extrabold text-sm text-white" data-i18n="registered_riders_title">Registered Delivery Partners</h2>
+          <span class="text-xs text-gray-400" data-i18n="riders_subtitle">Manage fleet active status & payouts</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
             <thead class="bg-gray-900 text-gray-400 font-bold border-b border-gray-700 uppercase">
               <tr>
-                <th class="p-3">Rider Name</th>
-                <th class="p-3">Phone</th>
-                <th class="p-3">Vehicle & Plate</th>
-                <th class="p-3">Area</th>
-                <th class="p-3">Payout UPI</th>
-                <th class="p-3">Duty Status</th>
-                <th class="p-3 text-right">Actions</th>
+                <th class="p-3" data-i18n="th_rider_name">Rider Name</th>
+                <th class="p-3" data-i18n="th_rider_phone">Phone</th>
+                <th class="p-3" data-i18n="th_vehicle_plate">Vehicle & Plate</th>
+                <th class="p-3" data-i18n="th_operating_area">Area</th>
+                <th class="p-3" data-i18n="th_payout_upi">Payout UPI</th>
+                <th class="p-3" data-i18n="th_duty_status">Duty Status</th>
+                <th class="p-3 text-right" data-i18n="th_actions">Actions</th>
               </tr>
             </thead>
             <tbody id="ridersTableBody" class="divide-y divide-gray-700/60 font-medium text-gray-200">
@@ -153,20 +153,20 @@
     <section id="tabContentOrders" class="hidden space-y-4">
       <div class="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden shadow-sm">
         <div class="p-4 border-b border-gray-700 flex justify-between items-center">
-          <h2 class="font-extrabold text-sm text-white">Recent Realtime Platform Orders</h2>
-          <button onclick="loadAdminData()" class="text-xs font-bold text-orange-400 hover:text-orange-300">Refresh Feed</button>
+          <h2 class="font-extrabold text-sm text-white" data-i18n="recent_orders_title">Recent Realtime Platform Orders</h2>
+          <button onclick="loadAdminData()" class="text-xs font-bold text-orange-400 hover:text-orange-300" data-i18n="refresh_feed_btn">Refresh Feed</button>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
             <thead class="bg-gray-900 text-gray-400 font-bold border-b border-gray-700 uppercase">
               <tr>
-                <th class="p-3">Order ID</th>
-                <th class="p-3">Stall</th>
-                <th class="p-3">Customer</th>
-                <th class="p-3">Grand Total</th>
-                <th class="p-3">Status</th>
-                <th class="p-3">OTP</th>
-                <th class="p-3">Created</th>
+                <th class="p-3" data-i18n="th_order_id">Order ID</th>
+                <th class="p-3" data-i18n="th_order_stall">Stall</th>
+                <th class="p-3" data-i18n="th_order_customer">Customer</th>
+                <th class="p-3" data-i18n="th_order_total">Grand Total</th>
+                <th class="p-3" data-i18n="th_order_status">Status</th>
+                <th class="p-3" data-i18n="th_order_otp">OTP</th>
+                <th class="p-3" data-i18n="th_order_created">Created</th>
               </tr>
             </thead>
             <tbody id="ordersTableBody" class="divide-y divide-gray-700/60 font-medium text-gray-200">
@@ -183,22 +183,22 @@
       <div class="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden shadow-sm">
         <div class="p-4 border-b border-gray-700 flex justify-between items-center">
           <div>
-            <h2 class="font-extrabold text-sm text-white">Vendor Daily Settlement Ledger</h2>
-            <p class="text-[11px] text-gray-400">Total food sales minus 10% platform commission</p>
+            <h2 class="font-extrabold text-sm text-white" data-i18n="vendor_settlement_ledger">Vendor Daily Settlement Ledger</h2>
+            <p class="text-[11px] text-gray-400" data-i18n="vendor_settlement_sub">Total food sales minus 10% platform commission</p>
           </div>
-          <span class="text-xs text-emerald-400 font-bold">Direct UPI Payout Links</span>
+          <span class="text-xs text-emerald-400 font-bold" data-i18n="direct_upi_payouts">Direct UPI Payout Links</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
             <thead class="bg-gray-900 text-gray-400 font-bold border-b border-gray-700 uppercase">
               <tr>
-                <th class="p-3">Stall Name</th>
-                <th class="p-3">Vendor UPI ID</th>
-                <th class="p-3">Orders Delivered</th>
-                <th class="p-3">Gross Sales</th>
-                <th class="p-3">Platform Cut</th>
-                <th class="p-3">Net Payable</th>
-                <th class="p-3 text-right">1-Tap Settle</th>
+                <th class="p-3" data-i18n="th_stall_name">Stall Name</th>
+                <th class="p-3" data-i18n="th_vendor_upi">Vendor UPI ID</th>
+                <th class="p-3" data-i18n="th_orders_delivered">Orders Delivered</th>
+                <th class="p-3" data-i18n="th_gross_sales">Gross Sales</th>
+                <th class="p-3" data-i18n="th_platform_cut">Platform Cut</th>
+                <th class="p-3" data-i18n="th_net_payable">Net Payable</th>
+                <th class="p-3 text-right" data-i18n="th_1tap_settle">1-Tap Settle</th>
               </tr>
             </thead>
             <tbody id="vendorPayoutsBody" class="divide-y divide-gray-700/60 font-medium text-gray-200">
@@ -212,20 +212,20 @@
       <div class="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden shadow-sm">
         <div class="p-4 border-b border-gray-700 flex justify-between items-center">
           <div>
-            <h2 class="font-extrabold text-sm text-white">Rider Gig Settlement Ledger</h2>
-            <p class="text-[11px] text-gray-400">₹40 flat per doorstep delivery verified via OTP</p>
+            <h2 class="font-extrabold text-sm text-white" data-i18n="rider_settlement_ledger">Rider Gig Settlement Ledger</h2>
+            <p class="text-[11px] text-gray-400" data-i18n="rider_settlement_sub">₹40 flat per doorstep delivery verified via OTP</p>
           </div>
-          <span class="text-xs text-emerald-400 font-bold">Direct UPI Payout Links</span>
+          <span class="text-xs text-emerald-400 font-bold" data-i18n="direct_upi_payouts">Direct UPI Payout Links</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
             <thead class="bg-gray-900 text-gray-400 font-bold border-b border-gray-700 uppercase">
               <tr>
-                <th class="p-3">Rider Name</th>
-                <th class="p-3">Rider UPI ID</th>
-                <th class="p-3">Completed Trips</th>
-                <th class="p-3">Total Payable</th>
-                <th class="p-3 text-right">1-Tap Settle</th>
+                <th class="p-3" data-i18n="th_rider_name">Rider Name</th>
+                <th class="p-3" data-i18n="th_payout_upi">Rider UPI ID</th>
+                <th class="p-3" data-i18n="th_completed_trips">Completed Trips</th>
+                <th class="p-3" data-i18n="th_net_payable">Total Payable</th>
+                <th class="p-3 text-right" data-i18n="th_1tap_settle">1-Tap Settle</th>
               </tr>
             </thead>
             <tbody id="riderPayoutsBody" class="divide-y divide-gray-700/60 font-medium text-gray-200">
@@ -239,31 +239,31 @@
     <!-- TAB 5: PLATFORM SETTINGS -->
     <section id="tabContentSettings" class="hidden space-y-4">
       <div class="bg-gray-800 border border-gray-700 rounded-2xl p-6 max-w-xl space-y-4 shadow-sm">
-        <h2 class="font-extrabold text-base text-white border-b border-gray-700 pb-2.5">Platform Business Configuration</h2>
+        <h2 class="font-extrabold text-base text-white border-b border-gray-700 pb-2.5" data-i18n="platform_biz_config">Platform Business Configuration</h2>
 
         <form id="settingsForm" onsubmit="handleSettingsSave(event)" class="space-y-4 text-xs">
           <div class="space-y-1">
-            <label class="font-bold text-gray-300">Platform Commission Rate (%)</label>
+            <label class="font-bold text-gray-300" data-i18n="setting_commission_label">Platform Commission Rate (%)</label>
             <input type="number" id="settingCommission" min="0" max="50" value="10" required
               class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-bold text-white focus:ring-2 focus:ring-orange-500">
-            <p class="text-[11px] text-gray-500">Deducted from vendor food sales (default 10%).</p>
+            <p class="text-[11px] text-gray-500" data-i18n="setting_commission_desc">Deducted from vendor food sales (default 10%).</p>
           </div>
 
           <div class="space-y-1">
-            <label class="font-bold text-gray-300">Rider Delivery Fee Payout (₹ per delivery)</label>
+            <label class="font-bold text-gray-300" data-i18n="setting_rider_payout_label">Rider Delivery Fee Payout (₹ per delivery)</label>
             <input type="number" id="settingRiderPayout" min="10" max="100" value="40" required
               class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-bold text-white focus:ring-2 focus:ring-orange-500">
-            <p class="text-[11px] text-gray-500">Paid to rider for each verified doorstep drop (default ₹40).</p>
+            <p class="text-[11px] text-gray-500" data-i18n="setting_rider_payout_desc">Paid to rider for each verified doorstep drop (default ₹40).</p>
           </div>
 
           <div class="space-y-1">
-            <label class="font-bold text-gray-300">Platform Master Merchant UPI ID</label>
+            <label class="font-bold text-gray-300" data-i18n="setting_platform_upi_label">Platform Master Merchant UPI ID</label>
             <input type="text" id="settingPlatformUpi" value="thelaexpress@icici" required
               class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-mono font-bold text-emerald-400 focus:ring-2 focus:ring-orange-500">
-            <p class="text-[11px] text-gray-500">Customer payments are collected here prior to daily split settlements.</p>
+            <p class="text-[11px] text-gray-500" data-i18n="setting_platform_upi_desc">Customer payments are collected here prior to daily split settlements.</p>
           </div>
 
-          <button type="submit" class="w-full bg-orange-600 hover:bg-orange-500 text-white rounded-xl py-3 font-bold text-xs transition">
+          <button type="submit" class="w-full bg-orange-600 hover:bg-orange-500 text-white rounded-xl py-3 font-bold text-xs transition" data-i18n="save_settings_btn">
             Save Platform Settings
           </button>
         </form>
@@ -280,6 +280,16 @@
     document.addEventListener('DOMContentLoaded', () => {
       loadAdminData();
       loadPayoutsData();
+
+      window.addEventListener('thela_language_changed', () => {
+        applyTranslations();
+        if (ADMIN_DATA && ADMIN_DATA.stalls) {
+          renderStallsTable(ADMIN_DATA.stalls);
+          renderRidersTable(ADMIN_DATA.riders || []);
+          renderOrdersTable(ADMIN_DATA.recentOrders || []);
+        }
+        loadPayoutsData();
+      });
     });
 
     async function loadAdminData() {
@@ -350,7 +360,7 @@
           </td>
           <td class="p-3 text-right space-x-1">
             <a href="/vendor.html?stallId=${s.id}" target="_blank" class="px-2 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[10px] font-bold inline-block">
-              Open POS ➔
+              ${t('open_pos_btn', 'Open POS ➔')}
             </a>
           </td>
         </tr>
@@ -376,7 +386,7 @@
           </td>
           <td class="p-3 text-right">
             <a href="/rider.html?riderId=${r.id}" target="_blank" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold inline-block">
-              Console ➔
+              ${t('open_rider_console_btn', 'Console ➔')}
             </a>
           </td>
         </tr>
@@ -386,7 +396,7 @@
     function renderOrdersTable(orders) {
       const tbody = document.getElementById('ordersTableBody');
       if (orders.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">No orders recorded yet.</td></tr>`;
+        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">${t('no_orders_recorded', 'No orders recorded yet.')}</td></tr>`;
         return;
       }
       tbody.innerHTML = orders.map(o => `
@@ -409,7 +419,7 @@
     function renderPayouts(vendorSettlements, riderSettlements) {
       const vBody = document.getElementById('vendorPayoutsBody');
       if (!vendorSettlements || vendorSettlements.length === 0) {
-        vBody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">No delivered orders to settle yet.</td></tr>`;
+        vBody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">${t('no_orders_recorded', 'No delivered orders to settle yet.')}</td></tr>`;
       } else {
         vBody.innerHTML = vendorSettlements.map(v => {
           const upiUri = `upi://pay?pa=${encodeURIComponent(v.upi_id)}&pn=${encodeURIComponent(v.stall_name)}&am=${v.netPayableToVendor}&tn=ThelaExpressSettlement`;
@@ -423,7 +433,7 @@
               <td class="p-3 font-black text-emerald-400">₹${v.netPayableToVendor}</td>
               <td class="p-3 text-right">
                 <a href="${upiUri}" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold inline-block">
-                  Pay ₹${v.netPayableToVendor} UPI
+                  ${t('pay_btn', 'Pay')} ₹${v.netPayableToVendor} UPI
                 </a>
               </td>
             </tr>
@@ -433,7 +443,7 @@
 
       const rBody = document.getElementById('riderPayoutsBody');
       if (!riderSettlements || riderSettlements.length === 0) {
-        rBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">No completed rider trips to settle yet.</td></tr>`;
+        rBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">${t('no_trips_yet', 'No completed rider trips to settle yet.')}</td></tr>`;
       } else {
         rBody.innerHTML = riderSettlements.map(r => {
           const upiUri = `upi://pay?pa=${encodeURIComponent(r.upi_id)}&pn=${encodeURIComponent(r.rider_name)}&am=${r.totalPayout}&tn=ThelaExpressRiderPayout`;
@@ -445,7 +455,7 @@
               <td class="p-3 font-black text-emerald-400">₹${r.totalPayout}</td>
               <td class="p-3 text-right">
                 <a href="${upiUri}" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold inline-block">
-                  Pay ₹${r.totalPayout} UPI
+                  ${t('pay_btn', 'Pay')} ₹${r.totalPayout} UPI
                 </a>
               </td>
             </tr>
