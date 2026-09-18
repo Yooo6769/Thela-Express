@@ -236,12 +236,12 @@ class Database {
     return badges;
   }
 
-  estimateDynamicDelivery(distanceKm = 1.0, prepMin = 14) {
+  estimateDynamicDelivery(distanceKm = 1.0, prepMin = 12) {
     const km = typeof distanceKm === 'number' ? distanceKm : (parseFloat(distanceKm) || 1.0);
     const travelMin = Math.round(km * 6);
     const totalMin = prepMin + travelMin;
-    const lower = Math.max(16, totalMin - 3);
-    const upper = totalMin + 5;
+    const lower = Math.max(10, totalMin - 3);
+    const upper = totalMin + 4;
     return `${lower}-${upper} min`;
   }
 

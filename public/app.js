@@ -237,6 +237,10 @@ function handleWebSocketMessage(data) {
       // Update tracking modal if active
       if (STATE.trackingOrder && STATE.trackingOrder.id === orderId) {
         STATE.trackingOrder.status = status;
+        if (data.payload.etaMinutes !== undefined) {
+          STATE.trackingOrder.etaMinutes = data.payload.etaMinutes;
+        }
+        updateTrackingEta(STATE.trackingOrder);
         renderTrackerSteps(STATE.trackingOrder);
       }
 
@@ -256,6 +260,7 @@ function handleWebSocketMessage(data) {
       showToast(`🎉 Order #${data.payload.orderId} Delivered! Enjoy your street bites.`);
       if (STATE.trackingOrder && STATE.trackingOrder.id === data.payload.orderId) {
         STATE.trackingOrder.status = 'DELIVERED';
+        updateTrackingEta(STATE.trackingOrder);
         renderTrackerSteps(STATE.trackingOrder);
       }
       loadCustomerOrders();
@@ -379,11 +384,12 @@ function switchView(viewName) {
 // 5. CUSTOMER VIEW LOGIC (Craving Hub, Discovery & Catalog)
 // ==========================================================
 
-function calculateDynamicDeliveryTime(distanceKm, prepMin = 13) {
-  const km = typeof distanceKm === 'number' ? distanceKm : (parseFloat(distanceKm) || 1.1);
-  const transitMin = Math.round(km * 5.5);
-  const totalMin = Math.max(16, prepMin + transitMin);
-  const lower = Math.max(15, totalMin - 3);
+function calculateDynamicDeliveryTime(distanceKm, prepMin = 12) {
+  const km = typeof distanceKm === 'number' ? distanceKm : (parseFloat(distanceKm) || 1.0);
+  const transitMin = Math.round(km * 6);
+  const prep = typeof prepMin === 'number' ? prepMin : (parseInt(prepMin, 10) || 12);
+  const totalMin = prep + transitMin;
+  const lower = Math.max(10, totalMin - 3);
   const upper = totalMin + 4;
   return `${lower}-${upper} min`;
 }
@@ -1895,13 +1901,40 @@ async function handlePlaceOrder() {
 // ==========================================================
 // 8. LIVE ORDER TRACKING & RADAR TELEMETRY
 // ==========================================================
+function updateTrackingEta(order) {
+  const etaElem = document.getElementById('trackEtaText');
+  if (!etaElem || !order) return;
+
+  if (order.status === 'DELIVERED') {
+    etaElem.innerText = typeof t === 'function' ? t('track_delivered', 'Delivered to your doorstep') : 'Delivered to your doorstep';
+    return;
+  }
+  if (order.status === 'CANCELLED') {
+    etaElem.innerText = typeof t === 'function' ? t('track_cancelled', 'Order cancelled') : 'Order cancelled';
+    return;
+  }
+  if (order.etaMinutes && typeof order.etaMinutes === 'number') {
+    const label = typeof t === 'function' ? t('estimated_delivery_time', 'Estimated delivery time') : 'Estimated delivery time';
+    etaElem.innerText = `${label}: ~${order.etaMinutes} mins`;
+    return;
+  }
+  const stall = (STATE.stalls || []).find(s => s.id === order.stall_id);
+  if (stall && (stall.distance || stall.distanceKm)) {
+    const dynamicTime = calculateDynamicDeliveryTime(stall.distance || stall.distanceKm, stall.prepMin || stall.prepTime || 12);
+    const label = typeof t === 'function' ? t('estimated_delivery_time', 'Estimated delivery time') : 'Estimated delivery time';
+    etaElem.innerText = `${label}: ${dynamicTime}`;
+    return;
+  }
+  etaElem.innerText = typeof t === 'function' ? t('track_eta_default', 'Estimated delivery time') : 'Estimated delivery time';
+}
+
 function openTrackingModal(order) {
   STATE.trackingOrder = order;
   STATE.radarProgress = 0.2; // initial rider progress
 
   document.getElementById('trackOrderId').innerText = `#${order.id}`;
   document.getElementById('trackDeliveryOtp').innerText = order.otp || '4829';
-  document.getElementById('trackEtaText').innerText = `Estimated Delivery in ${order.etaMinutes || 14} mins`;
+  updateTrackingEta(order);
 
   const riderNameElem = document.getElementById('trackRiderName');
   if (riderNameElem) {
