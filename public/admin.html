@@ -408,7 +408,7 @@
           <div class="space-y-1">
             <label class="font-bold text-gray-300">Stall Street Location</label>
             <div class="p-3 bg-gray-900 rounded-xl text-gray-300 font-mono text-[11px]" id="auditIdentityAddress">
-              Indiranagar 100ft Rd
+              Registered Address
             </div>
           </div>
 
@@ -556,7 +556,7 @@
               <div class="text-gray-300 font-semibold">${s.owner_name || 'Owner'}</div>
               <div class="text-[11px] text-orange-400 font-mono">+91 ${s.owner_phone}</div>
             </td>
-            <td class="p-3 text-gray-300 text-xs">${s.address || 'Indiranagar'}</td>
+            <td class="p-3 text-gray-300 text-xs">${s.address || 'Address pending'}</td>
             <td class="p-3">
               <div>
                 <span class="px-2 py-0.5 rounded text-[10px] font-black ${fBadgeClass}">
@@ -598,7 +598,7 @@
       currentAuditStallId = stall.id;
 
       document.getElementById('modalStallTitle').innerText = `${stall.name} — Trust & Audit`;
-      document.getElementById('modalStallSubtitle').innerText = `Owner: ${stall.owner_name || 'Vendor'} (+91 ${stall.owner_phone}) • ${stall.address || 'Bengaluru'}`;
+      document.getElementById('modalStallSubtitle').innerText = `Owner: ${stall.owner_name || 'Vendor'} (+91 ${stall.owner_phone}) • ${stall.address || 'Location registered'}`;
 
       // FSSAI prefill
       document.getElementById('auditFssaiNumber').value = stall.fssai_number || '';
@@ -753,7 +753,7 @@
             <div>${r.vehicle}</div>
             <div class="text-[10px] text-gray-500 font-mono">${r.vehicle_number || 'EV'}</div>
           </td>
-          <td class="p-3 text-gray-300">${r.area || 'Indiranagar'}</td>
+          <td class="p-3 text-gray-300">${r.area || 'Zone pending'}</td>
           <td class="p-3 font-mono text-gray-300">${r.upi_id || `${r.phone}@upi`}</td>
           <td class="p-3">
             <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.is_online ? 'bg-emerald-900/60 text-emerald-300' : 'bg-gray-700 text-gray-400'}">

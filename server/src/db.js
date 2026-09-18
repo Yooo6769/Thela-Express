@@ -121,7 +121,7 @@ class Database {
     const house = (addressData.house || '').trim();
     const street = (addressData.street || '').trim();
     const landmark = (addressData.landmark || '').trim();
-    const city = (addressData.city || 'Bengaluru').trim();
+    const city = (addressData.city || '').trim();
 
     let fullTitle = house ? `${house}, ${street}` : street;
     if (landmark) fullTitle += ` (Near ${landmark})`;
@@ -453,8 +453,9 @@ class Database {
   }
 
   verifyOtp(phone, enteredOtp) {
-    // Universal developer test OTP: '1234'
-    if (enteredOtp === '1234') return true;
+    // Universal developer test OTP: only allow in local development
+    const isDev = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'staging';
+    if (isDev && enteredOtp === '1234') return true;
     const record = this.data.otps[phone];
     if (record && record.otp === enteredOtp && Date.now() <= record.expires_at) {
       delete this.data.otps[phone];
@@ -480,15 +481,15 @@ class Database {
       reviewsCount: '1 (New)',
       deliveryTime: dynamicDelivery,
       distance: `${distVal.toFixed(1)} km`,
-      lat: parseFloat(stallData.lat) || 12.9725,
-      lng: parseFloat(stallData.lng) || 77.6408,
+      lat: parseFloat(stallData.lat) || 0,
+      lng: parseFloat(stallData.lng) || 0,
       specialty: stallData.specialty || 'Authentic Street Special',
       heritageStory: stallData.heritageStory || 'Newly onboarded authentic street vendor on ThelaExpress.',
       priceForTwo: stallData.priceForTwo || '₹120 for two',
       discount: stallData.discount || '15% OFF On First Order',
       imageUrl: stallData.imageUrl || 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80',
       upi_id: stallData.upi_id || 'vendor@upi',
-      address: stallData.address || 'Indiranagar 100ft Rd',
+      address: stallData.address || 'Street Address',
       isOpen: true,
       isVeg: stallData.isVeg !== undefined ? Boolean(stallData.isVeg) : true,
 
@@ -562,13 +563,13 @@ class Database {
       vehicle: riderData.vehicle || 'EV Scooter',
       vehicle_number: riderData.vehicle_number || '',
       upi_id: riderData.upi_id || '',
-      area: riderData.area || 'Indiranagar',
+      area: riderData.area || 'Operating Zone',
       rating: 5.0,
       deliveriesCount: 0,
       is_online: true,
       is_verified: true,
-      lat: 12.9735,
-      lng: 77.6400,
+      lat: riderData.lat || 0,
+      lng: riderData.lng || 0,
       created_at: new Date().toISOString()
     };
 

@@ -144,7 +144,8 @@ router.post('/:id/verify-otp', (req, res) => {
 
   if (!order) return res.status(404).json({ error: 'Order not found.' });
 
-  if (order.otp !== otp && otp !== '1234') {
+  const isDev = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'staging';
+  if (order.otp !== otp && (!isDev || otp !== '1234')) {
     return res.status(400).json({ error: 'Invalid delivery OTP provided by customer.' });
   }
 

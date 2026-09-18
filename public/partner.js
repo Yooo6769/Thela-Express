@@ -379,7 +379,7 @@ function updateVendorTrustCard() {
   }
 
   // 3. Identity
-  if (addressText) addressText.innerText = stall.address || 'Indiranagar 100ft Rd';
+  if (addressText) addressText.innerText = stall.address || 'Registered Street Location';
   if (stall.identity_status === 'verified' || stall.is_verified) {
     identityBadge.className = 'px-2 py-0.5 rounded-md text-[10px] font-black bg-emerald-100 text-emerald-800';
     identityBadge.innerText = 'Verified KYC ✓';

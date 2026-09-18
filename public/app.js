@@ -467,7 +467,7 @@ const CURATED_DISCOVERY = {
       reviewsCount: '440+',
       priceForTwo: 130,
       distance: '1.1 km',
-      prepMin: 14,
+      prepMin: 12,
       isVeg: true,
       badgeText: 'Live Buzz',
       badgeIcon: '🧈',
@@ -533,7 +533,7 @@ const CURATED_DISCOVERY = {
       reviewsCount: '360+',
       priceForTwo: 150,
       distance: '1.3 km',
-      prepMin: 15,
+      prepMin: 18,
       isVeg: true,
       badgeText: 'Popular Feast',
       badgeIcon: '🫓',
@@ -633,7 +633,7 @@ const CURATED_DISCOVERY = {
       reviewsCount: '980+',
       priceForTwo: 120,
       distance: '1.2 km',
-      prepMin: 14,
+      prepMin: 16,
       isVeg: true,
       badgeText: '40 Yrs Legend',
       badgeIcon: '👑',
@@ -781,7 +781,7 @@ const CURATED_DISCOVERY = {
       reviewsCount: '190+',
       priceForTwo: 130,
       distance: '1.2 km',
-      prepMin: 14,
+      prepMin: 11,
       isVeg: false,
       badgeText: 'Hidden Alley',
       badgeIcon: '🏔️',
@@ -1913,19 +1913,20 @@ function updateTrackingEta(order) {
     etaElem.innerText = typeof t === 'function' ? t('track_cancelled', 'Order cancelled') : 'Order cancelled';
     return;
   }
+  // Only show a delivery estimate when it comes from the actual order/delivery system
   if (order.etaMinutes && typeof order.etaMinutes === 'number') {
     const label = typeof t === 'function' ? t('estimated_delivery_time', 'Estimated delivery time') : 'Estimated delivery time';
     etaElem.innerText = `${label}: ~${order.etaMinutes} mins`;
     return;
   }
-  const stall = (STATE.stalls || []).find(s => s.id === order.stall_id);
-  if (stall && (stall.distance || stall.distanceKm)) {
-    const dynamicTime = calculateDynamicDeliveryTime(stall.distance || stall.distanceKm, stall.prepMin || stall.prepTime || 12);
+  if (order.estimated_delivery && typeof order.estimated_delivery === 'string') {
     const label = typeof t === 'function' ? t('estimated_delivery_time', 'Estimated delivery time') : 'Estimated delivery time';
-    etaElem.innerText = `${label}: ${dynamicTime}`;
+    etaElem.innerText = `${label}: ${order.estimated_delivery}`;
     return;
   }
-  etaElem.innerText = typeof t === 'function' ? t('track_eta_default', 'Estimated delivery time') : 'Estimated delivery time';
+  // When no delivery estimate has been received from the actual dispatch system yet
+  const pendingText = typeof t === 'function' ? t('track_eta_pending', 'Calculating delivery estimate...') : 'Calculating delivery estimate...';
+  etaElem.innerText = pendingText;
 }
 
 function openTrackingModal(order) {
@@ -1933,7 +1934,7 @@ function openTrackingModal(order) {
   STATE.radarProgress = 0.2; // initial rider progress
 
   document.getElementById('trackOrderId').innerText = `#${order.id}`;
-  document.getElementById('trackDeliveryOtp').innerText = order.otp || '4829';
+  document.getElementById('trackDeliveryOtp').innerText = order.otp || '----';
   updateTrackingEta(order);
 
   const riderNameElem = document.getElementById('trackRiderName');
@@ -2416,7 +2417,7 @@ function renderRiderGig(order) {
         <div class="flex items-center space-x-2">
           <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
           <span class="font-bold text-gray-700">Pickup:</span>
-          <span class="text-gray-900">${order.stall_name}, Indiranagar 100ft Rd</span>
+          <span class="text-gray-900">${order.stall_name}${order.stall_address ? ', ' + order.stall_address : ''}</span>
         </div>
         <div class="flex items-center space-x-2">
           <span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span>
@@ -2507,7 +2508,7 @@ function startRiderGpsSimulation(orderId) {
 
 // Rider prompts customer for 4-digit OTP
 async function promptDeliveryOtp(orderId) {
-  const entered = prompt(`Enter customer's 4-digit doorstep delivery OTP (Dev demo bypass: 1234):`, '1234');
+  const entered = prompt("Enter customer's 4-digit doorstep delivery OTP:");
   if (!entered) return;
 
   try {
@@ -2563,7 +2564,7 @@ async function handleSendOtp() {
       document.getElementById('authOtpSection').classList.remove('hidden');
       btn.innerText = 'Verify & Continue';
       btn.onclick = handleVerifyOtp;
-      showToast(`OTP sent to +91 ${phone} (Dev: 1234)`);
+      showToast(`Verification code sent to +91 ${phone}`);
     } else {
       alert(data.error);
       btn.innerText = 'Send OTP';

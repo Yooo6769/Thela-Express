@@ -34,9 +34,9 @@ router.post('/vendor', (req, res) => {
     name,
     category: category || 'chaat',
     specialty: specialty || 'Authentic Street Bites',
-    address: address || 'Indiranagar 100ft Rd',
-    lat: lat || 12.9725,
-    lng: lng || 77.6408,
+    address: address || 'Street Address',
+    lat: lat || null,
+    lng: lng || null,
     upi_id: upi_id || `${cleanPhone}@upi`,
     fssai_number: fssai_number || '',
     isVeg: isVeg !== undefined ? isVeg : true,
@@ -84,7 +84,7 @@ router.post('/rider', (req, res) => {
     vehicle: vehicle || 'EV Scooter',
     vehicle_number: vehicle_number || '',
     upi_id: upi_id || `${cleanPhone}@upi`,
-    area: area || 'Indiranagar'
+    area: area || 'Operating Zone'
   });
 
   console.log(`[ONBOARD] Real Rider registered: ${rider.name} (${rider.id}) Phone: ${cleanPhone}`);

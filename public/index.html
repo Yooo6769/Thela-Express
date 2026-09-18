@@ -650,9 +650,9 @@
           <div>
             <div class="flex items-center space-x-2">
               <h2 class="font-extrabold text-base">Live Order Tracking</h2>
-              <span id="trackOrderId" class="bg-white/20 text-[10px] font-bold px-1.5 py-0.5 rounded">#TH-0000</span>
+              <span id="trackOrderId" class="bg-white/20 text-[10px] font-bold px-1.5 py-0.5 rounded">#---</span>
             </div>
-            <p id="trackEtaText" class="text-xs text-amber-100 font-medium" data-i18n="track_eta_default">Estimated delivery time</p>
+            <p id="trackEtaText" class="text-xs text-amber-100 font-medium" data-i18n="track_eta_pending">Calculating delivery estimate...</p>
           </div>
         </div>
         <button onclick="closeTrackingModal()" class="w-8 h-8 rounded-full bg-black/20 text-white flex items-center justify-center hover:bg-black/30">
@@ -667,7 +667,7 @@
           <div class="text-xs text-amber-700">Share this code with the rider upon arrival</div>
         </div>
         <div id="trackDeliveryOtp" class="text-xl font-black tracking-widest bg-white border border-amber-300 text-amber-900 px-3 py-1 rounded-xl shadow-inner font-mono">
-          4829
+          ----
         </div>
       </div>
 
@@ -749,9 +749,9 @@
           </div>
           <input type="text" id="authOtpInput" maxlength="4" placeholder="Enter 4-digit OTP" value=""
             class="w-full text-center tracking-widest text-lg font-mono font-bold bg-gray-50 border border-gray-200 rounded-xl py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">
-          <div class="text-[11px] text-amber-700 bg-amber-50 p-2 rounded-lg">
-            <i class="fa-solid fa-info-circle mr-1"></i>Demo OTP: Enter <strong>1234</strong> to verify and login.
-          </div>
+          <p class="text-[11px] text-stone-500 text-center py-1">
+            Enter the 4-digit verification code sent to your phone.
+          </p>
         </div>
 
         <button id="authActionBtn" onclick="handleSendOtp()" class="w-full bg-orange-600 text-white rounded-xl py-2.5 font-bold text-sm hover:bg-orange-700 transition">
@@ -942,7 +942,7 @@
 
             <div class="space-y-1">
               <label class="font-bold text-gray-700">Street / Area / Colony *</label>
-              <input type="text" id="newAddrStreet" placeholder="e.g. 100ft Road, Indiranagar" required
+              <input type="text" id="newAddrStreet" placeholder="e.g. Main Street, Near City Market" required
                 class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
             </div>
 

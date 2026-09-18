@@ -14,12 +14,13 @@ router.post('/send-otp', (req, res) => {
   const generatedOtp = Math.floor(1000 + Math.random() * 9000).toString();
   
   db.saveOtp(cleanPhone, generatedOtp);
-  console.log(`[AUTH] Sent OTP to +91 ${cleanPhone}: ${generatedOtp} (Dev shortcut: '1234' is also always valid)`);
+  console.log(`[AUTH] Sent OTP to +91 ${cleanPhone}: ${generatedOtp}`);
 
+  const isDev = process.env.NODE_ENV !== 'production' && process.env.NODE_ENV !== 'staging';
   res.json({
     success: true,
     message: `OTP sent to +91 ${cleanPhone}`,
-    devOtp: generatedOtp // returned for frictionless local testing
+    ...(isDev ? { devOtp: generatedOtp } : {})
   });
 });
 
@@ -34,7 +35,7 @@ router.post('/verify-otp', (req, res) => {
   const isValid = db.verifyOtp(cleanPhone, otp);
 
   if (!isValid) {
-    return res.status(401).json({ error: 'Invalid or expired OTP. (Try 1234 in demo)' });
+    return res.status(401).json({ error: 'Invalid or expired verification code. Please try again.' });
   }
 
   let user = db.findUserByPhone(cleanPhone);
