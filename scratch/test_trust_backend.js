@@ -46,8 +46,7 @@ async function runTests() {
 
   console.log('\n--- Step 2: Customer get stall ---');
   const custRes = await request('GET', '/api/stalls/' + stall.id);
-  console.log('Trust Badges:
-', custRes.data.stall.trustBadges.map(b => b.label));
+  console.log('Trust Badges:', custRes.data.stall.trustBadges.map(b => b.label));
 
   console.log('\n--- Step 3: Trust dossier ---');
   const trustRes = await request('GET', '/api/stalls/' + stall.id + '/trust');
@@ -55,7 +54,7 @@ async function runTests() {
   console.log('Hygiene Status:', trustRes.data.hygiene.status);
 
   console.log('\n--- Step 4: Admin verifies FSSAI ---');
-  const fssaiVerifyRes = await request('OATCH', '/api/admin/stalls/' + stall.id + '/fssai', { status: 'verified', expiryDate: '2028-12-31', notes: 'FoSCoS verified' });
+  const fssaiVerifyRes = await request('PATCH', '/api/admin/stalls/' + stall.id + '/fssai', { status: 'verified', expiryDate: '2028-12-31', notes: 'FoSCoS verified' });
   console.log('Trust Badges after FSSAI verify:', fssaiVerifyRes.data.stall.trustBadges.map(b => b.label));
 
   console.log('\n--- Step 5: Admin conducts Hygiene Inspection ---');

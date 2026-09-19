@@ -49,11 +49,11 @@ async function run() {
   console.log('   ', hRes.data.stall.trustBadges.map(b => b.label));
 
   const trust = await request('GET', '/api/stalls/' + stall.id + '/trust');
-  cons{�K���	���\����Y\����ZHX\��Y���\��]K����ZK�X\��Y�[X�\�N�ۜ��K���	�\����Y\�Y�Y[�H��ܙN���\��]K�Y�Y[�K���ܙJN����X[�\��ۜ��H�\]Z\�J	ˋ��\��\��ܘ����N�ۜ�HH��]K��[˙�[�[�^
-�O�˚YOOH�[�Y
-NY�
-H�LJH���]K��[˜�X�JKJN����]�J
-N�B��ۜ��K���	��X[�Y\�[��N�ۜ��K���	��P��T��I�NB���[�
-K��]�
-HO���ۜ��K�\��܊JN����\�˙^]
-JN�JN
+  console.log('4. Trust dossier verification status:');
+  console.log('   FSSAI Masked:', trust.data.fssai.maskedNumber);
+  console.log('   Hygiene Status:', trust.data.hygiene.status);
+  console.log('   Checks count:', trust.data.completedChecks.length);
+  console.log('\nTrust tests completed successfully!');
+}
+
+run().catch(console.error);
