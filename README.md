@@ -1,44 +1,94 @@
-# ThelaExpress Live - Production Street Food Delivery Platform
+# ThelaExpress — Authentic Indian Street Food Delivery Ecosystem
 
-Welcome to **ThelaExpress Live** — a full-stack, real-time street food delivery ecosystem built for authentic vendors, delivery partners, and street food lovers.
-
----
-
-## 🚀 One-Click Launchers (Desktop Shortcuts)
-
-You can launch any of the 3 ecosystem portals directly from this folder:
-
-| Launcher File | Target Role | Description |
-| :--- | :--- | :--- |
-| **`Launch-Customer-App.bat`** | 🛍️ **Customer App** | Browse verified stalls, customize dishes, add to cart, phone OTP login, UPI checkout, and live order tracking. |
-| **`Launch-Vendor-Kitchen-POS.bat`** | 👨‍🍳 **Vendor Kitchen Display** | Live incoming kitchen order stream, pleasant audio chime alerts, 1-tap accept / cook / ready status progression, and item 86/85 stock manager. |
-| **`Launch-Rider-Console.bat`** | 🛵 **Rider Delivery Console** | Gigs acceptor, live GPS simulation transmitter, and 4-digit doorstep delivery OTP verification. |
-| **`Open-On-iPhone-Live.bat`** | 📱 **Mobile / iPhone Safari** | Starts a secure, TLS-certified HTTPS tunnel with QR code so you can test on iPhone Safari without any "HTTPS-Only" or Quick Look errors. |
+Welcome to **ThelaExpress**, a modern, full-stack, real-time street-food discovery and hyperlocal delivery platform designed specifically for authentic Indian street vendors (thelas), delivery partners, and street-food explorers.
 
 ---
 
-## 🔑 Authentication & Testing Shortcuts
+## 🌐 Complete App Directory (6 Core Portals)
 
-- **Phone OTP Login**: Enter any 10-digit mobile number (e.g. `9876543210`).
-- **Universal Dev OTP**: **`1234`** is pre-configured as a universal bypass for instant local testing.
-- **Doorstep Delivery OTP**: Displayed prominently on the customer tracking screen (e.g. `4829`), or bypass with `1234` in the rider console.
+The ecosystem is structured with zero build step (vanilla modern JavaScript + Tailwind CSS + Node.js LTS) for blazing fast load times and seamless cross-platform support:
 
----
-
-## 🛠️ Architecture & Tech Stack
-
-- **Backend**: Node.js LTS + Express.js API Gateway (`http://localhost:5000/api`)
-- **Realtime Layer**: Native WebSockets (`ws://localhost:5000/ws` or `wss://...` on mobile)
-- **Audio Engine**: Web Audio API synthesizer for instant 2-tone kitchen chimes without external audio files
-- **Database**: Persistent JSON Storage Engine (`thela-express-prod/server/data/thela.db.json`)
-- **Telemetry**: Real-time GPS coordinate stream and HTML5 Canvas radar map
-- **Frontend**: Responsive Tailwind CSS + Vanilla JS (Zero build step, maximum speed, seamless on iOS Safari & Android)
+| Portal | URL Path | Source File | Description |
+| :--- | :--- | :--- | :--- |
+| 🛍️ **Customer App** | `/` or `/index.html` | `public/index.html` | Night-market visual atmosphere, craving discovery, verified vendor pages, 12-language support, customizer, and live order tracker. |
+| 👨‍🍳 **Vendor Kitchen POS** | `/partner.html?role=vendor` | `public/partner.html` | Real-time incoming kitchen order stream, Web Audio chimes, 1-tap accept/prep/ready progression, item 86/85 stock management. |
+| 🛵 **Rider Console** | `/partner.html?role=rider` | `public/partner.html` | Order broadcast dispatcher, live GPS radar transmitter, thermal box confirmation, doorstep delivery OTP completion. |
+| 📝 **Vendor Onboarding** | `/onboard-vendor.html` | `public/onboard-vendor.html` | FSSAI registration number capture, hygiene self-audit checklist, signature dishes, cart photography, and geo-location pinning. |
+| 🪪 **Rider Onboarding** | `/onboard-rider.html` | `public/onboard-rider.html` | Driving license, vehicle type (EV / petrol scooter / bicycle), thermal delivery bag verification, document upload. |
+| 🛡️ **Admin & Trust Dossier** | `/admin.html` | `public/admin.html` | Operations central dispatch, vendor approval queue, FSSAI verification toggle, hygiene audit scores, revenue metrics. |
 
 ---
 
-## 🍲 Default Verified Street Food Stalls
+## ⚡ Quick Start for Developers
 
-1. **Sharma Ji Ka Mashoor Chaat** (Indiranagar) - FSSAI Clean Street Gold (98% Score)
-2. **Babu Vada Pav & Misal Center** (Indiranagar) - Zero-Oil Reheat Certified (99% Score)
-3. **Tibetan Momo Corner & Thukpa** (Indiranagar) - Steam Sanitized Cooking (96% Score)
-4. **Madras Benne Dosa & Podi Idli Thela** (Indiranagar) - White Butter Heritage (99% Score)
+### Prerequisites
+- **Node.js** (v18.x or higher)
+- **npm** (v9.x or higher)
+- **Git**
+
+### Installation & Launch in 60 Seconds
+
+```bash
+# 1. Clone repository
+git clone https://github.com/Yooo6769/Thela-Express.git
+cd Thela-Express
+
+# 2. Install server dependencies
+cd server
+npm install
+
+# 3. Start production/local server
+node src/server.js
+```
+
+The server will initialize on **`http://localhost:5000`** with:
+- Static client application serving (`/public`)
+- REST API Gateway (`/api/*`)
+- Bi-directional Real-time WebSockets (`ws://localhost:5000/ws`)
+
+---
+
+## 🧪 Verification & Test Suites
+
+Run the built-in automated test suites to verify integrity:
+
+```bash
+# In the repository root:
+node -c public/app.js                                 # Validate client script syntax
+node scratch/test_atmosphere.js                       # Test street-food visual atmosphere & adaptive density engine
+node scratch/test_all_i18n.js                         # Verify 12 Indian languages across all 5 apps (0 missing keys)
+node scratch/audit_promises.js                        # Ensure zero hardcoded delivery promises
+node scratch/audit_demodata.js                        # Ensure zero demo data leaks in production files
+node server/test-e2e.js                               # Run end-to-end order flow and socket sync test
+```
+
+---
+
+## 🏗️ Architecture & Technology Stack
+
+- **Frontend**: Lightweight Vanilla JavaScript ES6+, Tailwind CSS, FontAwesome 6, Lucide icons, HTML5 Canvas radar map.
+  - *Zero Build Step*: Direct asset serving, ultra-fast TTFB and LCP.
+  - *12 Indian Languages*: English, Hindi, Hinglish, Marathi, Gujarati, Tamil, Telugu, Kannada, Bengali, Malayalam, Punjabi, Odia.
+  - *Adaptive Visual Density Engine*: UI-state-driven atmosphere manager adapting to customer buying funnel.
+- **Backend API**: Node.js + Express.js REST API.
+- **Real-Time Stream**: Native `ws` WebSocket engine for sub-100ms order dispatch synchronization between customer, vendor, and rider.
+- **Database Engine**: Atomic JSON-backed persistence store (`server/data/thela.db.json`) with automated seeding and zero external DBMS configuration required for development.
+- **Audio Synthesis**: Native browser Web Audio API generating authentic two-tone kitchen chimes without external mp3 dependencies.
+
+---
+
+## 🚀 Deployment & Production Hosting
+
+- **Systemd / PM2 Config**: `ecosystem.config.js` included for instant PM2 management:
+  ```bash
+  pm2 start ecosystem.config.js
+  ```
+- **Reverse Proxy**: Ready-to-deploy Nginx config included in `deploy/nginx-thelaexpress.conf` with WebSocket upgrade rules.
+- **Cloudflare Tunnel / HTTPS**: Built-in scripts (`start-cloudflare.ps1` or `setup-vps.sh`) allow instantaneous SSL/TLS tunneling for testing on physical iOS/Android devices without App Store deployment.
+
+---
+
+## 🔒 Security & Verification Guidelines
+- **FSSAI Food Safety Compliance**: Strict verification check validation; unverified claims are never displayed.
+- **Dynamic Delivery Estimates**: Calculated dynamically using vendor prep time and haversine road distance matrix; zero static 15-minute guarantees.
+- **Zero Fiction Metric Policy**: Order counts and ratings represent genuine data only.
