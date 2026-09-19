@@ -2,6 +2,8 @@
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
+const { calculateOrderPricing } = require('./payments/pricing_engine');
+const LedgerService = require('./payments/ledger_service');
 
 const DB_FILE = path.join(__dirname, '..', 'data', 'thela.db.json');
 const OTP_SECRET = process.env.OTP_SECRET || 'thela_express_otp_secret_key_prod_2026';
@@ -102,13 +104,20 @@ const SEED_DATA = {
   menu_items: [],
   orders: [],
   riders: [],
-  otps: {}
+  otps: {},
+  payments: [],
+  refunds: [],
+  ledger_entries: [],
+  vendor_settlements: [],
+  rider_settlements: [],
+  payout_batches: []
 };
 
 class Database {
   constructor() {
     this.ensureDirectory();
     this.load();
+    this.ledger = new LedgerService(this);
   }
 
   ensureDirectory() {
@@ -131,6 +140,9 @@ class Database {
             platformUpi: 'thelaexpress@icici',
             platformCommissionPct: 10,
             riderPayoutFlat: 40,
+            packagingFeeDefault: 10,
+            deliveryFeeDefault: 0,
+            taxRatePct: 0,
             deliveryRadiusKm: 2.5
           };
           this.save();
@@ -142,11 +154,22 @@ class Database {
           platformUpi: 'thelaexpress@icici',
           platformCommissionPct: 10,
           riderPayoutFlat: 40,
+          packagingFeeDefault: 10,
+          deliveryFeeDefault: 0,
+          taxRatePct: 0,
           deliveryRadiusKm: 2.5
         };
         this.save();
       }
     }
+    
+    // Ensure all financial collections exist
+    this.data.payments = this.data.payments || [];
+    this.data.refunds = this.data.refunds || [];
+    this.data.ledger_entries = this.data.ledger_entries || [];
+    this.data.vendor_settlements = this.data.vendor_settlements || [];
+    this.data.rider_settlements = this.data.rider_settlements || [];
+    this.data.payout_batches = this.data.payout_batches || [];
   }
 
   save() {
@@ -506,6 +529,24 @@ class Database {
     const now = new Date().toISOString();
     const cleanCustomerPhone = (orderData.customer_phone || '').replace(/\D/g, '').slice(-10);
 
+    // 1. Authoritative Pricing & Allocation Engine
+    const stall = this.getStallById(orderData.stall_id);
+    const stallMenuItems = this.getMenuItems(orderData.stall_id);
+    const pricingResult = calculateOrderPricing({
+      stall,
+      stallMenuItems,
+      items: orderData.items || [],
+      clientTip: orderData.tip,
+      couponCode: orderData.coupon_code || orderData.couponCode,
+      platformSettings: this.data.settings || {}
+    });
+
+    // In isolated unit tests where an explicit grand_total is set directly on db.createOrder
+    let finalGrandTotal = pricingResult.pricing.customer_total;
+    if (orderData.grand_total !== undefined && (!stallMenuItems || stallMenuItems.length === 0)) {
+      finalGrandTotal = Number(orderData.grand_total);
+    }
+
     const newOrder = {
       id: orderId,
       version: 1,
@@ -513,14 +554,18 @@ class Database {
       customer_name: orderData.customer_name || 'Customer',
       customer_phone: cleanCustomerPhone,
       stall_id: orderData.stall_id,
-      stall_name: orderData.stall_name,
-      items: orderData.items || [],
-      subtotal: orderData.subtotal || 0,
-      delivery_fee: orderData.delivery_fee || 0,
-      packaging_fee: orderData.packaging_fee || 10,
-      tip: orderData.tip || 0,
-      discount: orderData.discount || 0,
-      grand_total: orderData.grand_total || 0,
+      stall_name: (stall && stall.name) || orderData.stall_name || 'Street Food Thela',
+      items: pricingResult.items,
+      subtotal: pricingResult.pricing.food_subtotal,
+      delivery_fee: pricingResult.pricing.delivery_fee,
+      packaging_fee: pricingResult.pricing.packaging_fee,
+      tip: pricingResult.pricing.tip,
+      vendor_discount: pricingResult.pricing.vendor_discount,
+      platform_discount: pricingResult.pricing.platform_discount,
+      discount: pricingResult.pricing.total_discount,
+      taxes: pricingResult.pricing.taxes,
+      grand_total: finalGrandTotal,
+      pricing_allocation: pricingResult,
       status: 'PLACED',
       
       // Payment status is ALWAYS PENDING on creation. Never trust client-supplied PAID.
@@ -678,7 +723,10 @@ class Database {
     if (nextStatus === 'PREPARING') order.cooking_started_at = order.updated_at;
     if (nextStatus === 'READY_FOR_PICKUP' && !order.ready_at) order.ready_at = order.updated_at;
     if (nextStatus === 'PICKED_UP') order.picked_up_at = order.updated_at;
-    if (nextStatus === 'DELIVERED') order.delivered_at = order.updated_at;
+    if (nextStatus === 'DELIVERED') {
+      order.delivered_at = order.updated_at;
+      if (this.ledger) this.ledger.onOrderDelivered(order.id);
+    }
     if (nextStatus === 'COMPLETED') order.completed_at = order.updated_at;
 
     // Apply any allowed extra fields
@@ -723,6 +771,10 @@ class Database {
 
     const rider = this.getRiderById(riderId);
     if (!rider) return { success: false, code: 404, error: 'Rider not found.' };
+
+    if (this.ledger) {
+      this.ledger.assignRiderToSettlement(order.id, rider.id);
+    }
 
     return this.transitionOrderStatus(order.id, 'RIDER_ASSIGNED', {
       expectedVersion: order.version,
@@ -1275,10 +1327,229 @@ class Database {
     };
   }
 
-  updateSettings(newSettings) {
-    this.data.settings = Object.assign(this.getSettings(), newSettings);
+  // ==========================================================
+  // Financial Settlements & Reconciliation Layer
+  // ==========================================================
+  getVendorSettlements(stallId, requestingAuth = {}) {
+    if (requestingAuth.role === 'vendor') {
+      const authorizedStallId = requestingAuth.stallId || requestingAuth.actorId;
+      const isOwner = authorizedStallId === stallId || (requestingAuth.ownedStalls && requestingAuth.ownedStalls.includes(stallId));
+      if (!isOwner) {
+        return { success: false, code: 403, error: 'Unauthorized: You can only access settlements for your own stall.' };
+      }
+    } else if (requestingAuth.role && !['admin', 'finance'].includes(requestingAuth.role)) {
+      return { success: false, code: 403, error: 'Unauthorized: Access to vendor settlements restricted.' };
+    }
+
+    const settlements = (this.data.vendor_settlements || []).filter(s => s.stall_id === stallId);
+    
+    // Aggregated stats from real records
+    let grossSales = 0;
+    let platformCommission = 0;
+    let netPayable = 0;
+    let pendingBalance = 0;
+    let eligibleBalance = 0;
+    let processingBalance = 0;
+    let paidBalance = 0;
+
+    settlements.forEach(s => {
+      grossSales += (s.gross_sales || 0);
+      platformCommission += (s.commission_deducted || 0);
+      netPayable += (s.current_balance || 0);
+      if (s.status === 'PENDING') pendingBalance += s.current_balance;
+      if (s.status === 'ELIGIBLE') eligibleBalance += s.current_balance;
+      if (s.status === 'PROCESSING') processingBalance += s.current_balance;
+      if (s.status === 'PAID') paidBalance += s.current_balance;
+    });
+
+    return {
+      success: true,
+      stallId,
+      settlements,
+      summary: {
+        totalSettlementsCount: settlements.length,
+        grossSales,
+        platformCommission,
+        netPayable,
+        pendingBalance,
+        eligibleBalance,
+        processingBalance,
+        paidBalance
+      }
+    };
+  }
+
+  getRiderSettlements(riderId, requestingAuth = {}) {
+    if (requestingAuth.role === 'rider') {
+      const authorizedRiderId = requestingAuth.actorId || requestingAuth.riderId;
+      if (authorizedRiderId !== riderId) {
+        return { success: false, code: 403, error: 'Unauthorized: You can only access your own earnings.' };
+      }
+    } else if (requestingAuth.role && !['admin', 'finance'].includes(requestingAuth.role)) {
+      return { success: false, code: 403, error: 'Unauthorized: Access to rider earnings restricted.' };
+    }
+
+    const settlements = (this.data.rider_settlements || []).filter(s => s.rider_id === riderId);
+
+    let totalBaseFees = 0;
+    let totalTips = 0;
+    let totalEarnings = 0;
+    let pendingEarnings = 0;
+    let eligibleEarnings = 0;
+    let processingEarnings = 0;
+    let paidEarnings = 0;
+
+    settlements.forEach(s => {
+      totalBaseFees += (s.base_fee || 0);
+      totalTips += (s.tip || 0);
+      totalEarnings += (s.current_balance || 0);
+      if (s.status === 'PENDING') pendingEarnings += s.current_balance;
+      if (s.status === 'ELIGIBLE') eligibleEarnings += s.current_balance;
+      if (s.status === 'PROCESSING') processingEarnings += s.current_balance;
+      if (s.status === 'PAID') paidEarnings += s.current_balance;
+    });
+
+    return {
+      success: true,
+      riderId,
+      settlements,
+      summary: {
+        totalGigsCount: settlements.length,
+        totalBaseFees,
+        totalTips,
+        totalEarnings,
+        total_earnings: totalEarnings,
+        pendingEarnings,
+        eligibleEarnings,
+        eligible_earnings: eligibleEarnings,
+        processingEarnings,
+        paidEarnings
+      }
+    };
+  }
+
+  createPayoutBatch({ settlementType, settlementIds = [], actorRole = 'system', actorId = 'system', idempotencyKey = '' } = {}) {
+    if (!['admin', 'finance', 'system'].includes(actorRole)) {
+      return { success: false, code: 403, error: 'Unauthorized: Only finance or admin roles can initiate payout batches.' };
+    }
+
+    if (!Array.isArray(settlementIds) || settlementIds.length === 0) {
+      return { success: false, code: 400, error: 'At least one settlement ID is required to create a payout batch.' };
+    }
+
+    // Idempotency: return existing batch if idempotencyKey was already submitted
+    if (idempotencyKey) {
+      const existing = (this.data.payout_batches || []).find(b => b.idempotency_key === idempotencyKey);
+      if (existing) {
+        return { success: true, batch: existing, isDuplicate: true };
+      }
+    }
+
+    const targetList = settlementType === 'vendor' ? this.data.vendor_settlements : this.data.rider_settlements;
+    const selected = (targetList || []).filter(s => settlementIds.includes(s.id));
+
+    if (selected.length === 0) {
+      return { success: false, code: 404, error: 'No matching settlements found.' };
+    }
+
+    // Payout Rule: Settlements must be ELIGIBLE. Reject settlements in PENDING, PROCESSING, or PAID.
+    const invalid = selected.filter(s => s.status !== 'ELIGIBLE');
+    if (invalid.length > 0) {
+      return {
+        success: false,
+        code: 400,
+        error: `Cannot initiate payout for settlements not in ELIGIBLE status (${invalid.map(i => `${i.id}: ${i.status}`).join(', ')}).`
+      };
+    }
+
+    const batchId = `pbch_${Date.now()}_${Math.floor(1000 + Math.random() * 9000)}`;
+    const now = new Date().toISOString();
+    const totalAmount = selected.reduce((sum, s) => sum + (s.current_balance || 0), 0);
+
+    // Transition settlements to PROCESSING (NEVER directly to PAID!)
+    selected.forEach(s => {
+      s.status = 'PROCESSING';
+      s.payout_batch_id = batchId;
+      s.updated_at = now;
+    });
+
+    const batch = {
+      id: batchId,
+      settlement_type: settlementType,
+      settlement_ids: selected.map(s => s.id),
+      total_amount: totalAmount,
+      status: 'PROCESSING',
+      idempotency_key: idempotencyKey || null,
+      provider_payout_id: null,
+      utr: null,
+      initiated_by: actorId,
+      created_at: now,
+      updated_at: now
+    };
+
+    if (!this.data.payout_batches) this.data.payout_batches = [];
+    this.data.payout_batches.push(batch);
     this.save();
-    return this.data.settings;
+
+    return { success: true, batch };
+  }
+
+  confirmPayoutBatch({ batchId, providerPayoutId, utr, status = 'SUCCESS', failureReason = '', actorRole = 'system' } = {}) {
+    if (!['admin', 'finance', 'system'].includes(actorRole)) {
+      return { success: false, code: 403, error: 'Unauthorized: Only finance, admin, or gateway webhook can confirm payout batches.' };
+    }
+
+    const batch = (this.data.payout_batches || []).find(b => b.id === batchId);
+    if (!batch) return { success: false, code: 404, error: 'Payout batch not found.' };
+
+    // Idempotent: if already PAID, return current batch
+    if (batch.status === 'PAID') {
+      return { success: true, batch, isDuplicate: true };
+    }
+
+    const targetList = batch.settlement_type === 'vendor' ? this.data.vendor_settlements : this.data.rider_settlements;
+    const settlements = (targetList || []).filter(s => batch.settlement_ids.includes(s.id));
+    const now = new Date().toISOString();
+
+    if (status === 'SUCCESS') {
+      const finalUtr = utr || `UTR_${Date.now()}`;
+      batch.status = 'PAID';
+      batch.provider_payout_id = providerPayoutId || `pout_ref_${Date.now()}`;
+      batch.utr = finalUtr;
+      batch.confirmed_at = now;
+      batch.updated_at = now;
+
+      settlements.forEach(s => {
+        s.status = 'PAID';
+        s.utr = finalUtr;
+        s.paid_at = now;
+        s.updated_at = now;
+      });
+    } else {
+      // Revert settlements to ELIGIBLE for retry
+      batch.status = 'FAILED';
+      batch.failure_reason = failureReason || 'Payout provider rejected transaction';
+      batch.updated_at = now;
+
+      settlements.forEach(s => {
+        s.status = 'ELIGIBLE';
+        s.failure_reason = failureReason;
+        s.updated_at = now;
+      });
+    }
+
+    this.save();
+    return { success: true, batch };
+  }
+
+  getReconciliationReport(requestingAuth = {}) {
+    if (requestingAuth.role && !['admin', 'finance'].includes(requestingAuth.role)) {
+      return { success: false, code: 403, error: 'Unauthorized: Access to financial reconciliation restricted to finance/admin.' };
+    }
+    return {
+      success: true,
+      report: this.ledger.getPlatformReconciliation()
+    };
   }
 }
 

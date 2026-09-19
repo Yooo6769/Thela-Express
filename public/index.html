@@ -1068,6 +1068,97 @@
   </div>
 
   <!-- ============================================================== -->
+  <!-- MODAL: SECURE PAYMENT & UPI CHECKOUT SCREEN                    -->
+  <!-- ============================================================== -->
+  <div id="paymentModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">
+    <div class="bg-white w-full sm:max-w-md max-h-[92vh] rounded-t-3xl sm:rounded-3xl flex flex-col overflow-hidden shadow-2xl">
+      <!-- Payment Modal Header -->
+      <div class="p-4 bg-gray-900 text-white flex items-center justify-between">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-lg bg-orange-600 flex items-center justify-center text-white">
+            <i class="fa-solid fa-lock text-sm"></i>
+          </div>
+          <div>
+            <h2 class="font-extrabold text-base" data-i18n="payment_modal_title">Secure Checkout</h2>
+            <p class="text-[11px] text-gray-400" id="payModalSubtitle">Order #--- • Server-Authoritative Billing</p>
+          </div>
+        </div>
+        <button onclick="closePaymentModal()" class="w-8 h-8 rounded-full bg-white/10 text-white flex items-center justify-center hover:bg-white/20">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+
+      <div class="p-5 space-y-4 overflow-y-auto">
+        <!-- Explicit Sandbox Warning Banner -->
+        <div id="payModalSandboxBanner" class="bg-amber-50 border border-amber-300 rounded-2xl p-3 flex items-start space-x-2.5 text-amber-900 text-xs shadow-sm">
+          <i class="fa-solid fa-flask-vial text-amber-600 text-base mt-0.5"></i>
+          <div>
+            <div class="font-extrabold uppercase text-[10px] tracking-wider text-amber-800">TEST / SANDBOX ENVIRONMENT</div>
+            <div class="text-[11px] text-amber-700 leading-tight">Simulated test payment engine. No real money will be charged from your bank.</div>
+          </div>
+        </div>
+
+        <!-- Authoritative Bill Breakdown -->
+        <div class="bg-gray-50 rounded-2xl p-4 border border-gray-200 space-y-2 text-xs">
+          <div class="font-black text-gray-700 uppercase tracking-wider text-[10px]">Authoritative Bill Breakdown</div>
+          <div class="flex justify-between text-gray-600">
+            <span>Food Subtotal</span>
+            <span id="payModalSubtotal" class="font-bold text-gray-900">₹0</span>
+          </div>
+          <div class="flex justify-between text-gray-600">
+            <span>Food Packaging</span>
+            <span id="payModalPackaging" class="font-bold text-gray-900">₹10</span>
+          </div>
+          <div class="flex justify-between text-gray-600">
+            <span>Delivery Charge</span>
+            <span id="payModalDelivery" class="font-bold text-green-600">FREE</span>
+          </div>
+          <div class="flex justify-between text-gray-600" id="payModalTipRow">
+            <span>Delivery Partner Tip (100% to Rider)</span>
+            <span id="payModalTip" class="font-bold text-orange-600">₹0</span>
+          </div>
+          <div class="flex justify-between pt-2 border-t border-gray-200 font-extrabold text-sm text-gray-900">
+            <span>Payable Amount</span>
+            <span id="payModalTotal" class="text-orange-600 text-base">₹0</span>
+          </div>
+        </div>
+
+        <!-- QR Code Simulation Box -->
+        <div class="bg-white border-2 border-dashed border-gray-300 rounded-2xl p-4 text-center space-y-2">
+          <div class="inline-block bg-amber-100 text-amber-800 text-[10px] font-black uppercase px-2.5 py-0.5 rounded-full">
+            SANDBOX TEST QR — DO NOT SCAN WITH REAL BANK APP
+          </div>
+          <div class="flex items-center justify-center p-2 bg-gray-50 rounded-xl border border-gray-100 w-40 h-40 mx-auto">
+            <div class="text-center space-y-1">
+              <i class="fa-solid fa-qrcode text-5xl text-gray-700"></i>
+              <div class="text-[9px] font-mono text-gray-500 font-bold" id="payModalTxnRef">TXN_SANDBOX</div>
+            </div>
+          </div>
+          <p class="text-[11px] text-gray-500">Cryptographically signed transaction intent generated server-side.</p>
+        </div>
+
+        <!-- Verification Action Buttons -->
+        <div class="space-y-2 pt-1">
+          <button id="payModalVerifyBtn" onclick="handleVerifyPayment(false)" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white rounded-2xl py-3.5 font-black text-sm shadow-lg shadow-emerald-600/25 flex items-center justify-center space-x-2 transition">
+            <i class="fa-solid fa-circle-check"></i>
+            <span>Complete Test Payment (Sandbox Verify)</span>
+          </button>
+          <button id="payModalFailBtn" onclick="handleVerifyPayment(true)" class="w-full bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-2xl py-2.5 font-bold text-xs transition flex items-center justify-center space-x-1.5">
+            <i class="fa-solid fa-triangle-exclamation text-amber-600"></i>
+            <span>Simulate Payment Decline (Test Failure Flow)</span>
+          </button>
+        </div>
+
+        <!-- Verification Loader -->
+        <div id="payModalLoading" class="hidden text-center py-2 text-xs font-bold text-orange-600">
+          <i class="fa-solid fa-spinner animate-spin mr-1.5"></i>
+          <span>Verifying cryptographic signature with gateway...</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
   <!-- MODAL: LIVE ORDER TRACKING SCREEN (Realtime WebSocket)         -->
   <!-- ============================================================== -->
   <div id="trackingModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4">

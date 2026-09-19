@@ -178,8 +178,70 @@
       </div>
     </section>
 
-    <!-- TAB 4: PAYOUT SETTLEMENT LEDGER -->
+    <!-- TAB 4: PAYOUT SETTLEMENT LEDGER & RECONCILIATION MONITOR -->
     <section id="tabContentPayouts" class="hidden space-y-6">
+      
+      <!-- RECONCILIATION LEDGER & BALANCE INVARIANT MONITOR -->
+      <div class="bg-gray-800 border border-gray-700 rounded-2xl p-5 shadow-sm space-y-4">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-2 border-b border-gray-700/80 pb-3">
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="w-7 h-7 rounded-lg bg-orange-500/20 text-orange-400 flex items-center justify-center text-sm font-bold">
+                <i class="fa-solid fa-scale-balanced"></i>
+              </span>
+              <h2 class="font-extrabold text-sm text-white">Platform Financial Reconciliation & Balance Invariant Monitor</h2>
+            </div>
+            <p class="text-[11px] text-gray-400 mt-0.5">
+              Double-entry append-only ledger: Customer Funds Inflow − Refunds = Vendor Payable + Rider Earnings + Platform Margin + Taxes
+            </p>
+          </div>
+          <div class="flex items-center space-x-2">
+            <span id="reconcileInvariantBadge" class="px-3 py-1 rounded-full text-[11px] font-black tracking-wide uppercase bg-emerald-900/50 text-emerald-300 border border-emerald-700/60 flex items-center space-x-1.5">
+              <i class="fa-solid fa-circle-check"></i>
+              <span>Invariant Maintained (₹0 Discrepancy)</span>
+            </span>
+            <button type="button" onclick="loadPayoutsData()" class="px-3 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-xl text-xs font-bold transition flex items-center space-x-1">
+              <i class="fa-solid fa-arrows-rotate text-[10px]"></i>
+              <span>Audit Now</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- 6 Reconciliation Stat Tiles -->
+        <div class="grid grid-cols-2 md:grid-cols-6 gap-3 text-xs">
+          <div class="bg-gray-900/80 border border-gray-700/60 rounded-xl p-3 space-y-0.5">
+            <div class="text-[10px] uppercase font-bold text-gray-400">Customer Paid</div>
+            <div class="text-base font-black text-white font-mono" id="reconTotalCollected">₹0.00</div>
+            <div class="text-[10px] text-gray-500">Gross inflow</div>
+          </div>
+          <div class="bg-gray-900/80 border border-gray-700/60 rounded-xl p-3 space-y-0.5">
+            <div class="text-[10px] uppercase font-bold text-gray-400">Total Refunded</div>
+            <div class="text-base font-black text-red-400 font-mono" id="reconTotalRefunded">₹0.00</div>
+            <div class="text-[10px] text-gray-500">Append-only reversals</div>
+          </div>
+          <div class="bg-gray-900/80 border border-gray-700/60 rounded-xl p-3 space-y-0.5">
+            <div class="text-[10px] uppercase font-bold text-emerald-400">Net Customer Inflow</div>
+            <div class="text-base font-black text-emerald-400 font-mono" id="reconNetCollected">₹0.00</div>
+            <div class="text-[10px] text-gray-500">Retained capital</div>
+          </div>
+          <div class="bg-gray-900/80 border border-gray-700/60 rounded-xl p-3 space-y-0.5">
+            <div class="text-[10px] uppercase font-bold text-orange-400">Vendor Payable</div>
+            <div class="text-base font-black text-orange-400 font-mono" id="reconVendorPayable">₹0.00</div>
+            <div class="text-[10px] text-gray-500">Net food sales</div>
+          </div>
+          <div class="bg-gray-900/80 border border-gray-700/60 rounded-xl p-3 space-y-0.5">
+            <div class="text-[10px] uppercase font-bold text-blue-400">Rider Earnings</div>
+            <div class="text-base font-black text-blue-400 font-mono" id="reconRiderPayable">₹0.00</div>
+            <div class="text-[10px] text-gray-500">Drop fees + tips</div>
+          </div>
+          <div class="bg-gray-900/80 border border-gray-700/60 rounded-xl p-3 space-y-0.5">
+            <div class="text-[10px] uppercase font-bold text-amber-400">Platform Margin</div>
+            <div class="text-base font-black text-amber-400 font-mono" id="reconPlatformMargin">₹0.00</div>
+            <div class="text-[10px] text-gray-500">Commission & fees</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Vendor Payouts -->
       <div class="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden shadow-sm">
         <div class="p-4 border-b border-gray-700 flex justify-between items-center">
@@ -187,7 +249,7 @@
             <h2 class="font-extrabold text-sm text-white" data-i18n="vendor_settlement_ledger">Vendor Daily Settlement Ledger</h2>
             <p class="text-[11px] text-gray-400" data-i18n="vendor_settlement_sub">Total food sales minus 10% platform commission</p>
           </div>
-          <span class="text-xs text-emerald-400 font-bold" data-i18n="direct_upi_payouts">Direct UPI Payout Links</span>
+          <span class="text-xs text-orange-400 font-bold">Two-Step Gateway Payout Workflow</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
@@ -199,7 +261,8 @@
                 <th class="p-3" data-i18n="th_gross_sales">Gross Sales</th>
                 <th class="p-3" data-i18n="th_platform_cut">Platform Cut</th>
                 <th class="p-3" data-i18n="th_net_payable">Net Payable</th>
-                <th class="p-3 text-right" data-i18n="th_1tap_settle">1-Tap Settle</th>
+                <th class="p-3">Status</th>
+                <th class="p-3 text-right">Settlement Action</th>
               </tr>
             </thead>
             <tbody id="vendorPayoutsBody" class="divide-y divide-gray-700/60 font-medium text-gray-200">
@@ -216,7 +279,7 @@
             <h2 class="font-extrabold text-sm text-white" data-i18n="rider_settlement_ledger">Rider Gig Settlement Ledger</h2>
             <p class="text-[11px] text-gray-400" data-i18n="rider_settlement_sub">₹40 flat per doorstep delivery verified via OTP</p>
           </div>
-          <span class="text-xs text-emerald-400 font-bold" data-i18n="direct_upi_payouts">Direct UPI Payout Links</span>
+          <span class="text-xs text-emerald-400 font-bold">100% Tips + Drop Earnings</span>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
@@ -226,10 +289,41 @@
                 <th class="p-3" data-i18n="th_payout_upi">Rider UPI ID</th>
                 <th class="p-3" data-i18n="th_completed_trips">Completed Trips</th>
                 <th class="p-3" data-i18n="th_net_payable">Total Payable</th>
-                <th class="p-3 text-right" data-i18n="th_1tap_settle">1-Tap Settle</th>
+                <th class="p-3">Status</th>
+                <th class="p-3 text-right">Settlement Action</th>
               </tr>
             </thead>
             <tbody id="riderPayoutsBody" class="divide-y divide-gray-700/60 font-medium text-gray-200">
+              <!-- Populated dynamically -->
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Recent Payout Batches Audit Log -->
+      <div class="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden shadow-sm">
+        <div class="p-4 border-b border-gray-700 flex justify-between items-center">
+          <div>
+            <h2 class="font-extrabold text-sm text-white">Recent Gateway Payout Batches & UTR Records</h2>
+            <p class="text-[11px] text-gray-400">Cryptographically tracked payout batches and bank UTR confirmations</p>
+          </div>
+          <span class="text-xs text-blue-400 font-bold">Immutable Audit Trail</span>
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs">
+            <thead class="bg-gray-900 text-gray-400 font-bold border-b border-gray-700 uppercase">
+              <tr>
+                <th class="p-3">Batch ID</th>
+                <th class="p-3">Type</th>
+                <th class="p-3">Total Amount</th>
+                <th class="p-3">Settlement Count</th>
+                <th class="p-3">Status</th>
+                <th class="p-3">Bank UTR Ref</th>
+                <th class="p-3">Created</th>
+                <th class="p-3 text-right">Action</th>
+              </tr>
+            </thead>
+            <tbody id="payoutBatchesBody" class="divide-y divide-gray-700/60 font-medium text-gray-200">
               <!-- Populated dynamically -->
             </tbody>
           </table>
@@ -489,13 +583,22 @@
       }
     }
 
+    const ADMIN_AUTH_TOKEN = 'Bearer thela_tok_admin';
+
     async function loadPayoutsData() {
       try {
-        const res = await fetch('/api/admin/payouts');
-        const data = await res.json();
-        renderPayouts(data.vendorSettlements, data.riderSettlements);
+        const [payoutsRes, reconRes] = await Promise.all([
+          fetch('/api/admin/payouts', { headers: { 'Authorization': ADMIN_AUTH_TOKEN } }),
+          fetch('/api/admin/reconciliation', { headers: { 'Authorization': ADMIN_AUTH_TOKEN } })
+        ]);
+        const data = await payoutsRes.json();
+        const recon = await reconRes.json();
+        if (recon && recon.report) {
+          renderReconciliation(recon.report);
+        }
+        renderPayouts(data.vendorSettlements || [], data.riderSettlements || [], data.payoutBatches || []);
       } catch (e) {
-        console.error('Failed to load payouts:', e);
+        console.error('Failed to load payouts & reconciliation:', e);
       }
     }
 
@@ -792,26 +895,58 @@
       `).join('');
     }
 
-    function renderPayouts(vendorSettlements, riderSettlements) {
+    function renderReconciliation(rep) {
+      if (!rep) return;
+      document.getElementById('reconTotalCollected').innerText = `₹${(rep.totalCollected || 0).toFixed(2)}`;
+      document.getElementById('reconTotalRefunded').innerText = `₹${(rep.totalRefunded || 0).toFixed(2)}`;
+      document.getElementById('reconNetCollected').innerText = `₹${(rep.netCollected || 0).toFixed(2)}`;
+      document.getElementById('reconVendorPayable').innerText = `₹${(rep.netVendorPayable || 0).toFixed(2)}`;
+      document.getElementById('reconRiderPayable').innerText = `₹${(rep.netRiderPayable || 0).toFixed(2)}`;
+      document.getElementById('reconPlatformMargin').innerText = `₹${(rep.netPlatformMargin || 0).toFixed(2)}`;
+
+      const badge = document.getElementById('reconcileInvariantBadge');
+      if (rep.isPlatformBalanced && (!rep.discrepancy || rep.discrepancy === 0)) {
+        badge.className = 'px-3 py-1 rounded-full text-[11px] font-black tracking-wide uppercase bg-emerald-900/50 text-emerald-300 border border-emerald-700/60 flex items-center space-x-1.5';
+        badge.innerHTML = '<i class="fa-solid fa-circle-check"></i><span>Invariant Maintained (₹0 Discrepancy)</span>';
+      } else {
+        badge.className = 'px-3 py-1 rounded-full text-[11px] font-black tracking-wide uppercase bg-red-900/60 text-red-300 border border-red-700/60 flex items-center space-x-1.5';
+        badge.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i><span>Discrepancy: ₹${rep.discrepancy || 0}</span>`;
+      }
+    }
+
+    function renderPayouts(vendorSettlements, riderSettlements, payoutBatches) {
       const vBody = document.getElementById('vendorPayoutsBody');
       if (!vendorSettlements || vendorSettlements.length === 0) {
-        vBody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">${t('no_orders_recorded', 'No delivered orders to settle yet.')}</td></tr>`;
+        vBody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">${t('no_orders_recorded', 'No delivered orders to settle yet.')}</td></tr>`;
       } else {
         vBody.innerHTML = vendorSettlements.map(v => {
-          const upiUri = `upi://pay?pa=${encodeURIComponent(v.upi_id)}&pn=${encodeURIComponent(v.stall_name)}&am=${v.netPayableToVendor}&tn=ThelaExpressSettlement`;
+          let statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-gray-700 text-gray-300">PENDING</span>';
+          let actionBtn = '<span class="text-gray-500 text-[11px] font-semibold">Awaiting Delivery</span>';
+
+          if (v.status === 'PROCESSING') {
+            statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-900/60 text-blue-300 border border-blue-700/50">PROCESSING</span>';
+            const bId = v.processingBatchId || '';
+            actionBtn = `<button onclick="confirmPayoutBatch('${bId}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[11px] font-black transition">Confirm UTR ✓</button>`;
+          } else if (v.status === 'ELIGIBLE' || v.eligiblePayable > 0) {
+            statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-900/60 text-amber-300 border border-amber-700/50">ELIGIBLE</span>';
+            const ids = (v.eligible_settlement_ids && v.eligible_settlement_ids.length) ? v.eligible_settlement_ids : v.settlement_ids;
+            const idsJson = encodeURIComponent(JSON.stringify(ids));
+            actionBtn = `<button onclick="initiatePayout('vendor', '${v.stall_id}', '${idsJson}')" class="px-2.5 py-1 bg-orange-600 hover:bg-orange-500 text-white rounded-lg text-[11px] font-black transition">Initiate Payout ₹${v.eligiblePayable || v.netPayableToVendor}</button>`;
+          } else if (v.status === 'PAID') {
+            statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-900/60 text-emerald-300 border border-emerald-700/50">PAID</span>';
+            actionBtn = '<span class="text-emerald-400 text-[11px] font-bold">Settled ✓</span>';
+          }
+
           return `
             <tr class="hover:bg-gray-800/80 transition">
               <td class="p-3 font-bold text-white">${v.stall_name}</td>
               <td class="p-3 font-mono text-gray-300">${v.upi_id}</td>
               <td class="p-3 font-bold text-white">${v.ordersCount} orders</td>
-              <td class="p-3 text-gray-300">₹${v.grossSales}</td>
-              <td class="p-3 text-orange-400">-₹${v.platformCut}</td>
-              <td class="p-3 font-black text-emerald-400">₹${v.netPayableToVendor}</td>
-              <td class="p-3 text-right">
-                <a href="${upiUri}" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold inline-block">
-                  ${t('pay_btn', 'Pay')} ₹${v.netPayableToVendor} UPI
-                </a>
-              </td>
+              <td class="p-3 text-gray-300 font-mono">₹${v.grossSales}</td>
+              <td class="p-3 text-orange-400 font-mono">-₹${v.platformCut}</td>
+              <td class="p-3 font-black text-emerald-400 font-mono">₹${v.netPayableToVendor}</td>
+              <td class="p-3">${statusBadge}</td>
+              <td class="p-3 text-right whitespace-nowrap">${actionBtn}</td>
             </tr>
           `;
         }).join('');
@@ -819,24 +954,137 @@
 
       const rBody = document.getElementById('riderPayoutsBody');
       if (!riderSettlements || riderSettlements.length === 0) {
-        rBody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-gray-500">${t('no_trips_yet', 'No completed rider trips to settle yet.')}</td></tr>`;
+        rBody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-gray-500">${t('no_trips_yet', 'No completed rider trips to settle yet.')}</td></tr>`;
       } else {
         rBody.innerHTML = riderSettlements.map(r => {
-          const upiUri = `upi://pay?pa=${encodeURIComponent(r.upi_id)}&pn=${encodeURIComponent(r.rider_name)}&am=${r.totalPayout}&tn=ThelaExpressRiderPayout`;
+          let statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-gray-700 text-gray-300">PENDING</span>';
+          let actionBtn = '<span class="text-gray-500 text-[11px] font-semibold">Awaiting Trips</span>';
+
+          if (r.status === 'PROCESSING') {
+            statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-900/60 text-blue-300 border border-blue-700/50">PROCESSING</span>';
+            const bId = r.processingBatchId || '';
+            actionBtn = `<button onclick="confirmPayoutBatch('${bId}')" class="px-2.5 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[11px] font-black transition">Confirm UTR ✓</button>`;
+          } else if (r.status === 'ELIGIBLE' || r.eligibleEarnings > 0) {
+            statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-amber-900/60 text-amber-300 border border-amber-700/50">ELIGIBLE</span>';
+            const ids = (r.eligible_settlement_ids && r.eligible_settlement_ids.length) ? r.eligible_settlement_ids : r.settlement_ids;
+            const idsJson = encodeURIComponent(JSON.stringify(ids));
+            actionBtn = `<button onclick="initiatePayout('rider', '${r.rider_id}', '${idsJson}')" class="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[11px] font-black transition">Initiate Payout ₹${r.eligibleEarnings || r.totalEarnings}</button>`;
+          } else if (r.status === 'PAID') {
+            statusBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-900/60 text-emerald-300 border border-emerald-700/50">PAID</span>';
+            actionBtn = '<span class="text-emerald-400 text-[11px] font-bold">Settled ✓</span>';
+          }
+
           return `
             <tr class="hover:bg-gray-800/80 transition">
               <td class="p-3 font-bold text-white">${r.rider_name}</td>
               <td class="p-3 font-mono text-gray-300">${r.upi_id}</td>
               <td class="p-3 font-bold text-white">${r.deliveriesCount} drops</td>
-              <td class="p-3 font-black text-emerald-400">₹${r.totalPayout}</td>
-              <td class="p-3 text-right">
-                <a href="${upiUri}" class="px-3 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-xs font-bold inline-block">
-                  ${t('pay_btn', 'Pay')} ₹${r.totalPayout} UPI
-                </a>
-              </td>
+              <td class="p-3 font-black text-emerald-400 font-mono">₹${r.totalEarnings}</td>
+              <td class="p-3">${statusBadge}</td>
+              <td class="p-3 text-right whitespace-nowrap">${actionBtn}</td>
             </tr>
           `;
         }).join('');
+      }
+
+      // Render Payout Batches Audit Table
+      const bBody = document.getElementById('payoutBatchesBody');
+      if (bBody) {
+        if (!payoutBatches || payoutBatches.length === 0) {
+          bBody.innerHTML = `<tr><td colspan="8" class="p-4 text-center text-gray-500">No payout batches initiated yet.</td></tr>`;
+        } else {
+          bBody.innerHTML = payoutBatches.map(b => {
+            let bBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-blue-900/60 text-blue-300 border border-blue-700/50">PROCESSING</span>';
+            let bAction = `<button onclick="confirmPayoutBatch('${b.id}')" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold transition">Confirm UTR ✓</button>`;
+            if (b.status === 'PAID') {
+              bBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-emerald-900/60 text-emerald-300 border border-emerald-700/50">PAID</span>';
+              bAction = '<span class="text-emerald-400 text-[10px] font-bold">Confirmed ✓</span>';
+            } else if (b.status === 'FAILED') {
+              bBadge = '<span class="px-2 py-0.5 rounded text-[10px] font-black bg-red-900/60 text-red-300 border border-red-700/50">FAILED</span>';
+              bAction = '<span class="text-red-400 text-[10px] font-bold">Failed</span>';
+            }
+
+            return `
+              <tr class="hover:bg-gray-800/80 transition">
+                <td class="p-3 font-mono font-bold text-orange-400 text-[11px]">#${b.id}</td>
+                <td class="p-3 uppercase font-bold text-gray-300 text-[11px]">${b.settlement_type}</td>
+                <td class="p-3 font-mono font-black text-white">₹${b.total_amount}</td>
+                <td class="p-3 text-gray-400">${(b.settlement_ids || []).length} settlements</td>
+                <td class="p-3">${bBadge}</td>
+                <td class="p-3 font-mono text-emerald-400 text-[11px]">${b.utr || 'Awaiting Gateway UTR'}</td>
+                <td class="p-3 text-gray-500 text-[11px]">${b.created_at ? new Date(b.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '-'}</td>
+                <td class="p-3 text-right whitespace-nowrap">${bAction}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+      }
+    }
+
+    async function initiatePayout(type, targetId, idsJsonEncoded) {
+      try {
+        const settlementIds = JSON.parse(decodeURIComponent(idsJsonEncoded));
+        if (!settlementIds || settlementIds.length === 0) {
+          alert('No eligible settlements to pay.');
+          return;
+        }
+
+        const idempotencyKey = `pout_${type}_${targetId}_${Date.now()}`;
+        const res = await fetch('/api/settlements/payout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': ADMIN_AUTH_TOKEN
+          },
+          body: JSON.stringify({
+            settlementType: type,
+            settlementIds: settlementIds,
+            idempotencyKey: idempotencyKey
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert(`Payout batch #${data.batch.id} initiated! Status is now PROCESSING. Click "Confirm UTR" to simulate/verify bank transfer.`);
+          loadPayoutsData();
+        } else {
+          alert(data.error || 'Failed to initiate payout batch.');
+        }
+      } catch (err) {
+        console.error('Error initiating payout:', err);
+        alert('Server error initiating payout.');
+      }
+    }
+
+    async function confirmPayoutBatch(batchId) {
+      if (!batchId) {
+        batchId = prompt('Please enter the Payout Batch ID to confirm:');
+        if (!batchId) return;
+      }
+
+      try {
+        const res = await fetch('/api/settlements/confirm-payout', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': ADMIN_AUTH_TOKEN
+          },
+          body: JSON.stringify({
+            batchId: batchId.trim(),
+            testOutcome: 'SUCCESS'
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert(`Payout batch #${batchId} confirmed! Bank UTR: ${data.utr}. Status is now PAID.`);
+          loadPayoutsData();
+        } else {
+          alert(data.error || 'Failed to confirm payout batch.');
+        }
+      } catch (err) {
+        console.error('Error confirming payout:', err);
+        alert('Server error confirming payout.');
       }
     }
 

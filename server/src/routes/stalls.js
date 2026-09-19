@@ -95,9 +95,11 @@ router.get('/:id/trust', (req, res) => {
       inspectedBy: stall.hygiene_inspected_by,
       checklist: stall.hygiene_checklist_verified || {},
       checklistVerified: Array.isArray(stall.hygiene_checklist_verified) ? stall.hygiene_checklist_verified : (stall.hygiene_checklist_verified ? Object.keys(stall.hygiene_checklist_verified).filter(k => stall.hygiene_checklist_verified[k]) : []),
+      completedChecks: Array.isArray(stall.hygiene_checklist_verified) ? stall.hygiene_checklist_verified : (stall.hygiene_checklist_verified ? Object.keys(stall.hygiene_checklist_verified).filter(k => stall.hygiene_checklist_verified[k]) : []),
       selfDeclaration: stall.hygiene_self_declaration || [],
       notes: stall.hygiene_notes || ''
     },
+    completedChecks: Array.isArray(stall.hygiene_checklist_verified) ? stall.hygiene_checklist_verified : (stall.hygiene_checklist_verified ? Object.keys(stall.hygiene_checklist_verified).filter(k => stall.hygiene_checklist_verified[k]) : []),
     identity: {
       status: stall.identity_status || 'pending',
       verifiedAt: stall.identity_verified_at,

@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const db = require('../db');
 const wsManager = require('../websocket');
+const { calculateOrderPricing } = require('../payments/pricing_engine');
 
 // Middleware: Authenticate and derive role strictly server-side
 function authenticateUser(req, res, next) {
@@ -27,20 +28,18 @@ router.use(authenticateUser);
 
 // POST /api/orders (Create Order)
 // Client CANNOT supply payment_status: PAID; payment_status is ALWAYS initialized to PENDING.
+// Client prices, fees, totals, and commissions are completely discarded; calculated authoritatively server-side.
 router.post('/', (req, res) => {
   const {
     stall_id,
     stall_name,
     items,
-    subtotal,
-    delivery_fee,
-    packaging_fee,
     tip,
-    discount,
-    grand_total,
     delivery_address,
     delivery_instruction,
     payment_method,
+    coupon_code,
+    couponCode,
     testOtp
   } = req.body;
 
@@ -48,25 +47,40 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: 'Order must contain items and a valid stall.' });
   }
 
+  const stall = db.getStallById(stall_id);
+  if (!stall) {
+    return res.status(404).json({ error: 'Stall not found.' });
+  }
+
+  // Authoritative server-side price calculation
+  let pricingResult;
+  try {
+    pricingResult = calculateOrderPricing({
+      stall,
+      stallMenuItems: db.getMenuItems(stall_id),
+      items,
+      clientTip: tip,
+      couponCode: coupon_code || couponCode,
+      platformSettings: db.data.settings || {}
+    });
+  } catch (err) {
+    return res.status(400).json({ error: err.message });
+  }
+
   // Derive customer details from authenticated session if available
   const customerId = req.auth?.authenticated ? req.auth.actorId : (req.body.customer_id || '');
   const customerPhone = (req.auth?.phone || req.body.customer_phone || '').replace(/\D/g, '').slice(-10);
   const customerName = (req.auth?.user?.name || req.body.customer_name || 'Customer');
 
-  // Any client-supplied payment_status in req.body is completely ignored.
+  // Any client-supplied payment_status, subtotal, discount, grand_total in req.body is completely ignored.
   const order = db.createOrder({
     customer_id: customerId,
     customer_name: customerName,
     customer_phone: customerPhone,
     stall_id,
-    stall_name,
-    items,
-    subtotal: Number(subtotal) || 0,
-    delivery_fee: Number(delivery_fee) || 0,
-    packaging_fee: Number(packaging_fee) || 10,
-    tip: Number(tip) || 0,
-    discount: Number(discount) || 0,
-    grand_total: Number(grand_total) || (Number(subtotal) + 10),
+    stall_name: stall.name || stall_name,
+    items: pricingResult.items,
+    tip: pricingResult.pricing.tip,
     delivery_address: delivery_address || '',
     delivery_instruction: delivery_instruction || 'Leave at Door',
     payment_method: payment_method || 'UPI',

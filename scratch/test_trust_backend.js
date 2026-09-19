@@ -62,7 +62,7 @@ async function runTests() {
   console.log('Trust Badges after Hygiene verify:', hygieneRes.data.stall.trustBadges.map(b => b.label));
 
   // Clean up test stall
-  const db = require('./server/src/db');
+  const db = require('../server/src/db');
   const idx = db.data.stalls.findIndex(s => s.id === stall.id);
   if (idx > -1) {
     db.data.stalls.splice(idx, 1);

@@ -247,6 +247,65 @@
       </div>
     </div>
 
+    <!-- Vendor Settlement & Payout Ledger -->
+    <div class="bg-white rounded-3xl border border-gray-200 p-5 shadow-sm space-y-4">
+      <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center text-sm font-black">
+            <i class="fa-solid fa-coins"></i>
+          </div>
+          <div>
+            <h2 class="text-base font-extrabold text-gray-900" data-i18n="vendor_settlement_ledger">Vendor Settlement Ledger</h2>
+            <p class="text-xs text-gray-500">Real-time breakdown of food sales, 10% platform commission, and payout statuses</p>
+          </div>
+        </div>
+        <button onclick="loadVendorSettlements()" class="text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center space-x-1">
+          <i class="fa-solid fa-rotate"></i>
+          <span data-i18n="refresh_btn">Refresh</span>
+        </button>
+      </div>
+
+      <!-- Settlement KPI Mini Cards -->
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+        <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+          <div class="text-[10px] uppercase font-bold text-gray-400">Delivered Food Sales</div>
+          <div class="text-lg font-black text-gray-900" id="vstlGrossSales">₹0</div>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+          <div class="text-[10px] uppercase font-bold text-gray-400">Platform Cut (10%)</div>
+          <div class="text-lg font-black text-orange-600" id="vstlPlatformCommission">₹0</div>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+          <div class="text-[10px] uppercase font-bold text-gray-400">Eligible For Payout</div>
+          <div class="text-lg font-black text-emerald-600" id="vstlEligibleBalance">₹0</div>
+        </div>
+        <div class="bg-gray-50 p-3 rounded-2xl border border-gray-100">
+          <div class="text-[10px] uppercase font-bold text-gray-400">Total Paid Out</div>
+          <div class="text-lg font-black text-blue-600" id="vstlPaidBalance">₹0</div>
+        </div>
+      </div>
+
+      <!-- Settlements Breakdown Table -->
+      <div class="overflow-x-auto">
+        <table class="w-full text-left text-xs">
+          <thead class="bg-gray-50 text-gray-500 font-bold border-b border-gray-100 uppercase text-[10px]">
+            <tr>
+              <th class="p-2.5">Order ID</th>
+              <th class="p-2.5">Gross Sales</th>
+              <th class="p-2.5">Packaging</th>
+              <th class="p-2.5">Platform Cut</th>
+              <th class="p-2.5">Net Payable</th>
+              <th class="p-2.5">Status</th>
+              <th class="p-2.5 text-right">Bank / UTR</th>
+            </tr>
+          </thead>
+          <tbody id="vendorSettlementsTableBody" class="divide-y divide-gray-100 font-medium text-gray-700">
+            <!-- Rendered dynamically -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
   </main>
 
   <!-- ============================================================== -->

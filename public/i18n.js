@@ -78,6 +78,7 @@ const I18N_LANGUAGES = [
 
 const I18N_DICTIONARY = {
   "en": {
+    "payment_modal_title": "Secure Checkout",
     "select_location": "Select Delivery Location",
     "pure_veg": "Pure Veg",
     "search_placeholder": "Search dishes or street food...",
@@ -406,6 +407,7 @@ const I18N_DICTIONARY = {
     "orders_delivered_suffix": "orders delivered"
   },
   "hi": {
+    "payment_modal_title": "सुरक्षित चेकआउट",
     "select_location": "डिलीवरी स्थान चुनें",
     "pure_veg": "शुद्ध शाकाहारी",
     "search_placeholder": "व्यंजन या स्ट्रीट फूड खोजें...",
@@ -734,6 +736,7 @@ const I18N_DICTIONARY = {
     "orders_delivered_suffix": "orders delivered"
   },
   "hinglish": {
+    "payment_modal_title": "Secure Checkout",
     "select_location": "Delivery Location Chuno",
     "pure_veg": "Pure Veg",
     "search_placeholder": "Dishes ya street food search karo...",
@@ -1062,6 +1065,7 @@ const I18N_DICTIONARY = {
     "orders_delivered_suffix": "orders delivered"
   },
   "mr": {
+    "payment_modal_title": "सुरक्षित चेकआउट",
     "select_location": "डिलिव्हरी ठिकाण निवडा",
     "pure_veg": "शुद्ध शाकाहारी",
     "search_placeholder": "पदार्थ किंवा स्ट्रीट फूड शोधा...",
@@ -1390,6 +1394,7 @@ const I18N_DICTIONARY = {
     "orders_delivered_suffix": "orders delivered"
   },
   "gu": {
+    "payment_modal_title": "સુરક્ષિત ચેકઆઉટ",
     "select_location": "ડિલિવરી સ્થળ પસંદ કરો",
     "pure_veg": "શુદ્ધ શાકાહારી",
     "search_placeholder": "વાનગીઓ અથવા સ્ટ્રીટ ફૂડ શોધો...",
@@ -1718,6 +1723,7 @@ const I18N_DICTIONARY = {
     "orders_delivered_suffix": "orders delivered"
   },
   "ta": {
+    "payment_modal_title": "பாதுகாப்பான கட்டணம்",
     "select_location": "டெலிவரி இடத்தை தேர்வுசெய்க",
     "pure_veg": "சைவம் மட்டும்",
     "search_placeholder": "உணவுகள் அல்லது தெரு உணவுகளைத் தேடுங்கள்...",
@@ -2046,6 +2052,7 @@ const I18N_DICTIONARY = {
     "orders_delivered_suffix": "orders delivered"
   },
   "te": {
+    "payment_modal_title": "సురక్షిత చెల్లింపు",
     "select_location": "డెలివరీ స్థానాన్ని ఎంచుకోండి",
     "pure_veg": "పూర్తి శాఖాహారం",
     "search_placeholder": "వంటకాలు లేదా స్ట్రీట్ ఫుడ్ వెతకండి...",
@@ -2374,6 +2381,7 @@ const I18N_DICTIONARY = {
     "orders_delivered_suffix": "orders delivered"
   },
   "kn": {
+    "payment_modal_title": "ಸುರಕ್ಷಿತ ಪಾವತಿ",
     "select_location": "ಡೆಲಿವರಿ ಸ್ಥಳವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
     "pure_veg": "ಶುದ್ಧ ಸಸ್ಯಾಹಾರಿ",
     "search_placeholder": "ಖಾದ್ಯಗಳು ಅಥವಾ ಸ್ಟ್ರೀಟ್ ಫುಡ್ ಹುಡುಕಿ...",
@@ -2702,6 +2710,7 @@ const I18N_DICTIONARY = {
     "orders_delivered_suffix": "orders delivered"
   },
   "bn": {
+    "payment_modal_title": "সুরক্ষিত চেকআউট",
     "select_location": "ডেলিভারি লোকেশন বেছে নিন",
     "pure_veg": "খাঁটি নিরামিষ",
     "search_placeholder": "খাবার বা স্ট্রিট ফুড খুঁজুন...",
@@ -3030,6 +3039,7 @@ const I18N_DICTIONARY = {
     "orders_delivered_suffix": "orders delivered"
   },
   "ml": {
+    "payment_modal_title": "സുരക്ഷിത പേയ്മെന്റ്",
     "select_location": "ഡെലിവറി ലൊക്കേഷൻ തിരഞ്ഞെടുക്കുക",
     "pure_veg": "പ്യുവർ വെജ്",
     "search_placeholder": "വിഭവങ്ങൾ അല്ലെങ്കിൽ സ്ട്രീറ്റ് ഫുഡ് തിരയുക...",
@@ -3358,6 +3368,7 @@ const I18N_DICTIONARY = {
     "orders_delivered_suffix": "orders delivered"
   },
   "pa": {
+    "payment_modal_title": "ਸੁਰੱਖਿਅਤ ਚੈੱਕਆਉਟ",
     "select_location": "ਡਿਲੀਵਰੀ ਟਿਕਾਣਾ ਚੁਣੋ",
     "pure_veg": "ਸ਼ੁੱਧ ਸ਼ਾਕਾਹਾਰੀ",
     "search_placeholder": "ਪਕਵਾਨ ਜਾਂ ਸਟ੍ਰੀਟ ਫੂਡ ਖੋਜੋ...",
@@ -3686,6 +3697,7 @@ const I18N_DICTIONARY = {
     "orders_delivered_suffix": "orders delivered"
   },
   "or": {
+    "payment_modal_title": "ସୁରକ୍ଷିତ ଚେକ୍ଆଉଟ୍",
     "select_location": "ଡେଲିଭରୀ ସ୍ଥାନ ବାଛନ୍ତୁ",
     "pure_veg": "ଶୁଦ୍ଧ ନିରାମିଷ",
     "search_placeholder": "ଖାଦ୍ୟ କିମ୍ବା ଷ୍ଟ୍ରିଟ୍ ଫୁଡ୍ ଖୋଜନ୍ତୁ...",

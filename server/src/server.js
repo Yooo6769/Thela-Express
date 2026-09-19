@@ -13,6 +13,7 @@ const ridersRoutes = require('./routes/riders');
 const onboardRoutes = require('./routes/onboard');
 const adminRoutes = require('./routes/admin');
 const usersRoutes = require('./routes/users');
+const settlementsRoutes = require('./routes/settlements');
 
 const app = express();
 const server = http.createServer(app);
@@ -29,6 +30,7 @@ app.use('/api/users', usersRoutes);
 app.use('/api/stalls', stallsRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/payments', paymentsRoutes);
+app.use('/api/settlements', settlementsRoutes);
 app.use('/api/riders', ridersRoutes);
 app.use('/api/onboard', onboardRoutes);
 app.use('/api/admin', adminRoutes);

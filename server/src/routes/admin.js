@@ -4,6 +4,19 @@ const router = express.Router();
 const db = require('../db');
 const wsManager = require('../websocket');
 
+// Middleware: Derive authentication and role server-side
+function authenticateUser(req, res, next) {
+  const token = req.headers.authorization || req.headers['x-auth-token'];
+  if (!token) {
+    req.auth = { authenticated: false };
+    return next();
+  }
+  req.auth = db.resolveAuth(token);
+  next();
+}
+
+router.use(authenticateUser);
+
 // GET /api/admin/overview
 router.get('/overview', (req, res) => {
   const stats = db.getPlatformStats();
@@ -101,59 +114,145 @@ router.patch('/riders/:id/verify', (req, res) => {
   res.json({ success: true, rider });
 });
 
-// GET /api/admin/payouts (Settlement Ledger for Vendors & Riders)
+// GET /api/admin/payouts (Settlement Ledger for Vendors & Riders backed by real records)
 router.get('/payouts', (req, res) => {
-  const orders = db.data.orders || [];
-  const deliveredOrders = orders.filter(o => o.status === 'DELIVERED');
-  const commissionPct = db.data.settings?.platformCommissionPct || 10;
-  const riderPayoutFlat = db.data.settings?.riderPayoutFlat || 40;
+  const vendorSettlements = db.data.vendor_settlements || [];
+  const riderSettlements = db.data.rider_settlements || [];
+  const payoutBatches = db.data.payout_batches || [];
 
-  // Aggregate by Stall
-  const vendorPayouts = {};
-  deliveredOrders.forEach(o => {
-    if (!vendorPayouts[o.stall_id]) {
-      const stall = db.getStallById(o.stall_id);
-      vendorPayouts[o.stall_id] = {
-        stall_id: o.stall_id,
-        stall_name: o.stall_name,
+  // Group real settlements by stall
+  const vendorGroups = {};
+  vendorSettlements.forEach(s => {
+    if (!vendorGroups[s.stall_id]) {
+      const stall = db.getStallById(s.stall_id);
+      vendorGroups[s.stall_id] = {
+        stall_id: s.stall_id,
+        stall_name: s.stall_name || (stall ? stall.name : 'Thela'),
         upi_id: stall ? (stall.upi_id || `${stall.owner_phone}@upi`) : 'vendor@upi',
         ordersCount: 0,
         grossSales: 0,
         platformCut: 0,
-        netPayableToVendor: 0
+        netPayableToVendor: 0,
+        eligiblePayable: 0,
+        processingPayable: 0,
+        paidOut: 0,
+        settlement_ids: [],
+        eligible_settlement_ids: [],
+        processingBatchId: null,
+        status: 'PENDING'
       };
     }
-    const rec = vendorPayouts[o.stall_id];
+    const rec = vendorGroups[s.stall_id];
     rec.ordersCount += 1;
-    rec.grossSales += (o.subtotal || 0);
-    const cut = Math.round(((o.subtotal || 0) * commissionPct) / 100);
-    rec.platformCut += cut;
-    rec.netPayableToVendor += ((o.subtotal || 0) - cut);
+    rec.grossSales += (s.gross_sales || 0);
+    rec.platformCut += (s.commission_deducted || 0);
+    rec.netPayableToVendor += (s.current_balance || 0);
+    rec.settlement_ids.push(s.id);
+    if (s.status === 'ELIGIBLE') {
+      rec.eligiblePayable += s.current_balance;
+      rec.eligible_settlement_ids.push(s.id);
+    }
+    if (s.status === 'PROCESSING') {
+      rec.processingPayable += s.current_balance;
+    }
+    if (s.status === 'PAID') {
+      rec.paidOut += s.current_balance;
+    }
   });
 
-  // Aggregate by Rider
-  const riderPayouts = {};
-  deliveredOrders.forEach(o => {
-    const rId = o.rider_id || 'rdr_1';
-    if (!riderPayouts[rId]) {
+  // Calculate overall vendor status and link processing batches
+  Object.values(vendorGroups).forEach(rec => {
+    const activeBatch = payoutBatches.find(b =>
+      b.status === 'PROCESSING' &&
+      b.settlement_type === 'vendor' &&
+      b.settlement_ids.some(id => rec.settlement_ids.includes(id))
+    );
+    if (activeBatch) rec.processingBatchId = activeBatch.id;
+
+    if (rec.processingPayable > 0 || rec.processingBatchId) {
+      rec.status = 'PROCESSING';
+    } else if (rec.eligiblePayable > 0) {
+      rec.status = 'ELIGIBLE';
+    } else if (rec.paidOut > 0 && rec.netPayableToVendor === 0) {
+      rec.status = 'PAID';
+    } else {
+      rec.status = 'PENDING';
+    }
+  });
+
+  // Group real settlements by rider
+  const riderGroups = {};
+  riderSettlements.forEach(s => {
+    const rId = s.rider_id;
+    if (!rId) return; // Unassigned gig or cancelled before assignment
+
+    if (!riderGroups[rId]) {
       const rider = db.getRiderById(rId);
-      riderPayouts[rId] = {
+      riderGroups[rId] = {
         rider_id: rId,
-        rider_name: rider ? rider.name : 'Ramesh Kumar',
+        rider_name: rider ? rider.name : 'Delivery Partner',
         upi_id: rider ? (rider.upi_id || `${rider.phone}@upi`) : 'rider@upi',
         deliveriesCount: 0,
-        totalPayout: 0
+        totalEarnings: 0,
+        eligibleEarnings: 0,
+        processingEarnings: 0,
+        paidOut: 0,
+        settlement_ids: [],
+        eligible_settlement_ids: [],
+        processingBatchId: null,
+        status: 'PENDING'
       };
     }
-    riderPayouts[rId].deliveriesCount += 1;
-    riderPayouts[rId].totalPayout += riderPayoutFlat;
+    const rec = riderGroups[rId];
+    rec.deliveriesCount += 1;
+    rec.totalEarnings += (s.current_balance || 0);
+    rec.settlement_ids.push(s.id);
+    if (s.status === 'ELIGIBLE') {
+      rec.eligibleEarnings += s.current_balance;
+      rec.eligible_settlement_ids.push(s.id);
+    }
+    if (s.status === 'PROCESSING') {
+      rec.processingEarnings += s.current_balance;
+    }
+    if (s.status === 'PAID') {
+      rec.paidOut += s.current_balance;
+    }
+  });
+
+  // Calculate overall rider status and link processing batches
+  Object.values(riderGroups).forEach(rec => {
+    const activeBatch = payoutBatches.find(b =>
+      b.status === 'PROCESSING' &&
+      b.settlement_type === 'rider' &&
+      b.settlement_ids.some(id => rec.settlement_ids.includes(id))
+    );
+    if (activeBatch) rec.processingBatchId = activeBatch.id;
+
+    if (rec.processingEarnings > 0 || rec.processingBatchId) {
+      rec.status = 'PROCESSING';
+    } else if (rec.eligibleEarnings > 0) {
+      rec.status = 'ELIGIBLE';
+    } else if (rec.paidOut > 0 && rec.totalEarnings === 0) {
+      rec.status = 'PAID';
+    } else {
+      rec.status = 'PENDING';
+    }
   });
 
   res.json({
     success: true,
-    vendorSettlements: Object.values(vendorPayouts),
-    riderSettlements: Object.values(riderPayouts)
+    vendorSettlements: Object.values(vendorGroups),
+    riderSettlements: Object.values(riderGroups),
+    rawVendorRecords: vendorSettlements,
+    rawRiderRecords: riderSettlements,
+    payoutBatches: (payoutBatches || []).slice(-15).reverse()
   });
+});
+
+// GET /api/admin/reconciliation (Double-entry reconciliation monitor)
+router.get('/reconciliation', (req, res) => {
+  const result = db.getReconciliationReport(req.auth);
+  res.json(result);
 });
 
 // PATCH /api/admin/settings

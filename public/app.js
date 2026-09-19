@@ -2748,10 +2748,9 @@ async function handlePlaceOrder() {
       // Subscribe to live order updates
       subscribeToOrder(data.order.id);
 
-      // Open Live Tracking Modal
-      openTrackingModal(data.order);
+      // Open Secure Payment Modal (Collect payment before tracking)
+      openPaymentModal(data.order);
       loadCustomerOrders();
-      showToast(`🎉 Order #${data.order.id} placed successfully!`);
     } else {
       showToast(`Failed: ${data.error || 'Please try again'}`);
     }
@@ -2761,6 +2760,116 @@ async function handlePlaceOrder() {
   } finally {
     btn.disabled = false;
     btn.innerHTML = `<span>Place Order</span><i class="fa-solid fa-arrow-right ml-2"></i>`;
+  }
+}
+
+// ==========================================================
+// SECURE CHECKOUT & PAYMENT MODAL ENGINE
+// ==========================================================
+async function openPaymentModal(order) {
+  STATE.currentCheckoutOrder = order;
+  const modal = document.getElementById('paymentModal');
+  if (!modal) return;
+
+  // Populate order summary
+  const subEl = document.getElementById('payModalSubtotal');
+  const packEl = document.getElementById('payModalPackaging');
+  const delEl = document.getElementById('payModalDelivery');
+  const tipEl = document.getElementById('payModalTip');
+  const totEl = document.getElementById('payModalTotal');
+  const subtitleEl = document.getElementById('payModalSubtitle');
+
+  if (subEl) subEl.innerText = `₹${order.subtotal || 0}`;
+  if (packEl) packEl.innerText = `₹${order.packaging_fee || 10}`;
+  if (delEl) delEl.innerText = (order.delivery_fee && order.delivery_fee > 0) ? `₹${order.delivery_fee}` : 'FREE';
+  if (tipEl) tipEl.innerText = `₹${order.tip || 0}`;
+  if (totEl) totEl.innerText = `₹${order.grand_total || 0}`;
+  if (subtitleEl) subtitleEl.innerText = `Order #${order.id} • ${order.stall_name || 'Street Food Thela'}`;
+
+  modal.classList.remove('hidden');
+
+  // Request authoritative payment intent from backend
+  try {
+    const res = await fetch('/api/payments/create-intent', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({ orderId: order.id })
+    });
+    const intent = await res.json();
+    if (intent.success) {
+      STATE.currentPaymentIntent = intent;
+      const refEl = document.getElementById('payModalTxnRef');
+      if (refEl) refEl.innerText = intent.providerTransactionId;
+    } else {
+      showToast(`Payment Intent Error: ${intent.error || 'Could not initiate'}`);
+    }
+  } catch (err) {
+    console.error('Failed to create payment intent:', err);
+  }
+}
+
+function closePaymentModal() {
+  const modal = document.getElementById('paymentModal');
+  if (modal) modal.classList.add('hidden');
+  const loader = document.getElementById('payModalLoading');
+  if (loader) loader.classList.add('hidden');
+}
+
+async function handleVerifyPayment(simulateFailure = false) {
+  if (!STATE.currentCheckoutOrder) return;
+  const orderId = STATE.currentCheckoutOrder.id;
+  const loader = document.getElementById('payModalLoading');
+  const verifyBtn = document.getElementById('payModalVerifyBtn');
+  const failBtn = document.getElementById('payModalFailBtn');
+
+  if (loader) loader.classList.remove('hidden');
+  if (verifyBtn) verifyBtn.disabled = true;
+  if (failBtn) failBtn.disabled = true;
+
+  try {
+    const res = await fetch('/api/payments/verify', {
+      method: 'POST',
+      headers: getAuthHeaders(),
+      body: JSON.stringify({
+        orderId,
+        txnId: STATE.currentPaymentIntent?.providerTransactionId || `txn_sbx_${orderId}`,
+        signature: STATE.currentPaymentIntent?.signature || 'sig_demo',
+        testSimulationOutcome: simulateFailure ? 'FAIL' : 'SUCCESS'
+      })
+    });
+
+    const data = await res.json();
+    if (data.success && data.payment_status === 'PAID') {
+      showToast('🎉 Payment Verified via Sandbox Gateway!');
+      closePaymentModal();
+
+      // Refresh order and open live tracking
+      const orderRes = await fetch(`/api/orders/${orderId}`, { headers: getAuthHeaders() });
+      const orderData = await orderRes.json();
+      if (orderData.success) {
+        openTrackingModal(orderData.order);
+      } else {
+        STATE.currentCheckoutOrder.payment_status = 'PAID';
+        openTrackingModal(STATE.currentCheckoutOrder);
+      }
+      loadCustomerOrders();
+    } else {
+      showToast(`Payment Failed: ${data.error || 'Transaction declined.'}`);
+      closePaymentModal();
+      // Refresh order to show failure tracking state
+      const orderRes = await fetch(`/api/orders/${orderId}`, { headers: getAuthHeaders() });
+      const orderData = await orderRes.json();
+      if (orderData.success) {
+        openTrackingModal(orderData.order);
+      }
+    }
+  } catch (err) {
+    console.error('Verification error:', err);
+    showToast('Failed to connect to payment gateway.');
+  } finally {
+    if (loader) loader.classList.add('hidden');
+    if (verifyBtn) verifyBtn.disabled = false;
+    if (failBtn) failBtn.disabled = false;
   }
 }
 

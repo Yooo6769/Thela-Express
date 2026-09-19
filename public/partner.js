@@ -424,9 +424,77 @@ async function loadVendorOrders() {
     const data = await res.json();
     PARTNER_STATE.vendorOrders = data.orders || [];
     renderVendorOrders(PARTNER_STATE.vendorOrders);
+    loadVendorSettlements();
   } catch (e) {
     console.error('Failed to load vendor orders:', e);
   }
+}
+
+async function loadVendorSettlements() {
+  if (!PARTNER_STATE.vendorStallId) return;
+  try {
+    const res = await fetch(`/api/settlements/vendor/${PARTNER_STATE.vendorStallId}`, {
+      headers: getPartnerAuthHeaders('vendor')
+    });
+    const data = await res.json();
+    if (data.success) {
+      renderVendorSettlements(data);
+    }
+  } catch (e) {
+    console.error('Failed to load vendor settlements:', e);
+  }
+}
+
+function renderVendorSettlements(data) {
+  const grossEl = document.getElementById('vstlGrossSales');
+  const commEl = document.getElementById('vstlPlatformCommission');
+  const eligEl = document.getElementById('vstlEligibleBalance');
+  const paidEl = document.getElementById('vstlPaidBalance');
+  const tbody = document.getElementById('vendorSettlementsTableBody');
+
+  if (grossEl) grossEl.innerText = `₹${data.summary.grossSales || 0}`;
+  if (commEl) commEl.innerText = `₹${data.summary.platformCommission || 0}`;
+  if (eligEl) eligEl.innerText = `₹${data.summary.eligibleBalance || 0}`;
+  if (paidEl) paidEl.innerText = `₹${data.summary.paidBalance || 0}`;
+
+  if (!tbody) return;
+
+  const settlements = data.settlements || [];
+  if (settlements.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="7" class="p-6 text-center text-gray-400 text-xs">
+          No settlements recorded yet for this stall. Deliver orders to generate earnings.
+        </td>
+      </tr>
+    `;
+    return;
+  }
+
+  tbody.innerHTML = settlements.map(s => {
+    let badgeClass = 'bg-amber-100 text-amber-800';
+    let label = 'Pending';
+    if (s.status === 'ELIGIBLE') { badgeClass = 'bg-emerald-100 text-emerald-800'; label = 'Eligible'; }
+    else if (s.status === 'PROCESSING') { badgeClass = 'bg-blue-100 text-blue-800'; label = 'Processing'; }
+    else if (s.status === 'PAID') { badgeClass = 'bg-purple-100 text-purple-800'; label = 'Paid'; }
+    else if (s.status === 'CANCELLED') { badgeClass = 'bg-gray-100 text-gray-600'; label = 'Refunded / Void'; }
+
+    return `
+      <tr class="hover:bg-gray-50/80 transition">
+        <td class="p-2.5 font-mono font-bold text-gray-900">#${s.order_id}</td>
+        <td class="p-2.5 font-bold text-gray-800">₹${s.gross_sales || 0}</td>
+        <td class="p-2.5 text-gray-500">₹${s.packaging_fee || 10}</td>
+        <td class="p-2.5 text-orange-600 font-semibold">-₹${s.commission_deducted || 0}</td>
+        <td class="p-2.5 font-black text-gray-900">₹${s.current_balance !== undefined ? s.current_balance : s.net_payable}</td>
+        <td class="p-2.5">
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-black ${badgeClass}">${label}</span>
+        </td>
+        <td class="p-2.5 text-right font-mono text-[10px] text-gray-400">
+          ${s.utr || 'Awaiting Batch'}
+        </td>
+      </tr>
+    `;
+  }).join('');
 }
 
 function renderVendorOrders(orders) {
@@ -659,12 +727,30 @@ async function loadRiderOrders() {
     const completedTrips = orders.filter(o => o.status === 'DELIVERED');
 
     renderRiderActiveGig(activeGig);
-    renderRiderTrips(completedTrips);
 
-    // Calculate today's earnings (₹40 per trip + any tips)
-    const totalEarnings = completedTrips.reduce((sum, o) => sum + 40 + (o.tip || 0), 0);
-    const earningsEl = document.getElementById('riderEarningsTotal');
-    if (earningsEl) earningsEl.innerText = `₹${totalEarnings.toFixed(2)}`;
+    // Fetch authoritative backend rider earnings and settlements
+    try {
+      const stlRes = await fetch(`/api/settlements/rider/${PARTNER_STATE.currentRiderId}`, {
+        headers: getPartnerAuthHeaders('rider')
+      });
+      const stlData = await stlRes.json();
+      if (stlData.success) {
+        const earnings = stlData.summary || {};
+        const earningsEl = document.getElementById('riderEarningsTotal');
+        if (earningsEl) {
+          earningsEl.innerText = `₹${(earnings.total_earnings ?? earnings.totalEarnings ?? 0).toFixed(2)}`;
+        }
+        const eligibleEl = document.getElementById('riderEligibleEarnings');
+        if (eligibleEl) {
+          eligibleEl.innerText = `₹${(earnings.eligible_earnings ?? earnings.eligibleEarnings ?? 0).toFixed(2)}`;
+        }
+        renderRiderTrips(completedTrips, stlData.settlements);
+      } else {
+        renderRiderTrips(completedTrips);
+      }
+    } catch (err) {
+      renderRiderTrips(completedTrips);
+    }
   } catch (e) {
     console.error('Failed to load rider gigs:', e);
   }
@@ -861,27 +947,49 @@ async function verifyDoorstepOtp(orderId) {
   }
 }
 
-function renderRiderTrips(trips) {
+function renderRiderTrips(trips, settlements = []) {
   const container = document.getElementById('riderTripsList');
   if (!container) return;
 
-  if (trips.length === 0) {
+  if (!trips || trips.length === 0) {
     container.innerHTML = `<div class="py-4 text-center text-gray-400 text-xs">${t('no_trips_yet', 'No completed trips yet today.')}</div>`;
     return;
   }
 
-  container.innerHTML = trips.slice(0, 5).map(trip => `
-    <div class="py-2.5 flex items-center justify-between">
-      <div>
-        <div class="font-bold text-gray-900">Trip #${trip.id} — ${trip.stall_name}</div>
-        <div class="text-[10px] text-gray-400">${new Date(trip.created_at).toLocaleTimeString()} • ${trip.delivery_address || 'Doorstep'}</div>
+  container.innerHTML = trips.slice(0, 8).map(trip => {
+    const stl = Array.isArray(settlements) ? settlements.find(s => s.order_id === trip.id) : null;
+    let badgeClass = 'bg-emerald-100 text-emerald-800';
+    let label = 'Eligible';
+
+    if (stl) {
+      if (stl.status === 'PENDING') { badgeClass = 'bg-amber-100 text-amber-800'; label = 'Pending'; }
+      else if (stl.status === 'ELIGIBLE') { badgeClass = 'bg-emerald-100 text-emerald-800'; label = 'Eligible'; }
+      else if (stl.status === 'PROCESSING') { badgeClass = 'bg-blue-100 text-blue-800'; label = 'Processing'; }
+      else if (stl.status === 'PAID') { badgeClass = 'bg-purple-100 text-purple-800'; label = 'Paid'; }
+      else if (stl.status === 'CANCELLED') { badgeClass = 'bg-gray-100 text-gray-600'; label = 'Cancelled'; }
+    }
+
+    const earned = stl ? (stl.current_balance !== undefined ? stl.current_balance : stl.total_earnings) : (40 + (trip.tip || 0));
+
+    return `
+      <div class="py-2.5 flex items-center justify-between">
+        <div>
+          <div class="font-bold text-gray-900 flex items-center space-x-1.5">
+            <span>Trip #${trip.id} — ${trip.stall_name}</span>
+            <span class="px-1.5 py-0.2 rounded text-[9px] font-black ${badgeClass}">${label}</span>
+          </div>
+          <div class="text-[10px] text-gray-400">
+            ${new Date(trip.created_at).toLocaleTimeString()} • ${trip.delivery_address || 'Doorstep'}
+            ${trip.tip ? `• <span class="text-orange-600 font-bold">Includes ₹${trip.tip} Tip</span>` : ''}
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="font-black text-emerald-600">+₹${earned}</span>
+          <div class="text-[10px] text-gray-400">${stl?.utr || 'Delivered ✓'}</div>
+        </div>
       </div>
-      <div class="text-right">
-        <span class="font-black text-emerald-600">+₹${40 + (trip.tip || 0)}</span>
-        <div class="text-[10px] text-gray-400">Delivered ✓</div>
-      </div>
-    </div>
-  `).join('');
+    `;
+  }).join('');
 }
 
 // Helpers
