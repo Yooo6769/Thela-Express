@@ -33,7 +33,9 @@ const STATE = {
   customizerItem: null,
   customizerSelections: {},
   riderSimInterval: null,
-  radarProgress: 0.2 // 0.0 to 1.0 representing rider progress along route
+  radarProgress: 0.2, // 0.0 to 1.0 representing rider progress along route
+  customerLocation: null, // { lat: number, lng: number }
+  deliveryCapacity: null // { activeRiders: number, activeOrders: number, capacityAvailable: boolean }
 };
 
 // ==========================================================
@@ -463,16 +465,190 @@ function switchView(viewName) {
 // 5. CUSTOMER VIEW LOGIC (Craving Hub, Discovery & Catalog)
 // ==========================================================
 
-function calculateDynamicDeliveryTime(distanceKm, prepMin = 12) {
+function computeGeographicDistanceKm(lat1, lon1, lat2, lon2) {
+  const p1 = parseFloat(lat1);
+  const l1 = parseFloat(lon1);
+  const p2 = parseFloat(lat2);
+  const l2 = parseFloat(lon2);
+  if (isNaN(p1) || isNaN(l1) || isNaN(p2) || isNaN(l2)) return null;
+  const R = 6371; // Earth radius in km
+  const dLat = (p2 - p1) * Math.PI / 180;
+  const dLon = (l2 - l1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+            Math.cos(p1 * Math.PI / 180) * Math.cos(p2 * Math.PI / 180) *
+            Math.sin(dLon / 2) * Math.sin(dLon / 2);
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  return Math.round(R * c * 10) / 10;
+}
+
+function getActiveCustomerCoordinates() {
+  if (typeof STATE !== 'undefined') {
+    if (STATE.customerLocation && typeof STATE.customerLocation.lat === 'number' && typeof STATE.customerLocation.lng === 'number') {
+      return STATE.customerLocation;
+    }
+    if (STATE.activeAddress && typeof STATE.activeAddress.lat === 'number' && typeof STATE.activeAddress.lng === 'number') {
+      return { lat: STATE.activeAddress.lat, lng: STATE.activeAddress.lng };
+    }
+  }
+  return null;
+}
+
+function calculateDynamicDeliveryTime(distanceKm, prepMin, capacity = null) {
   if (distanceKm === undefined || distanceKm === null || distanceKm === '') return null;
   const km = typeof distanceKm === 'number' ? distanceKm : parseFloat(distanceKm);
   if (isNaN(km) || km <= 0) return null;
-  const transitMin = Math.round(km * 6);
-  const prep = typeof prepMin === 'number' ? prepMin : (parseInt(prepMin, 10) || 12);
-  const totalMin = prep + transitMin;
+
+  // Zero fiction: prepMin must be positive number from legitimate backend data, NO fallback!
+  const prep = (typeof prepMin === 'number' && prepMin > 0)
+    ? prepMin
+    : (parseInt(prepMin, 10) > 0 ? parseInt(prepMin, 10) : null);
+  if (!prep) return null;
+
+  const transitMin = Math.max(3, Math.round(km * 5));
+  let capacityBuffer = 0;
+  const cap = capacity || (typeof STATE !== 'undefined' && STATE.deliveryCapacity ? STATE.deliveryCapacity : null);
+  if (cap && typeof cap.activeRiders === 'number' && cap.activeRiders > 0) {
+    const queueRatio = (cap.activeOrders || 0) / cap.activeRiders;
+    if (queueRatio > 1) {
+      capacityBuffer = Math.min(15, Math.round((queueRatio - 1) * 4));
+    }
+  }
+
+  const totalMin = prep + transitMin + capacityBuffer;
   const lower = Math.max(10, totalMin - 3);
   const upper = totalMin + 4;
-  return `${lower}-${upper} min`;
+  return `${lower}–${upper} min`;
+}
+
+function calculateMarketplaceEta(stall, customerCoords = null, capacity = null) {
+  if (!stall) {
+    return {
+      isAvailable: false,
+      reason: 'stall_unavailable',
+      pillText: 'ETA unavailable',
+      badgeText: '🛵 ETA unavailable',
+      displayText: '🛵 ETA unavailable',
+      distanceKm: null,
+      distanceText: null
+    };
+  }
+
+  // 1. Resolve customer coordinates
+  const cust = customerCoords || (typeof getActiveCustomerCoordinates === 'function' ? getActiveCustomerCoordinates() : null);
+
+  // 2. Resolve distance
+  let distKm = null;
+  if (cust && typeof cust.lat === 'number' && typeof cust.lng === 'number' &&
+      typeof stall.lat === 'number' && typeof stall.lng === 'number') {
+    distKm = computeGeographicDistanceKm(cust.lat, cust.lng, stall.lat, stall.lng);
+  } else if (typeof stall.distanceKm === 'number' && stall.distanceKm > 0) {
+    distKm = stall.distanceKm;
+  } else if (typeof stall.distance === 'string' && stall.distance.includes('km')) {
+    const parsed = parseFloat(stall.distance);
+    if (!isNaN(parsed) && parsed > 0) distKm = parsed;
+  }
+
+  const distText = distKm !== null ? `${distKm.toFixed(1)} km` : null;
+
+  // If customer location is missing or distance cannot be computed
+  if (distKm === null) {
+    if (!cust) {
+      return {
+        isAvailable: false,
+        reason: 'location_required',
+        pillText: 'ETA available after location',
+        badgeText: '🛵 ETA available after location',
+        displayText: '🛵 ETA available after location',
+        distanceKm: null,
+        distanceText: null
+      };
+    }
+    return {
+      isAvailable: false,
+      reason: 'vendor_location_missing',
+      pillText: 'ETA unavailable',
+      badgeText: '🛵 ETA unavailable',
+      displayText: '🛵 ETA unavailable',
+      distanceKm: null,
+      distanceText: null
+    };
+  }
+
+  // 3. Resolve prep time (Strict Zero-Fiction Standard: positive number, NO fallback)
+  const prepTime = (typeof stall.prepTime === 'number' && stall.prepTime > 0)
+    ? stall.prepTime
+    : (parseInt(stall.prepTime, 10) > 0 ? parseInt(stall.prepTime, 10) : null);
+
+  if (!prepTime) {
+    return {
+      isAvailable: false,
+      reason: 'prep_time_unavailable',
+      pillText: 'ETA unavailable',
+      badgeText: '🛵 ETA unavailable',
+      displayText: '🛵 ETA unavailable',
+      distanceKm: distKm,
+      distanceText: distText
+    };
+  }
+
+  // 4. Resolve delivery capacity (activeRiders, activeOrders)
+  const cap = capacity || (typeof STATE !== 'undefined' && STATE.deliveryCapacity ? STATE.deliveryCapacity : null);
+  let capacityBuffer = 0;
+  if (cap && typeof cap.activeRiders === 'number' && cap.activeRiders > 0) {
+    const load = (cap.activeOrders || 0) / cap.activeRiders;
+    if (load > 1) {
+      capacityBuffer = Math.min(15, Math.round((load - 1) * 4));
+    }
+  }
+
+  // 5. Geographic transit time (~5 min per km straight-line)
+  const transitMin = Math.max(3, Math.round(distKm * 5));
+  const totalMin = prepTime + transitMin + capacityBuffer;
+  const lower = Math.max(10, totalMin - 3);
+  const upper = totalMin + 4;
+  const timeRange = `${lower}–${upper} min`;
+  const fullPill = `${timeRange} · ${distText}`;
+
+  return {
+    isAvailable: true,
+    reason: null,
+    lowerMin: lower,
+    upperMin: upper,
+    timeRange: timeRange,
+    prepTime: prepTime,
+    transitMin: transitMin,
+    capacityBuffer: capacityBuffer,
+    distanceKm: distKm,
+    distanceText: distText,
+    pillText: fullPill,
+    badgeText: `🛵 ${fullPill}`,
+    displayText: `🛵 ${fullPill}`
+  };
+}
+
+function calculateTrackingEta(order, liveRiderTelemetry = null) {
+  if (!order) return { text: 'Order details unavailable', isLive: false };
+  if (order.status === 'DELIVERED') {
+    return { text: typeof t === 'function' ? t('track_delivered', 'Delivered to your doorstep') : 'Delivered to your doorstep', isLive: false };
+  }
+  if (order.status === 'CANCELLED') {
+    return { text: typeof t === 'function' ? t('track_cancelled', 'Order cancelled') : 'Order cancelled', isLive: false };
+  }
+  if (order.etaMinutes && typeof order.etaMinutes === 'number') {
+    const label = typeof t === 'function' ? t('estimated_delivery_time', 'Estimated delivery time') : 'Estimated delivery time';
+    return { text: `${label}: ~${order.etaMinutes} mins`, isLive: true, remainingMin: order.etaMinutes };
+  }
+  if (order.estimated_delivery && typeof order.estimated_delivery === 'string') {
+    const label = typeof t === 'function' ? t('estimated_delivery_time', 'Estimated delivery time') : 'Estimated delivery time';
+    return { text: `${label}: ${order.estimated_delivery}`, isLive: true };
+  }
+  if (order.status === 'OUT_FOR_DELIVERY' || order.status === 'PICKED_UP') {
+    return { text: '🛵 Out for delivery — arriving shortly', isLive: true };
+  }
+  if (order.status === 'PREPARING' || order.status === 'ACCEPTED') {
+    return { text: '🍳 Freshly preparing your street bite at thela', isLive: true };
+  }
+  return { text: typeof t === 'function' ? t('track_eta_pending', 'Calculating live delivery estimate...') : 'Calculating live delivery estimate...', isLive: true };
 }
 
 function scrollDiscovery(trackId, delta) {
@@ -874,7 +1050,10 @@ function renderDiscoverySections(stalls) {
         reviewsCount: hasGenuineRating ? (s.reviewsCount || s.ratingCount + ' ratings') : null,
         priceForTwo: (s.priceForTwo && Number(s.priceForTwo) > 0) ? Number(s.priceForTwo) : null,
         distance: s.distance || null,
-        prepMin: s.prepTime || 12,
+        distanceKm: s.distanceKm || null,
+        lat: s.lat || null,
+        lng: s.lng || null,
+        prepTime: (typeof s.prepTime === 'number' && s.prepTime > 0) ? s.prepTime : (parseInt(s.prepTime, 10) > 0 ? parseInt(s.prepTime, 10) : null),
         isVeg: Boolean(s.isVeg),
         badgeText: defaultBadge,
         badgeIcon: '',
@@ -898,10 +1077,11 @@ function renderDiscoverySections(stalls) {
 
     // Combine: live stalls first, then curated to reach at least 4 items
     const displayCards = [...liveCards, ...mappedCurated].slice(0, 5);
+    const custCoords = getActiveCustomerCoordinates();
 
     track.innerHTML = displayCards.map(card => {
       const isFav = card.isRealStall && STATE.favorites.includes(card.id);
-      const dynamicEta = card.distance ? calculateDynamicDeliveryTime(card.distance, card.prepMin) : null;
+      const eta = card.isRealStall ? calculateMarketplaceEta(card, custCoords, STATE.deliveryCapacity) : null;
       const safeName = card.name.replace(/'/g, "\\'");
       const fallbackImg = getThelaFoodPlaceholder(card.category, card.name);
 
@@ -918,7 +1098,7 @@ function renderDiscoverySections(stalls) {
               <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent pointer-events-none"></div>
 
               <!-- Top-Left Badge -->
-              <div class="absolute top-2.5 left-2.5 flex items-center space-x-1.5">
+              <div class="absolute top-2.5 left-2.5 flex items-center space-x-1.5 flex-wrap gap-y-1">
                 <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider backdrop-blur shadow-md ${card.badgeColor}">
                   ${card.badgeIcon ? card.badgeIcon + ' ' : ''}${card.badgeText}
                 </span>
@@ -935,19 +1115,17 @@ function renderDiscoverySections(stalls) {
                 <i class="${isFav ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart text-stone-400 hover:text-red-500'}"></i>
               </button>
 
-              <!-- Bottom Overlay Pills (Strictly Data-Gated: Omitted if null) -->
+              <!-- Bottom Overlay Pills (Prominent Dynamic Delivery ETA & Geographic Distance) -->
               <div class="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">
-                ${dynamicEta ? `
-                  <div class="bg-stone-900/85 backdrop-blur px-2.5 py-1 rounded-lg text-[10px] font-extrabold text-white shadow-sm flex items-center space-x-1">
-                    <i class="fa-regular fa-clock text-amber-400"></i>
-                    <span>${dynamicEta}</span>
-                  </div>
-                ` : '<div></div>'}
+                <div class="thela-eta-badge bg-stone-900/90 backdrop-blur px-2.5 py-1 rounded-lg text-[10px] font-black text-white shadow-md flex items-center space-x-1 border border-white/20">
+                  <i class="fa-solid fa-motorcycle text-amber-400 text-[10px]"></i>
+                  <span>${eta.pillText}</span>
+                </div>
 
-                ${card.distance ? `
+                ${eta.distanceText ? `
                   <div class="bg-stone-900/85 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-bold text-stone-200 shadow-sm flex items-center space-x-1">
                     <i class="fa-solid fa-location-dot text-amber-400 text-[9px]"></i>
-                    <span>${card.distance}</span>
+                    <span>${eta.distanceText}</span>
                   </div>
                 ` : ''}
               </div>
@@ -1106,9 +1284,18 @@ async function loadStalls() {
     const searchVal = document.getElementById('searchInput')?.value;
     if (searchVal && searchVal.trim()) params.append('search', searchVal.trim());
 
+    const custCoords = getActiveCustomerCoordinates();
+    if (custCoords && typeof custCoords.lat === 'number' && typeof custCoords.lng === 'number') {
+      params.append('lat', custCoords.lat);
+      params.append('lng', custCoords.lng);
+    }
+
     const res = await fetch(`/api/stalls?${params.toString()}`);
     const data = await res.json();
     let stalls = data.stalls || [];
+    if (data.capacity) {
+      STATE.deliveryCapacity = data.capacity;
+    }
     if (STATE.selectedCategory === 'favorites') {
       stalls = stalls.filter(s => STATE.favorites.includes(s.id));
     }
@@ -1163,11 +1350,12 @@ function renderStalls(stalls) {
     return;
   }
 
+  const custCoords = getActiveCustomerCoordinates();
+
   container.innerHTML = stalls.map(stall => {
     const isFav = STATE.favorites.includes(stall.id);
-    const hasDistance = Boolean(stall.distance);
-    const dynamicEta = hasDistance ? calculateDynamicDeliveryTime(stall.distance, stall.prepTime || 12) : null;
-    const distText = hasDistance ? `${stall.distance} away` : null;
+    const eta = calculateMarketplaceEta(stall, custCoords, STATE.deliveryCapacity);
+    const distText = eta.distanceText ? `${eta.distanceText} away` : null;
     const priceTwo = (stall.priceForTwo && Number(stall.priceForTwo) > 0) ? `₹${stall.priceForTwo}` : null;
     const safeName = stall.name.replace(/'/g, "\\'");
     const stallImg = stall.imageUrl || getThelaFoodPlaceholder(stall.category, stall.name);
@@ -1223,19 +1411,18 @@ function renderStalls(stalls) {
           <!-- Gradient Top Scrim -->
           <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/25 pointer-events-none"></div>
 
-          <!-- Top-Left: Open / Closed Badge & Dynamic Delivery ETA -->
-          <div class="absolute top-3 left-3 flex items-center space-x-1.5">
+          <!-- Top-Left: Open / Closed Badge & Prominent Dynamic Delivery ETA -->
+          <div class="absolute top-3 left-3 flex items-center space-x-1.5 flex-wrap gap-y-1">
             ${stall.isOpen 
               ? `<span class="bg-emerald-600/95 backdrop-blur text-white text-[10px] font-black px-2.5 py-1 rounded-full flex items-center shadow-md">
                   <span class="w-1.5 h-1.5 rounded-full bg-white mr-1.5 animate-pulse"></span>OPEN
                 </span>`
               : `<span class="bg-stone-900/90 backdrop-blur text-stone-200 text-[10px] font-black px-2.5 py-1 rounded-full shadow-md">CLOSED</span>`
             }
-            ${dynamicEta ? `
-              <span class="bg-white/95 backdrop-blur text-stone-900 text-[10px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center">
-                <i class="fa-regular fa-clock text-amber-600 mr-1 text-xs"></i>${dynamicEta}
-              </span>
-            ` : ''}
+            <span class="thela-eta-badge bg-stone-900/90 backdrop-blur text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center space-x-1 border border-white/20">
+              <i class="fa-solid fa-motorcycle text-amber-400 text-[10px]"></i>
+              <span>${eta.pillText}</span>
+            </span>
           </div>
 
           <!-- Top-Right: Favorite Heart Button -->
@@ -1508,12 +1695,15 @@ async function openStallModal(stallId) {
       }
     }
 
-    // 7. Distance & Dynamic Delivery Time (Data-Gated: Omitted if unavailable)
+    // 7. Distance & Dynamic Delivery Time (Strict Data-Gating & Consistent Engine)
+    const custCoords = getActiveCustomerCoordinates();
+    const eta = calculateMarketplaceEta(data.stall, custCoords, STATE.deliveryCapacity);
+
     const distBlock = document.getElementById('modalDistBlock');
     const distEl = document.getElementById('modalStallDistance');
     if (distEl && distBlock) {
-      if (data.stall.distance) {
-        distEl.innerText = `${data.stall.distance} away`;
+      if (eta.distanceText) {
+        distEl.innerText = `${eta.distanceText} away`;
         distBlock.classList.remove('hidden');
       } else {
         distBlock.classList.add('hidden');
@@ -1523,17 +1713,8 @@ async function openStallModal(stallId) {
     const etaBlock = document.getElementById('modalEtaBlock');
     const etaEl = document.getElementById('modalStallEta');
     if (etaEl && etaBlock) {
-      if (data.stall.distance) {
-        const dynamicEta = calculateDynamicDeliveryTime(data.stall.distance, data.stall.prepTime || 12);
-        if (dynamicEta) {
-          etaEl.innerText = dynamicEta;
-          etaBlock.classList.remove('hidden');
-        } else {
-          etaBlock.classList.add('hidden');
-        }
-      } else {
-        etaBlock.classList.add('hidden');
-      }
+      etaEl.innerText = eta.pillText;
+      etaBlock.classList.remove('hidden');
     }
 
     const addrEl = document.getElementById('modalStallAddress');
@@ -2277,16 +2458,37 @@ function updateCartFloatingBar() {
   }
 
   if (count > 0) {
+    const activeStall = (STATE.stalls || []).find(s => s.id === STATE.cart.stallId) || STATE.currentStall;
+    const eta = activeStall ? calculateMarketplaceEta(activeStall, getActiveCustomerCoordinates(), STATE.deliveryCapacity) : null;
+
     if (modalCartBar) {
       modalCartBar.classList.remove('hidden');
       document.getElementById('modalCartCount').innerText = `${count} ${count === 1 ? 'ITEM' : 'ITEMS'}`;
       document.getElementById('modalCartTotal').innerText = `₹${subtotal}`;
+      const modalCartEta = document.getElementById('modalCartEta');
+      if (modalCartEta) {
+        if (eta) {
+          modalCartEta.innerText = `🛵 ${eta.pillText}`;
+          modalCartEta.classList.remove('hidden');
+        } else {
+          modalCartEta.classList.add('hidden');
+        }
+      }
     }
 
     if (stickyCart) {
       stickyCart.classList.remove('hidden');
       document.getElementById('stickyCartBadge').innerText = `${count} ${count === 1 ? 'ITEM' : 'ITEMS'}`;
       document.getElementById('stickyCartTotal').innerText = `₹${subtotal}`;
+      const stickyCartEta = document.getElementById('stickyCartEta');
+      if (stickyCartEta) {
+        if (eta) {
+          stickyCartEta.innerText = `🛵 ${eta.pillText}`;
+          stickyCartEta.classList.remove('hidden');
+        } else {
+          stickyCartEta.classList.add('hidden');
+        }
+      }
     }
   } else {
     if (modalCartBar) modalCartBar.classList.add('hidden');
@@ -2343,6 +2545,17 @@ function toggleEcoPackaging() {
 function renderCartDrawerItems() {
   const list = document.getElementById('cartItemsList');
   document.getElementById('cartStallName').innerText = STATE.cart.stallName || 'Street Cart';
+
+  const cartEtaBanner = document.getElementById('cartEtaBanner');
+  const cartEtaText = document.getElementById('cartEtaText');
+  const activeStall = (STATE.stalls || []).find(s => s.id === STATE.cart.stallId) || STATE.currentStall;
+  if (cartEtaBanner && cartEtaText && activeStall) {
+    const eta = calculateMarketplaceEta(activeStall, getActiveCustomerCoordinates(), STATE.deliveryCapacity);
+    cartEtaText.innerText = `🛵 ${eta.pillText}`;
+    cartEtaBanner.classList.remove('hidden');
+  } else if (cartEtaBanner) {
+    cartEtaBanner.classList.add('hidden');
+  }
 
   if (STATE.cart.items.length === 0) {
     list.innerHTML = `
@@ -2494,29 +2707,8 @@ async function handlePlaceOrder() {
 function updateTrackingEta(order) {
   const etaElem = document.getElementById('trackEtaText');
   if (!etaElem || !order) return;
-
-  if (order.status === 'DELIVERED') {
-    etaElem.innerText = typeof t === 'function' ? t('track_delivered', 'Delivered to your doorstep') : 'Delivered to your doorstep';
-    return;
-  }
-  if (order.status === 'CANCELLED') {
-    etaElem.innerText = typeof t === 'function' ? t('track_cancelled', 'Order cancelled') : 'Order cancelled';
-    return;
-  }
-  // Only show a delivery estimate when it comes from the actual order/delivery system
-  if (order.etaMinutes && typeof order.etaMinutes === 'number') {
-    const label = typeof t === 'function' ? t('estimated_delivery_time', 'Estimated delivery time') : 'Estimated delivery time';
-    etaElem.innerText = `${label}: ~${order.etaMinutes} mins`;
-    return;
-  }
-  if (order.estimated_delivery && typeof order.estimated_delivery === 'string') {
-    const label = typeof t === 'function' ? t('estimated_delivery_time', 'Estimated delivery time') : 'Estimated delivery time';
-    etaElem.innerText = `${label}: ${order.estimated_delivery}`;
-    return;
-  }
-  // When no delivery estimate has been received from the actual dispatch system yet
-  const pendingText = typeof t === 'function' ? t('track_eta_pending', 'Calculating delivery estimate...') : 'Calculating delivery estimate...';
-  etaElem.innerText = pendingText;
+  const result = calculateTrackingEta(order);
+  etaElem.innerText = result.text;
 }
 
 function openTrackingModal(order) {

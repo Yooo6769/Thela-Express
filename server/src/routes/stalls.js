@@ -9,10 +9,18 @@ router.get('/categories', (req, res) => {
   res.json({ categories: db.getCategories() });
 });
 
+// GET /api/stalls/capacity (Live Platform Delivery Capacity Telemetry)
+router.get('/capacity', (req, res) => {
+  res.json({
+    success: true,
+    capacity: db.getDeliveryCapacity()
+  });
+});
+
 // GET /api/stalls
 router.get('/', (req, res) => {
-  const { category, search, vegOnly } = req.query;
-  let stalls = db.getStalls(category);
+  const { category, search, vegOnly, lat, lng } = req.query;
+  let stalls = db.getStalls(category, lat, lng);
 
   if (vegOnly === 'true') {
     stalls = stalls.filter(s => s.isVeg);
@@ -26,7 +34,7 @@ router.get('/', (req, res) => {
     );
   }
 
-  res.json({ stalls });
+  res.json({ stalls, capacity: db.getDeliveryCapacity() });
 });
 
 // GET /api/stalls/:id

@@ -913,6 +913,7 @@
           <div class="flex items-center space-x-2.5">
             <span id="modalCartCount" class="bg-white/20 px-2 py-0.5 rounded-lg text-xs font-black">0 ITEMS</span>
             <span id="modalCartTotal" class="text-base font-black tracking-tight">₹0</span>
+            <span id="modalCartEta" class="hidden text-xs bg-white/20 px-2 py-0.5 rounded-lg font-black text-amber-100"></span>
           </div>
           <div class="flex items-center space-x-1.5 font-black text-xs">
             <span data-i18n="view_cart_btn">View Cart</span>
@@ -961,6 +962,9 @@
           <div>
             <h2 class="font-black text-base text-gray-900">Your Street Cart</h2>
             <p id="cartStallName" class="text-xs text-gray-500">Select street bites to order</p>
+            <div id="cartEtaBanner" class="hidden mt-1.5 flex items-center space-x-1.5 text-xs font-black text-amber-900 bg-amber-50 px-2.5 py-0.5 rounded-xl border border-amber-200">
+              <span id="cartEtaText"></span>
+            </div>
           </div>
         </div>
         <button onclick="closeCartDrawer()" class="w-8 h-8 rounded-full bg-gray-100 text-gray-500 flex items-center justify-center hover:bg-gray-200">
@@ -1604,6 +1608,7 @@
       <div class="flex items-center space-x-2">
         <span id="stickyCartBadge" class="bg-white/20 px-2 py-0.5 rounded-lg text-xs">1 ITEM</span>
         <span id="stickyCartTotal">₹140</span>
+        <span id="stickyCartEta" class="hidden text-xs bg-white/20 px-2 py-0.5 rounded-lg font-black text-amber-100"></span>
       </div>
       <div class="flex items-center space-x-1">
         <span>Proceed to Cart</span>

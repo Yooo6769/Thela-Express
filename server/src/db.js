@@ -236,13 +236,27 @@ class Database {
     return badges;
   }
 
-  estimateDynamicDelivery(distanceKm = 1.0, prepMin = 12) {
-    const km = typeof distanceKm === 'number' ? distanceKm : (parseFloat(distanceKm) || 1.0);
-    const travelMin = Math.round(km * 6);
-    const totalMin = prepMin + travelMin;
-    const lower = Math.max(10, totalMin - 3);
-    const upper = totalMin + 4;
-    return `${lower}-${upper} min`;
+  computeGeographicDistanceKm(lat1, lon1, lat2, lon2) {
+    const R = 6371; // Earth radius in km
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+              Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+              Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return Math.round(R * c * 10) / 10;
+  }
+
+  getDeliveryCapacity() {
+    const riders = this.data.riders || [];
+    const orders = this.data.orders || [];
+    const activeRiders = riders.filter(r => r.is_online).length;
+    const activeOrders = orders.filter(o => !['DELIVERED', 'CANCELLED'].includes(o.status)).length;
+    return {
+      activeRiders,
+      activeOrders,
+      capacityAvailable: activeRiders > 0
+    };
   }
 
   formatStallForPublic(stall) {
@@ -268,12 +282,12 @@ class Database {
       completedChecks: completedChecks,
       streetPhotos: stall.streetPhotos || stall.photos || [],
       famousDishes: stall.famousDishes || [],
-      dynamicDelivery: this.estimateDynamicDelivery(stall.distance || 1.0)
+      prepTime: (typeof stall.prepTime === 'number' && stall.prepTime > 0) ? stall.prepTime : (parseInt(stall.prepTime, 10) > 0 ? parseInt(stall.prepTime, 10) : null)
     };
   }
 
   // Stalls & Categories
-  getStalls(category) {
+  getStalls(category, customerLat = null, customerLng = null) {
     let list = this.data.stalls || [];
     if (category && category !== 'all') {
       const target = category.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -283,7 +297,22 @@ class Database {
         return cat === target || s.category.toLowerCase() === category.toLowerCase() || s.category.toLowerCase().includes(category.toLowerCase());
       });
     }
-    return list.map(s => this.formatStallForPublic(s));
+    const cLat = customerLat != null ? parseFloat(customerLat) : null;
+    const cLng = customerLng != null ? parseFloat(customerLng) : null;
+    const hasCustLoc = cLat != null && cLng != null && !isNaN(cLat) && !isNaN(cLng);
+
+    return list.map(s => {
+      const formatted = this.formatStallForPublic(s);
+      if (hasCustLoc && formatted.lat && formatted.lng && !isNaN(formatted.lat) && !isNaN(formatted.lng)) {
+        const geoKm = this.computeGeographicDistanceKm(cLat, cLng, formatted.lat, formatted.lng);
+        formatted.distance = `${geoKm.toFixed(1)} km`;
+        formatted.distanceKm = geoKm;
+      } else {
+        formatted.distance = null;
+        formatted.distanceKm = null;
+      }
+      return formatted;
+    });
   }
 
   getCategories() {
@@ -485,8 +514,6 @@ class Database {
   registerStall(stallData, menuItems = []) {
     const stallId = `stall_${Date.now()}`;
     const hasFssai = Boolean(stallData.fssai_number && stallData.fssai_number.trim());
-    const distVal = parseFloat(stallData.distance) || (0.7 + (Math.random() * 1.5));
-    const dynamicDelivery = this.estimateDynamicDelivery(distVal);
     const newStall = {
       id: stallId,
       owner_name: stallData.owner_name || 'Vendor Partner',
@@ -495,14 +522,15 @@ class Database {
       category: stallData.category || 'chaat',
       rating: 5.0,
       reviewsCount: '1 (New)',
-      deliveryTime: dynamicDelivery,
-      distance: `${distVal.toFixed(1)} km`,
+      deliveryTime: null,
+      distance: null,
+      prepTime: (typeof stallData.prepTime === 'number' && stallData.prepTime > 0) ? stallData.prepTime : (parseInt(stallData.prepTime, 10) > 0 ? parseInt(stallData.prepTime, 10) : null),
       lat: parseFloat(stallData.lat) || 0,
       lng: parseFloat(stallData.lng) || 0,
       specialty: stallData.specialty || 'Authentic Street Special',
       heritageStory: stallData.heritageStory || 'Newly onboarded authentic street vendor on ThelaExpress.',
-      priceForTwo: stallData.priceForTwo || '₹120 for two',
-      discount: stallData.discount || '15% OFF On First Order',
+      priceForTwo: stallData.priceForTwo ? String(stallData.priceForTwo) : null,
+      discount: stallData.discount || null,
       imageUrl: stallData.imageUrl || 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80',
       upi_id: stallData.upi_id || 'vendor@upi',
       address: stallData.address || 'Street Address',
