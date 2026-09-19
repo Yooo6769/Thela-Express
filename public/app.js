@@ -40,6 +40,7 @@ const STATE = {
 // 1. INITIALIZATION & LIFECYCLE
 // ==========================================================
 document.addEventListener('DOMContentLoaded', () => {
+  AtmosphereManager.init();
   loadStoredUser();
   initWebSocket();
   loadCategories();
@@ -62,6 +63,84 @@ document.addEventListener('DOMContentLoaded', () => {
     if (typeof loadCategories === 'function') loadCategories();
   });
 });
+
+// ==========================================================
+// ATMOSPHERE MANAGER (UI-State-Driven Adaptive Density Engine)
+// ==========================================================
+const AtmosphereManager = {
+  currentDensity: 'high',
+  overrideStack: [], // Array of { source: string, density: string }
+  scrollTicking: false,
+  container: null,
+
+  init() {
+    this.container = document.getElementById('thelaAtmosphere');
+    if (!this.container) return;
+
+    // Initial baseline check based on viewport scroll position
+    this.updateBaselineFromScroll();
+
+    // Scroll listener for baseline density transitions (high at top hero, medium in catalog)
+    window.addEventListener('scroll', () => {
+      if (!this.scrollTicking) {
+        window.requestAnimationFrame(() => {
+          this.updateBaselineFromScroll();
+          this.scrollTicking = false;
+        });
+        this.scrollTicking = true;
+      }
+    }, { passive: true });
+
+    // Tab inactive battery saver
+    document.addEventListener('visibilitychange', () => {
+      if (!this.container) return;
+      if (document.visibilityState === 'hidden') {
+        this.container.classList.add('atmosphere-paused');
+      } else {
+        this.container.classList.remove('atmosphere-paused');
+      }
+    });
+  },
+
+  updateBaselineFromScroll() {
+    // If any focused UI modal/drawer override is active, that state has absolute priority
+    if (this.overrideStack.length > 0) return;
+
+    const scrollY = window.scrollY || window.pageYOffset || 0;
+    // Hero & craving hub area (top 320px) = high density
+    // Scrolled down into carousels & catalog = medium density
+    const target = scrollY < 320 ? 'high' : 'medium';
+    this.setDensity(target);
+  },
+
+  pushOverride(source, density) {
+    this.overrideStack = this.overrideStack.filter(o => o.source !== source);
+    this.overrideStack.push({ source, density });
+    this.applyCurrentDensity();
+  },
+
+  popOverride(source) {
+    this.overrideStack = this.overrideStack.filter(o => o.source !== source);
+    this.applyCurrentDensity();
+  },
+
+  applyCurrentDensity() {
+    if (this.overrideStack.length > 0) {
+      const topOverride = this.overrideStack[this.overrideStack.length - 1];
+      this.setDensity(topOverride.density);
+    } else {
+      this.updateBaselineFromScroll();
+    }
+  },
+
+  setDensity(density) {
+    if (this.currentDensity === density && this.container && this.container.getAttribute('data-density') === density) return;
+    this.currentDensity = density;
+    if (this.container) {
+      this.container.setAttribute('data-density', density);
+    }
+  }
+};
 
 async function loadStoredUser() {
   const saved = localStorage.getItem('thela_user');
@@ -1429,6 +1508,7 @@ async function openStallModal(stallId) {
     const modalEl = document.getElementById('stallModal');
     if (modalEl) modalEl.classList.remove('hidden');
     document.body.style.overflow = 'hidden';
+    AtmosphereManager.pushOverride('stallModal', 'low');
 
   } catch (e) {
     console.error('Failed to open stall modal:', e);
@@ -1442,6 +1522,7 @@ function closeStallModal() {
   document.body.style.overflow = '';
   const vidEl = document.getElementById('modalStallVideo');
   if (vidEl) vidEl.pause();
+  AtmosphereManager.popOverride('stallModal');
 }
 
 function toggleStallFavoriteFromModal() {
@@ -1750,6 +1831,7 @@ async function openTrustModal(stallId) {
     }
 
     document.getElementById('trustModal').classList.remove('hidden');
+    AtmosphereManager.pushOverride('trustModal', 'minimal');
   } catch (err) {
     console.error('Failed to open trust modal:', err);
     showToast('Failed to open trust details');
@@ -1759,6 +1841,7 @@ async function openTrustModal(stallId) {
 function closeTrustModal() {
   const modal = document.getElementById('trustModal');
   if (modal) modal.classList.add('hidden');
+  AtmosphereManager.popOverride('trustModal');
 }
 
 function renderCategoryTabsAndMenuItems(items) {
@@ -1989,10 +2072,12 @@ function openCustomizer(item) {
   }).join('');
 
   document.getElementById('customizerModal').classList.remove('hidden');
+  AtmosphereManager.pushOverride('customizer', 'minimal');
 }
 
 function closeCustomizerModal() {
   document.getElementById('customizerModal').classList.add('hidden');
+  AtmosphereManager.popOverride('customizer');
 }
 
 function confirmCustomizationAndAdd() {
@@ -2106,10 +2191,12 @@ function openCartDrawer() {
   updateCartAddressDisplay();
   renderCartDrawerItems();
   document.getElementById('cartDrawer').classList.remove('hidden');
+  AtmosphereManager.pushOverride('cartDrawer', 'minimal');
 }
 
 function closeCartDrawer() {
   document.getElementById('cartDrawer').classList.add('hidden');
+  AtmosphereManager.popOverride('cartDrawer');
 }
 
 function updateCartAddressDisplay() {
@@ -2344,6 +2431,7 @@ function openTrackingModal(order) {
 
   renderTrackerSteps(order);
   document.getElementById('trackingModal').classList.remove('hidden');
+  AtmosphereManager.pushOverride('trackingModal', 'minimal');
 
   // Draw initial radar frame
   drawRadarFrame();
@@ -2351,6 +2439,7 @@ function openTrackingModal(order) {
 
 function closeTrackingModal() {
   document.getElementById('trackingModal').classList.add('hidden');
+  AtmosphereManager.popOverride('trackingModal');
 }
 
 function renderTrackerSteps(order) {
@@ -2932,10 +3021,12 @@ async function promptDeliveryOtp(orderId) {
 // ==========================================================
 function openAuthModal() {
   document.getElementById('authModal').classList.remove('hidden');
+  AtmosphereManager.pushOverride('authModal', 'minimal');
 }
 
 function closeAuthModal() {
   document.getElementById('authModal').classList.add('hidden');
+  AtmosphereManager.popOverride('authModal');
 }
 
 async function handleSendOtp() {
@@ -3085,10 +3176,12 @@ function openProfileModal() {
   if (favsStat) favsStat.innerText = STATE.favorites.length || 0;
 
   document.getElementById('profileModal').classList.remove('hidden');
+  AtmosphereManager.pushOverride('profileModal', 'minimal');
 }
 
 function closeProfileModal() {
   document.getElementById('profileModal').classList.add('hidden');
+  AtmosphereManager.popOverride('profileModal');
 }
 
 async function handleUpdateProfile(event) {
@@ -3172,10 +3265,12 @@ function openAddressDrawer() {
   }
   renderSavedAddresses();
   document.getElementById('addressDrawer').classList.remove('hidden');
+  AtmosphereManager.pushOverride('addressDrawer', 'minimal');
 }
 
 function closeAddressDrawer() {
   document.getElementById('addressDrawer').classList.add('hidden');
+  AtmosphereManager.popOverride('addressDrawer');
 }
 
 function renderSavedAddresses() {
@@ -3395,6 +3490,7 @@ async function openOrderHistoryModal() {
   }
 
   document.getElementById('orderHistoryModal').classList.remove('hidden');
+  AtmosphereManager.pushOverride('orderHistoryModal', 'minimal');
 
   try {
     const res = await fetch(`/api/orders/user/${STATE.user.phone}`);
@@ -3478,6 +3574,7 @@ async function openOrderHistoryModal() {
 
 function closeOrderHistoryModal() {
   document.getElementById('orderHistoryModal').classList.add('hidden');
+  AtmosphereManager.popOverride('orderHistoryModal');
 }
 
 async function handleReorder(orderId) {
@@ -3529,11 +3626,13 @@ function openRatingModal(orderId) {
   if (commentInput) commentInput.value = '';
 
   document.getElementById('ratingModal').classList.remove('hidden');
+  AtmosphereManager.pushOverride('ratingModal', 'minimal');
 }
 
 function closeRatingModal() {
   document.getElementById('ratingModal').classList.add('hidden');
   STATE.ratingOrderId = null;
+  AtmosphereManager.popOverride('ratingModal');
 }
 
 function setStarRating(rating) {

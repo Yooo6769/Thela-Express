@@ -74,9 +74,309 @@
     .food-hero-card:hover {
       transform: translateY(-3px);
     }
+
+    /* ========================================================== */
+    /* THELA ATMOSPHERE — ADAPTIVE VISUAL DENSITY SYSTEM          */
+    /* ========================================================== */
+    #thelaAtmosphere {
+      position: fixed;
+      inset: 0;
+      pointer-events: none !important;
+      user-select: none !important;
+      z-index: 0;
+      overflow: hidden;
+      transition: opacity 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+    #thelaAtmosphere * {
+      pointer-events: none !important;
+      user-select: none !important;
+    }
+
+    /* Ambient Streetlamp Glow Disks */
+    .thela-glow-disk {
+      position: absolute;
+      border-radius: 9999px;
+      filter: blur(60px);
+      transition: opacity 0.8s ease, transform 0.8s ease;
+      will-change: transform, opacity;
+      pointer-events: none !important;
+    }
+    .glow-amber-warm {
+      background: radial-gradient(circle, rgba(245, 158, 11, 0.32) 0%, rgba(217, 119, 6, 0.12) 60%, transparent 80%);
+    }
+    .glow-saffron-soft {
+      background: radial-gradient(circle, rgba(234, 88, 12, 0.25) 0%, rgba(194, 65, 12, 0.08) 60%, transparent 80%);
+    }
+    .glow-terracotta {
+      background: radial-gradient(circle, rgba(194, 65, 12, 0.20) 0%, rgba(245, 158, 11, 0.06) 60%, transparent 80%);
+    }
+
+    /* Floating Drifter Motif Container */
+    .thela-motif {
+      position: absolute;
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform, opacity;
+      pointer-events: none !important;
+    }
+
+    /* Drift Animation Variations */
+    .anim-drift-a {
+      animation: thelaDriftA 22s ease-in-out infinite alternate;
+    }
+    .anim-drift-b {
+      animation: thelaDriftB 26s ease-in-out infinite alternate;
+    }
+    .anim-drift-c {
+      animation: thelaDriftC 20s ease-in-out infinite alternate;
+    }
+    .anim-drift-d {
+      animation: thelaDriftD 28s ease-in-out infinite alternate;
+    }
+    .anim-steam {
+      animation: thelaSteamRise 8s ease-out infinite;
+    }
+    .anim-lantern {
+      animation: thelaLanternPulse 6s ease-in-out infinite;
+    }
+
+    @keyframes thelaDriftA {
+      0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+      50% { transform: translate3d(18px, -22px, 0) rotate(5deg); }
+      100% { transform: translate3d(-14px, -40px, 0) rotate(-4deg); }
+    }
+    @keyframes thelaDriftB {
+      0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+      50% { transform: translate3d(-20px, 18px, 0) rotate(-6deg); }
+      100% { transform: translate3d(16px, 36px, 0) rotate(4deg); }
+    }
+    @keyframes thelaDriftC {
+      0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+      50% { transform: translate3d(22px, 16px, 0) rotate(6deg); }
+      100% { transform: translate3d(-16px, -24px, 0) rotate(-5deg); }
+    }
+    @keyframes thelaDriftD {
+      0% { transform: translate3d(0, 0, 0) rotate(0deg); }
+      50% { transform: translate3d(-16px, -20px, 0) rotate(4deg); }
+      100% { transform: translate3d(18px, 24px, 0) rotate(-6deg); }
+    }
+    @keyframes thelaSteamRise {
+      0% { transform: translate3d(0, 0, 0) scale(0.9); opacity: 0; }
+      25% { opacity: 0.16; }
+      75% { opacity: 0.12; }
+      100% { transform: translate3d(12px, -70px, 0) scale(1.15); opacity: 0; }
+    }
+    @keyframes thelaLanternPulse {
+      0%, 100% { opacity: 0.22; transform: scale(1); }
+      50% { opacity: 0.38; transform: scale(1.06); }
+    }
+
+    /* 4-Tier Adaptive Density Rules */
+    /* Level 1: HIGH — Hero & Craving Discovery */
+    #thelaAtmosphere[data-density="high"] .thela-glow-disk { opacity: 0.35; }
+    #thelaAtmosphere[data-density="high"] .motif-primary { opacity: 0.13; }
+    #thelaAtmosphere[data-density="high"] .motif-secondary { opacity: 0.09; }
+    #thelaAtmosphere[data-density="high"] .motif-steam { opacity: 0.15; }
+
+    /* Level 2: MEDIUM — Discovery Carousels & Main Grid */
+    #thelaAtmosphere[data-density="medium"] .thela-glow-disk { opacity: 0.20; }
+    #thelaAtmosphere[data-density="medium"] .motif-primary { opacity: 0.08; }
+    #thelaAtmosphere[data-density="medium"] .motif-secondary { opacity: 0.03; }
+    #thelaAtmosphere[data-density="medium"] .motif-steam { opacity: 0.07; }
+
+    /* Level 3: LOW — Vendor Stall Page & Menu */
+    #thelaAtmosphere[data-density="low"] .thela-glow-disk { opacity: 0.10; }
+    #thelaAtmosphere[data-density="low"] .motif-primary { opacity: 0.03; }
+    #thelaAtmosphere[data-density="low"] .motif-secondary { opacity: 0; }
+    #thelaAtmosphere[data-density="low"] .motif-steam { opacity: 0.03; }
+
+    /* Level 4: MINIMAL — Cart, Checkout, Auth, Address, Customizer */
+    #thelaAtmosphere[data-density="minimal"] .thela-glow-disk { opacity: 0.05; }
+    #thelaAtmosphere[data-density="minimal"] .thela-motif { opacity: 0 !important; }
+    #thelaAtmosphere[data-density="minimal"] * { animation-play-state: paused !important; }
+
+    /* Tab inactive battery saver */
+    .atmosphere-paused * {
+      animation-play-state: paused !important;
+    }
+
+    /* Accessibility: Reduced Motion */
+    @media (prefers-reduced-motion: reduce) {
+      #thelaAtmosphere * {
+        animation: none !important;
+      }
+    }
   </style>
 </head>
 <body class="bg-[#faf8f5] text-stone-900 min-h-screen flex flex-col antialiased select-none md:select-auto">
+
+  <!-- ============================================================== -->
+  <!-- ADAPTIVE VISUAL ATMOSPHERE: INDIAN STREET FOOD MARKET CANVAS   -->
+  <!-- ============================================================== -->
+  <div id="thelaAtmosphere" class="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none" aria-hidden="true" data-density="high">
+    <!-- Ambient Streetlamp Glow Disks (Layer 0) -->
+    <div class="thela-glow-disk glow-amber-warm w-96 h-96 -top-24 -right-24"></div>
+    <div class="thela-glow-disk glow-saffron-soft w-80 h-80 top-1/3 -left-28"></div>
+    <div class="thela-glow-disk glow-terracotta w-96 h-96 bottom-10 -right-20"></div>
+    <div class="thela-glow-disk glow-amber-warm w-72 h-72 bottom-1/4 -left-16"></div>
+
+    <!-- Rising Steam Plumes (Layer 1) -->
+    <div class="thela-motif motif-steam anim-steam top-28 right-8 sm:right-24 opacity-15">
+      <svg class="w-12 h-24 text-amber-500/40" viewBox="0 0 50 100" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M15 90 Q30 70 15 50 T15 10" />
+        <path d="M28 85 Q40 68 28 48 T28 15" opacity="0.6" />
+        <path d="M38 95 Q25 78 38 58 T38 25" opacity="0.4" />
+      </svg>
+    </div>
+    <div class="thela-motif motif-steam anim-steam bottom-36 left-6 sm:left-20 opacity-12" style="animation-delay: -3.5s;">
+      <svg class="w-14 h-28 text-orange-500/40" viewBox="0 0 50 100" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round">
+        <path d="M20 95 Q35 72 20 52 T20 12" />
+        <path d="M32 90 Q18 70 32 50 T32 18" opacity="0.7" />
+      </svg>
+    </div>
+
+    <!-- Street-Food Drifters Layer (Layers 2 & 3) -->
+    <!-- 1. Authentic Heritage Street Thela / Cart (Top Left Margin) -->
+    <div class="thela-motif motif-primary anim-drift-a top-28 -left-4 sm:left-4 w-20 h-20 sm:w-24 sm:h-24">
+      <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
+        <path d="M15 32 L85 32 L80 18 L20 18 Z" fill="#c2410c" />
+        <path d="M20 18 L27 32 L34 32 L28 18 Z" fill="#fff7ed" />
+        <path d="M42 18 L46 32 L54 32 L50 18 Z" fill="#fff7ed" />
+        <path d="M64 18 L67 32 L74 32 L71 18 Z" fill="#fff7ed" />
+        <path d="M15 32 Q20 37 25 32 Q30 37 35 32 Q40 37 45 32 Q50 37 55 32 Q60 37 65 32 Q70 37 75 32 Q80 37 85 32" stroke="#ea580c" stroke-width="2" fill="none" />
+        <rect x="22" y="34" width="56" height="18" rx="2" fill="#78350f" />
+        <rect x="25" y="37" width="50" height="12" fill="#d97706" opacity="0.6" />
+        <line x1="22" y1="18" x2="22" y2="52" stroke="#451a03" stroke-width="2.5" />
+        <line x1="78" y1="18" x2="78" y2="52" stroke="#451a03" stroke-width="2.5" />
+        <circle cx="16" cy="38" r="4" fill="#fbbf24" opacity="0.9" />
+        <circle cx="50" cy="66" r="14" fill="none" stroke="#78350f" stroke-width="3" />
+        <circle cx="50" cy="66" r="3" fill="#451a03" />
+        <line x1="50" y1="52" x2="50" y2="80" stroke="#78350f" stroke-width="1.5" />
+        <line x1="36" y1="66" x2="64" y2="66" stroke="#78350f" stroke-width="1.5" />
+        <line x1="40" y1="56" x2="60" y2="76" stroke="#78350f" stroke-width="1.5" />
+        <line x1="40" y1="76" x2="60" y2="56" stroke="#78350f" stroke-width="1.5" />
+        <path d="M78 42 L90 38" stroke="#451a03" stroke-width="2.5" stroke-linecap="round" />
+        <line x1="26" y1="52" x2="24" y2="74" stroke="#451a03" stroke-width="2.5" />
+      </svg>
+    </div>
+
+    <!-- 2. Steamed Momos & Bamboo Basket (Top Right Margin) -->
+    <div class="thela-motif motif-primary anim-drift-b top-36 -right-3 sm:right-8 w-16 h-16 sm:w-20 sm:h-20" style="animation-delay: -5s;">
+      <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
+        <ellipse cx="50" cy="65" rx="36" ry="14" fill="#b45309" />
+        <ellipse cx="50" cy="63" rx="34" ry="12" fill="#fef3c7" />
+        <ellipse cx="50" cy="63" rx="34" ry="12" stroke="#d97706" stroke-width="1.5" fill="none" />
+        <path d="M22 64 L78 64 M26 60 L74 60" stroke="#d97706" stroke-width="1" opacity="0.6" />
+        <path d="M30 58 C30 50 42 48 42 56 C42 62 30 62 30 58 Z" fill="#fffbeb" stroke="#d97706" stroke-width="1.5" />
+        <path d="M36 50 L36 54 M33 51 L35 55 M39 51 L37 55" stroke="#b45309" stroke-width="1" />
+        <path d="M44 54 C44 45 56 43 56 52 C56 60 44 60 44 54 Z" fill="#ffffff" stroke="#d97706" stroke-width="1.5" />
+        <path d="M50 45 L50 50 M47 47 L49 51 M53 47 L51 51" stroke="#b45309" stroke-width="1" />
+        <path d="M58 57 C58 49 70 47 70 55 C70 62 58 62 58 57 Z" fill="#fffbeb" stroke="#d97706" stroke-width="1.5" />
+        <path d="M64 49 L64 54 M61 50 L63 54 M67 50 L65 54" stroke="#b45309" stroke-width="1" />
+        <path d="M42 42 Q46 32 40 22" stroke="#ea580c" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7" />
+        <path d="M52 38 Q56 28 50 18" stroke="#ea580c" stroke-width="1.5" stroke-linecap="round" fill="none" opacity="0.7" />
+      </svg>
+    </div>
+
+    <!-- 3. Curved Indian Green & Red Chillies (Mid Left Margin) -->
+    <div class="thela-motif motif-primary anim-drift-c top-1/2 -left-2 sm:left-6 w-14 h-14 sm:w-16 sm:h-16" style="animation-delay: -9s;">
+      <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
+        <path d="M46 22 Q42 12 40 8" stroke="#15803d" stroke-width="2.5" stroke-linecap="round" />
+        <path d="M42 20 Q54 36 46 64 Q40 82 28 88 Q36 72 38 52 Q40 32 42 20 Z" fill="#16a34a" />
+        <ellipse cx="43" cy="20" rx="4" ry="2" fill="#15803d" />
+        <path d="M52 24 Q58 14 62 10" stroke="#991b1b" stroke-width="2.5" stroke-linecap="round" />
+        <path d="M54 22 Q46 38 56 66 Q64 84 76 90 Q66 74 62 54 Q58 34 54 22 Z" fill="#dc2626" />
+        <ellipse cx="53" cy="22" rx="4" ry="2" fill="#991b1b" />
+      </svg>
+    </div>
+
+    <!-- 4. Fresh Sliced Lemon & Citrus Droplets (Mid Right Margin) -->
+    <div class="thela-motif motif-primary anim-drift-d top-[45%] -right-2 sm:right-6 w-14 h-14 sm:w-16 sm:h-16" style="animation-delay: -14s;">
+      <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
+        <circle cx="50" cy="50" r="38" fill="#facc15" stroke="#ca8a04" stroke-width="2" />
+        <circle cx="50" cy="50" r="33" fill="#fef9c3" />
+        <circle cx="50" cy="50" r="5" fill="#fef08a" />
+        <path d="M50 42 C50 25 58 25 58 42 Z" fill="#eab308" transform="rotate(0 50 50)" />
+        <path d="M50 42 C50 25 58 25 58 42 Z" fill="#eab308" transform="rotate(45 50 50)" />
+        <path d="M50 42 C50 25 58 25 58 42 Z" fill="#eab308" transform="rotate(90 50 50)" />
+        <path d="M50 42 C50 25 58 25 58 42 Z" fill="#eab308" transform="rotate(135 50 50)" />
+        <path d="M50 42 C50 25 58 25 58 42 Z" fill="#eab308" transform="rotate(180 50 50)" />
+        <path d="M50 42 C50 25 58 25 58 42 Z" fill="#eab308" transform="rotate(225 50 50)" />
+        <path d="M50 42 C50 25 58 25 58 42 Z" fill="#eab308" transform="rotate(270 50 50)" />
+        <path d="M50 42 C50 25 58 25 58 42 Z" fill="#eab308" transform="rotate(315 50 50)" />
+        <path d="M78 72 C78 78 84 78 84 72 C84 66 81 60 81 60 C81 60 78 66 78 72 Z" fill="#facc15" />
+      </svg>
+    </div>
+
+    <!-- 5. Tandoori Seekh Skewer (Bottom Left Margin) -->
+    <div class="thela-motif motif-primary anim-drift-a bottom-48 -left-3 sm:left-8 w-16 h-16 sm:w-20 sm:h-20" style="animation-delay: -18s;">
+      <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
+        <line x1="12" y1="88" x2="88" y2="12" stroke="#78716c" stroke-width="2.5" stroke-linecap="round" />
+        <circle cx="12" cy="88" r="3.5" fill="#44403c" />
+        <rect x="22" y="58" width="16" height="16" rx="3" fill="#ea580c" stroke="#9a3412" stroke-width="1.5" transform="rotate(-45 30 66)" />
+        <rect x="36" y="44" width="6" height="14" rx="2" fill="#16a34a" transform="rotate(-45 39 51)" />
+        <rect x="44" y="36" width="16" height="16" rx="3" fill="#f97316" stroke="#c2410c" stroke-width="1.5" transform="rotate(-45 52 44)" />
+        <rect x="58" y="22" width="6" height="14" rx="2" fill="#a855f7" transform="rotate(-45 61 29)" />
+        <rect x="66" y="14" width="14" height="14" rx="3" fill="#ea580c" stroke="#9a3412" stroke-width="1.5" transform="rotate(-45 73 21)" />
+      </svg>
+    </div>
+
+    <!-- 6. Wok & Swirling Street Noodles (Bottom Right Margin) -->
+    <div class="thela-motif motif-primary anim-drift-b bottom-40 -right-4 sm:right-10 w-18 h-18 sm:w-22 sm:h-22" style="animation-delay: -11s;">
+      <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
+        <path d="M18 50 C18 78 82 78 82 50 Z" fill="#292524" />
+        <path d="M14 50 L86 50" stroke="#44403c" stroke-width="3" stroke-linecap="round" />
+        <circle cx="14" cy="50" r="4" fill="none" stroke="#78716c" stroke-width="2" />
+        <circle cx="86" cy="50" r="4" fill="none" stroke="#78716c" stroke-width="2" />
+        <path d="M28 50 Q36 32 46 48 T66 42 T76 48" fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+        <path d="M34 50 Q44 36 54 50 T72 46" fill="none" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round" />
+        <line x1="42" y1="20" x2="52" y2="48" stroke="#b45309" stroke-width="2.5" stroke-linecap="round" />
+        <line x1="50" y1="18" x2="56" y2="46" stroke="#b45309" stroke-width="2.5" stroke-linecap="round" />
+        <circle cx="38" cy="46" r="2.5" fill="#16a34a" />
+        <circle cx="62" cy="44" r="2.5" fill="#dc2626" />
+      </svg>
+    </div>
+
+    <!-- 7. Earthen Handi Pot (Mid-Bottom Center Right) -->
+    <div class="thela-motif motif-secondary anim-drift-c top-2/3 right-1/4 hidden md:block w-16 h-16 opacity-8">
+      <svg viewBox="0 0 100 100" class="w-full h-full">
+        <path d="M24 45 C20 75 80 75 76 45 C70 42 30 42 24 45 Z" fill="#9a3412" />
+        <ellipse cx="50" cy="42" rx="24" ry="6" fill="#c2410c" stroke="#7c2d12" stroke-width="2" />
+        <path d="M30 40 Q50 26 70 40 Z" fill="#ea580c" />
+        <circle cx="50" cy="27" r="3.5" fill="#7c2d12" />
+      </svg>
+    </div>
+
+    <!-- 8. Cutting Chai Kulhad (Mid-Top Center Left) -->
+    <div class="thela-motif motif-secondary anim-drift-d top-1/3 left-1/4 hidden md:block w-14 h-14 opacity-8" style="animation-delay: -8s;">
+      <svg viewBox="0 0 100 100" class="w-full h-full">
+        <path d="M32 30 L38 80 C38 84 62 84 62 80 L68 30 Z" fill="#fff7ed" stroke="#d97706" stroke-width="2" />
+        <path d="M36 45 L40 76 C40 78 60 78 60 76 L64 45 Z" fill="#b45309" />
+        <line x1="44" y1="36" x2="46" y2="76" stroke="#fef3c7" stroke-width="1.5" opacity="0.6" />
+        <line x1="56" y1="36" x2="54" y2="76" stroke="#fef3c7" stroke-width="1.5" opacity="0.6" />
+        <path d="M48 24 Q52 16 46 8" stroke="#d97706" stroke-width="1.5" fill="none" stroke-linecap="round" />
+      </svg>
+    </div>
+
+    <!-- 9. Red Onion Rings (Scattered Accent) -->
+    <div class="thela-motif motif-secondary anim-drift-a top-3/4 left-10 hidden sm:block w-12 h-12 opacity-8" style="animation-delay: -16s;">
+      <svg viewBox="0 0 100 100" class="w-full h-full">
+        <ellipse cx="45" cy="50" rx="30" ry="20" fill="none" stroke="#9333ea" stroke-width="3" transform="rotate(-20 45 50)" />
+        <ellipse cx="45" cy="50" rx="22" ry="14" fill="none" stroke="#c084fc" stroke-width="2" transform="rotate(-20 45 50)" />
+        <ellipse cx="65" cy="65" rx="18" ry="12" fill="none" stroke="#9333ea" stroke-width="2.5" transform="rotate(15 65 65)" />
+      </svg>
+    </div>
+
+    <!-- 10. Vintage Bazaar Hanging Bulb (Top Center) -->
+    <div class="thela-motif motif-primary anim-lantern top-0 right-1/3 w-10 h-28 hidden sm:block">
+      <svg viewBox="0 0 60 140" class="w-full h-full">
+        <line x1="30" y1="0" x2="30" y2="70" stroke="#292524" stroke-width="2" />
+        <rect x="25" y="70" width="10" height="12" rx="1" fill="#78350f" />
+        <path d="M22 82 C14 88 14 106 30 114 C46 106 46 88 38 82 Z" fill="#fef3c7" opacity="0.6" stroke="#f59e0b" stroke-width="1.5" />
+        <path d="M26 95 Q30 88 30 100 Q30 88 34 95" stroke="#ea580c" stroke-width="2" fill="none" />
+        <circle cx="30" cy="98" r="14" fill="#fbbf24" opacity="0.3" filter="blur(4px)" />
+      </svg>
+    </div>
+  </div>
 
   <!-- Top App Navigation & Clean Minimal Location Bar -->
   <header class="sticky top-0 z-40 bg-white/95 backdrop-blur-md border-b border-stone-200/80 shadow-xs transition-all">
