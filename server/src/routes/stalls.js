@@ -4,6 +4,19 @@ const router = express.Router();
 const db = require('../db');
 const wsManager = require('../websocket');
 
+// Middleware to resolve auth token if present
+function authenticateRequest(req, res, next) {
+  const token = req.headers.authorization || req.headers['x-auth-token'];
+  if (!token) {
+    req.auth = { authenticated: false };
+    return next();
+  }
+  req.auth = db.resolveAuth(token);
+  next();
+}
+
+router.use(authenticateRequest);
+
 // GET /api/stalls/categories (All available street food categories + custom vendor categories)
 router.get('/categories', (req, res) => {
   res.json({ categories: db.getCategories() });
@@ -17,7 +30,7 @@ router.get('/capacity', (req, res) => {
   });
 });
 
-// GET /api/stalls
+// GET /api/stalls (Returns ONLY stalls that are LIVE and compliant with mandatory gates)
 router.get('/', (req, res) => {
   const { category, search, vegOnly, lat, lng } = req.query;
   let stalls = db.getStalls(category, lat, lng);
@@ -43,6 +56,18 @@ router.get('/:id', (req, res) => {
   if (!stall) {
     return res.status(404).json({ error: 'Stall not found.' });
   }
+
+  // If stall is not LIVE, only authorized owner or admin can view it
+  if (stall.status !== 'LIVE' || !stall.isOpen) {
+    const isOwner = req.auth?.authenticated && req.auth.role === 'vendor' &&
+      (req.auth.stallId === stall.id || req.auth.ownedStallIds?.includes(stall.id));
+    const isAdmin = req.auth?.authenticated && req.auth.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(404).json({ error: 'Stall not available or undergoing verification.' });
+    }
+  }
+
   const items = db.getMenuItems(stall.id);
   res.json({ stall: db.formatStallForPublic(stall), items });
 });
@@ -52,6 +77,17 @@ router.get('/:id/trust', (req, res) => {
   const stall = db.getStallById(req.params.id);
   if (!stall) {
     return res.status(404).json({ error: 'Stall not found.' });
+  }
+
+  // If stall is not LIVE, protect from public unless owner/admin
+  if (stall.status !== 'LIVE' || !stall.isOpen) {
+    const isOwner = req.auth?.authenticated && req.auth.role === 'vendor' &&
+      (req.auth.stallId === stall.id || req.auth.ownedStallIds?.includes(stall.id));
+    const isAdmin = req.auth?.authenticated && req.auth.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(404).json({ error: 'Trust dossier unavailable for unverified stall.' });
+    }
   }
 
   const formatted = db.formatStallForPublic(stall);
@@ -68,66 +104,81 @@ router.get('/:id/trust', (req, res) => {
       ownerName: stall.owner_name,
       address: stall.address,
       location: { lat: stall.lat, lng: stall.lng },
-      lat: stall.lat,
-      lng: stall.lng
-    },
-    stallId: stall.id,
-    stallName: stall.name,
-    ownerName: stall.owner_name,
-    address: stall.address,
-    lat: stall.lat,
-    lng: stall.lng,
-    badges: formatted.trustBadges,
-    fssai: {
-      status: stall.fssai_status || (stall.fssai_number ? 'submitted' : 'not_submitted'),
-      number: rawFssai,
-      maskedNumber: maskedFssai,
-      registrationNumber: maskedFssai,
-      verifiedAt: stall.fssai_verified_at,
-      expiryDate: stall.fssai_expiry_date,
-      rejectionReason: stall.fssai_rejection_reason,
-      notes: stall.fssai_notes || ''
-    },
-    hygiene: {
-      status: stall.hygiene_status || 'not_inspected',
-      score: stall.hygiene_score,
-      verifiedAt: stall.hygiene_verified_at,
-      inspectedBy: stall.hygiene_inspected_by,
-      checklist: stall.hygiene_checklist_verified || {},
-      checklistVerified: Array.isArray(stall.hygiene_checklist_verified) ? stall.hygiene_checklist_verified : (stall.hygiene_checklist_verified ? Object.keys(stall.hygiene_checklist_verified).filter(k => stall.hygiene_checklist_verified[k]) : []),
+      locationVerified: Boolean(stall.location_verified),
+      trustBadges: formatted.trustBadges,
+      hygieneScore: stall.hygiene_score || null,
+      ordersCount: formatted.ordersCount,
+      fssai: {
+        numberMasked: maskedFssai,
+        status: stall.fssai_status || 'not_submitted',
+        verifiedAt: stall.fssai_verified_at,
+        expiryDate: stall.fssai_expiry_date
+      },
+      hygiene: {
+        status: stall.hygiene_status || 'not_inspected',
+        verifiedAt: stall.hygiene_verified_at,
+        score: stall.hygiene_score,
+        inspectedBy: stall.hygiene_inspected_by,
+        notes: stall.hygiene_notes || ''
+      },
       completedChecks: Array.isArray(stall.hygiene_checklist_verified) ? stall.hygiene_checklist_verified : (stall.hygiene_checklist_verified ? Object.keys(stall.hygiene_checklist_verified).filter(k => stall.hygiene_checklist_verified[k]) : []),
-      selfDeclaration: stall.hygiene_self_declaration || [],
-      notes: stall.hygiene_notes || ''
-    },
-    completedChecks: Array.isArray(stall.hygiene_checklist_verified) ? stall.hygiene_checklist_verified : (stall.hygiene_checklist_verified ? Object.keys(stall.hygiene_checklist_verified).filter(k => stall.hygiene_checklist_verified[k]) : []),
-    identity: {
-      status: stall.identity_status || 'pending',
-      verifiedAt: stall.identity_verified_at,
-      isVerified: Boolean(stall.is_verified)
-    },
-    auditStandard: {
-      frequency: 'Every 90 days',
-      standards: ['RO Mineral Water', 'Covered Glass Food Cart', '100% Food-Grade Dona & Paper', 'Fresh Oil Standard'],
-      reportingContact: 'grievance@thelaexpress.in'
+      identity: {
+        status: stall.identity_status || 'pending',
+        verifiedAt: stall.identity_verified_at,
+        isVerified: Boolean(stall.is_verified)
+      },
+      auditStandard: {
+        frequency: 'Every 90 days',
+        standards: ['RO Mineral Water', 'Covered Glass Food Cart', '100% Food-Grade Dona & Paper', 'Fresh Oil Standard'],
+        reportingContact: 'grievance@thelaexpress.in'
+      }
     }
   });
 });
 
-// PATCH /api/stalls/:id/toggle-open
-router.patch('/:id/toggle-open', (req, res) => {
+// PATCH /api/stalls/:id/toggle-open or /api/stalls/:id/toggle-live
+// Server-authoritative: A stall can only be toggled LIVE if it is APPROVED and satisfies all 7 activation gates
+router.patch(['/:id/toggle-open', '/:id/toggle-live'], (req, res) => {
   const stall = db.getStallById(req.params.id);
   if (!stall) {
     return res.status(404).json({ error: 'Stall not found.' });
   }
 
-  const updated = db.updateStall(stall.id, { isOpen: !stall.isOpen });
-  
-  wsManager.broadcastAll({
-    type: 'STALL_STATUS_CHANGED',
-    payload: { stallId: stall.id, isOpen: updated.isOpen }
+  // Authorization check
+  if (!req.auth || !req.auth.authenticated) {
+    return res.status(401).json({ error: 'Authentication required.' });
+  }
+  const isOwner = req.auth.role === 'vendor' &&
+    (req.auth.stallId === stall.id || req.auth.ownedStallIds?.includes(stall.id));
+  const isAdmin = req.auth.role === 'admin';
+
+  if (!isOwner && !isAdmin) {
+    return res.status(403).json({ error: 'Forbidden: You are not authorized to modify this stall status.' });
+  }
+
+  const willBeOpen = req.body.isOpen !== undefined ? Boolean(req.body.isOpen) : !stall.isOpen;
+  const targetStatus = willBeOpen ? 'LIVE' : 'INACTIVE';
+
+  const result = db.transitionStallStatus(stall.id, targetStatus, {
+    expectedVersion: req.body.expectedVersion,
+    actorRole: req.auth.role,
+    actorId: req.auth.actorId,
+    reason: willBeOpen ? 'Vendor opened kitchen for orders' : 'Vendor closed kitchen'
   });
 
-  res.json({ success: true, stall: updated });
+  if (!result.success) {
+    return res.status(result.code || 400).json({
+      error: result.error,
+      failedGates: result.failedGates || []
+    });
+  }
+
+  wsManager.broadcastAll({
+    type: 'STALL_STATUS_CHANGED',
+    payload: { stallId: stall.id, isOpen: willBeOpen, status: targetStatus }
+  });
+
+  res.json({ success: true, stall: result.stall });
 });
 
 // PATCH /api/stalls/menu/:itemId/stock

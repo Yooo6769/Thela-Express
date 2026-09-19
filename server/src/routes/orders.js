@@ -52,6 +52,12 @@ router.post('/', (req, res) => {
     return res.status(404).json({ error: 'Stall not found.' });
   }
 
+  // Continuous LIVE Revalidation Gate: Stall must be currently LIVE, open, and compliant with all mandatory activation gates
+  const acceptanceCheck = db.checkStallCanAcceptOrders(stall);
+  if (!acceptanceCheck.canAccept) {
+    return res.status(400).json({ error: `Cannot place order: ${acceptanceCheck.reason}` });
+  }
+
   // Authoritative server-side price calculation
   let pricingResult;
   try {

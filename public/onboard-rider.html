@@ -123,7 +123,7 @@
 
       <!-- Submit Button -->
       <button type="submit" id="riderSubmitBtn" class="w-full bg-emerald-600 text-white rounded-2xl py-4 font-black text-sm shadow-xl shadow-emerald-600/25 hover:bg-emerald-700 flex items-center justify-center space-x-2 transition">
-        <span data-i18n="complete_rider_onboard_btn">Complete Registration & Open Rider Console</span>
+        <span data-i18n="complete_rider_onboard_btn">Submit Partner Application</span>
         <i class="fa-solid fa-arrow-right"></i>
       </button>
 
@@ -133,22 +133,27 @@
   <!-- Success Modal -->
   <div id="riderSuccessModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
     <div class="bg-white max-w-md w-full rounded-3xl p-6 text-center space-y-4 shadow-2xl">
-      <div class="w-16 h-16 rounded-3xl bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto text-3xl font-black">
-        <i class="fa-solid fa-motorcycle"></i>
+      <div class="w-16 h-16 rounded-3xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto text-3xl font-black">
+        <i class="fa-solid fa-id-card"></i>
       </div>
 
-      <h3 class="text-xl font-black text-gray-900" data-i18n="rider_success_title">Partner Account Activated!</h3>
-      <p class="text-xs text-gray-600" data-i18n="rider_success_desc">You are now registered as a verified ThelaExpress delivery partner. Start picking up food packages from local carts.</p>
+      <h3 class="text-xl font-black text-gray-900" data-i18n="rider_success_title">Application Submitted — Review Pending</h3>
+      <p class="text-xs text-gray-600" data-i18n="rider_success_desc">Your delivery partner application has been submitted for identity and document review. Your account is not active yet and you cannot accept delivery gigs until verified by operations.</p>
 
       <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 text-left space-y-1.5 text-xs">
-        <div class="font-bold text-gray-900" id="successRiderName">Delivery Partner</div>
+        <div class="flex items-center justify-between">
+          <div class="font-bold text-gray-900" id="successRiderName">Delivery Partner</div>
+          <span class="px-2 py-0.5 rounded-full text-[10px] font-bold bg-amber-100 text-amber-800">
+            APPLICATION_SUBMITTED
+          </span>
+        </div>
         <div class="text-gray-500" id="successRiderVehicle">Registered Vehicle</div>
-        <div class="text-emerald-700 font-bold" data-i18n="rider_payout_rate">Payout: ₹40.00 / Delivery (Verified with Doorstep OTP)</div>
+        <div class="text-emerald-700 font-bold" data-i18n="rider_payout_rate">Configured Payout Rule: ₹40.00 / Delivery upon verified doorstep OTP (Active upon partner approval)</div>
       </div>
 
       <div class="space-y-2 pt-2">
-        <a id="successRiderLink" href="#" data-i18n="open_rider_console_btn" class="w-full bg-emerald-600 text-white rounded-xl py-3 font-bold text-xs block hover:bg-emerald-700 shadow-md transition">
-          Open Rider Delivery Console ➔
+        <a id="successRiderLink" href="#" class="w-full bg-emerald-600 text-white rounded-xl py-3 font-bold text-xs block hover:bg-emerald-700 shadow-md transition">
+          View Application Status & Verification Progress ➔
         </a>
         <a href="/" data-i18n="return_to_customer_app" class="w-full bg-gray-100 text-gray-800 rounded-xl py-2.5 font-bold text-xs block hover:bg-gray-200 transition">
           Return to Customer App
@@ -183,6 +188,13 @@
 
         const data = await res.json();
         if (data.success) {
+          if (data.applicant_token) {
+            localStorage.setItem('thela_applicant_token', data.applicant_token);
+            localStorage.setItem('thela_rider_token', data.applicant_token);
+          }
+          if (data.rider && data.rider.id) {
+            localStorage.setItem('thela_rider_id', data.rider.id);
+          }
           document.getElementById('successRiderName').innerText = data.rider.name;
           document.getElementById('successRiderVehicle').innerText = data.rider.vehicle;
           document.getElementById('successRiderLink').href = `/partner.html?role=rider&riderId=${data.rider.id}`;
@@ -195,7 +207,7 @@
         alert('Could not connect to server.');
       } finally {
         btn.disabled = false;
-        btn.innerHTML = `<span data-i18n="complete_rider_onboard_btn">${t('complete_rider_onboard_btn', 'Complete Registration & Open Rider Console')}</span><i class="fa-solid fa-arrow-right ml-2"></i>`;
+        btn.innerHTML = `<span data-i18n="complete_rider_onboard_btn">${typeof t === 'function' ? t('complete_rider_onboard_btn', 'Submit Partner Application') : 'Submit Partner Application'}</span><i class="fa-solid fa-arrow-right ml-2"></i>`;
       }
     }
   </script>

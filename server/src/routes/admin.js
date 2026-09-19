@@ -15,10 +15,17 @@ function authenticateUser(req, res, next) {
   next();
 }
 
+function requireAdmin(req, res, next) {
+  if (!req.auth || !req.auth.authenticated || (req.auth.role !== 'admin' && req.auth.role !== 'reviewer' && req.auth.role !== 'auditor')) {
+    return res.status(403).json({ error: 'Forbidden: Authorized administrative or compliance reviewer role required.' });
+  }
+  next();
+}
+
 router.use(authenticateUser);
 
 // GET /api/admin/overview
-router.get('/overview', (req, res) => {
+router.get('/overview', requireAdmin, (req, res) => {
   const stats = db.getPlatformStats();
   const rawStalls = db.data.stalls || [];
   const stalls = rawStalls.map(s => db.formatStallForPublic(s));
@@ -34,8 +41,160 @@ router.get('/overview', (req, res) => {
   });
 });
 
-// PATCH /api/admin/stalls/:id/fssai (Admin FSSAI Verification Lifecycle)
-router.patch('/stalls/:id/fssai', (req, res) => {
+// GET /api/admin/vendor-applications (List all vendor applications with compliance state)
+router.get('/vendor-applications', requireAdmin, (req, res) => {
+  const { status, search } = req.query;
+  let stalls = db.data.stalls || [];
+
+  if (status && status !== 'all') {
+    stalls = stalls.filter(s => s.status === status || s.verification_status === status);
+  }
+
+  if (search && search.trim()) {
+    const q = search.trim().toLowerCase();
+    stalls = stalls.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      (s.owner_name && s.owner_name.toLowerCase().includes(q)) ||
+      (s.owner_phone && s.owner_phone.includes(q))
+    );
+  }
+
+  const formatted = stalls.map(s => {
+    const gateEval = db.validateVendorLiveActivationGates(s);
+    return {
+      ...s,
+      gatesPassed: gateEval.eligible,
+      missingRequirements: gateEval.reasons,
+      menuItemCount: db.getMenuItems(s.id).length
+    };
+  });
+
+  res.json({ success: true, applications: formatted });
+});
+
+// GET /api/admin/rider-applications (List all rider partner applications)
+router.get('/rider-applications', requireAdmin, (req, res) => {
+  const { status, search } = req.query;
+  let riders = db.data.riders || [];
+
+  if (status && status !== 'all') {
+    riders = riders.filter(r => r.status === status || r.verification_status === status);
+  }
+
+  if (search && search.trim()) {
+    const q = search.trim().toLowerCase();
+    riders = riders.filter(r =>
+      r.name.toLowerCase().includes(q) ||
+      (r.phone && r.phone.includes(q)) ||
+      (r.area && r.area.toLowerCase().includes(q))
+    );
+  }
+
+  const formatted = riders.map(r => {
+    const gateEval = db.validateRiderActivationGates(r);
+    return {
+      ...r,
+      gatesPassed: gateEval.eligible,
+      missingRequirements: gateEval.reasons
+    };
+  });
+
+  res.json({ success: true, applications: formatted });
+});
+
+// POST /api/admin/stalls/:id/transition (Authoritative Stall Stage Transition)
+// Zero Admin Bypass: Even admin transitions to LIVE must satisfy all 7 mandatory activation gates
+router.post('/stalls/:id/transition', requireAdmin, (req, res) => {
+  const { nextStatus, expectedVersion, reason, extra } = req.body;
+
+  if (!nextStatus) {
+    return res.status(400).json({ error: 'Target nextStatus is required.' });
+  }
+
+  const result = db.transitionStallStatus(req.params.id, nextStatus, {
+    expectedVersion,
+    actorRole: req.auth.role,
+    actorId: req.auth.actorId,
+    reason: reason || `Admin transitioned status to ${nextStatus}`,
+    extra
+  });
+
+  if (!result.success) {
+    return res.status(result.code || 400).json({
+      error: result.error,
+      failedGates: result.failedGates || []
+    });
+  }
+
+  wsManager.broadcastAll({
+    type: 'STALL_STATUS_CHANGED',
+    payload: { stallId: req.params.id, status: nextStatus, action: 'STATUS_TRANSITION' }
+  });
+
+  res.json({
+    success: true,
+    message: `Stall status successfully transitioned to ${nextStatus}`,
+    stall: result.stall,
+    idempotent: Boolean(result.idempotent)
+  });
+});
+
+// POST /api/admin/riders/:id/transition (Authoritative Rider Stage Transition)
+router.post('/riders/:id/transition', requireAdmin, (req, res) => {
+  const { nextStatus, expectedVersion, reason, extra } = req.body;
+
+  if (!nextStatus) {
+    return res.status(400).json({ error: 'Target nextStatus is required.' });
+  }
+
+  const result = db.transitionRiderStatus(req.params.id, nextStatus, {
+    expectedVersion,
+    actorRole: req.auth.role,
+    actorId: req.auth.actorId,
+    reason: reason || `Admin transitioned rider status to ${nextStatus}`,
+    extra
+  });
+
+  if (!result.success) {
+    return res.status(result.code || 400).json({
+      error: result.error,
+      failedGates: result.failedGates || []
+    });
+  }
+
+  wsManager.broadcastAll({
+    type: 'RIDER_STATUS_CHANGED',
+    payload: { riderId: req.params.id, status: nextStatus, action: 'STATUS_TRANSITION' }
+  });
+
+  res.json({
+    success: true,
+    message: `Rider status successfully transitioned to ${nextStatus}`,
+    rider: result.rider,
+    idempotent: Boolean(result.idempotent)
+  });
+});
+
+// POST /api/admin/stalls/:id/location-verify (Authorized Location Verification)
+router.post('/stalls/:id/location-verify', requireAdmin, (req, res) => {
+  const { verified, notes } = req.body;
+  const stall = db.updateStallLocationVerification(req.params.id, {
+    verified: Boolean(verified),
+    verifiedBy: req.auth.actorId,
+    notes
+  });
+
+  if (!stall) return res.status(404).json({ error: 'Stall not found.' });
+
+  res.json({
+    success: true,
+    message: `Physical location verification updated: ${verified ? 'VERIFIED' : 'UNVERIFIED'}`,
+    stall
+  });
+});
+
+// PATCH /api/admin/stalls/:id/fssai (Admin FSSAI Regulatory Verification)
+router.patch('/stalls/:id/fssai', requireAdmin, (req, res) => {
   const { status, fssaiNumber, expiryDate, rejectionReason, notes } = req.body;
   const stall = db.updateStallFssai(req.params.id, {
     status,
@@ -56,15 +215,16 @@ router.patch('/stalls/:id/fssai', (req, res) => {
 });
 
 // POST /api/admin/stalls/:id/hygiene-inspection (Admin Physical/Virtual Cart Hygiene Inspection)
-router.post('/stalls/:id/hygiene-inspection', (req, res) => {
-  const { status, score, inspectedBy, checklist, checklistVerified, notes } = req.body;
+router.post('/stalls/:id/hygiene-inspection', requireAdmin, (req, res) => {
+  const { status, score, inspectedBy, checklist, checklistVerified, notes, verifyLocation } = req.body;
   const stall = db.recordHygieneInspection(req.params.id, {
     status: status || 'verified',
     score: score !== undefined ? parseInt(score) : 95,
-    inspectedBy: inspectedBy || 'ThelaExpress Quality Auditor',
+    inspectedBy: inspectedBy || req.auth.actorId || 'ThelaExpress Quality Auditor',
     checklist: checklist,
     checklistVerified: checklistVerified,
-    notes: notes || 'Stall inspected and approved on site.'
+    notes: notes || 'Stall inspected and certified on site.',
+    verifyLocation: verifyLocation !== undefined ? Boolean(verifyLocation) : true
   });
 
   if (!stall) return res.status(404).json({ error: 'Stall not found.' });
@@ -77,8 +237,8 @@ router.post('/stalls/:id/hygiene-inspection', (req, res) => {
   res.json({ success: true, message: `Hygiene inspection recorded (${stall.hygiene_status})`, stall });
 });
 
-// PATCH /api/admin/stalls/:id/identity (Admin KYC & Location Verification)
-router.patch('/stalls/:id/identity', (req, res) => {
+// PATCH /api/admin/stalls/:id/identity (Admin KYC & Document Verification)
+router.patch('/stalls/:id/identity', requireAdmin, (req, res) => {
   const { status, notes } = req.body;
   const stall = db.updateStallIdentity(req.params.id, { status, notes });
   if (!stall) return res.status(404).json({ error: 'Stall not found.' });
@@ -91,8 +251,8 @@ router.patch('/stalls/:id/identity', (req, res) => {
   res.json({ success: true, message: `Identity status updated to ${stall.identity_status}`, stall });
 });
 
-// PATCH /api/admin/stalls/:id/verify (Legacy alias)
-router.patch('/stalls/:id/verify', (req, res) => {
+// PATCH /api/admin/stalls/:id/verify (Legacy alias - requires admin)
+router.patch('/stalls/:id/verify', requireAdmin, (req, res) => {
   const { isApproved } = req.body;
   const stall = db.verifyStall(req.params.id, Boolean(isApproved));
   if (!stall) return res.status(404).json({ error: 'Stall not found.' });
@@ -105,8 +265,8 @@ router.patch('/stalls/:id/verify', (req, res) => {
   res.json({ success: true, stall });
 });
 
-// PATCH /api/admin/riders/:id/verify
-router.patch('/riders/:id/verify', (req, res) => {
+// PATCH /api/admin/riders/:id/verify (Legacy alias - requires admin)
+router.patch('/riders/:id/verify', requireAdmin, (req, res) => {
   const { isApproved } = req.body;
   const rider = db.verifyRider(req.params.id, Boolean(isApproved));
   if (!rider) return res.status(404).json({ error: 'Rider not found.' });
@@ -115,7 +275,7 @@ router.patch('/riders/:id/verify', (req, res) => {
 });
 
 // GET /api/admin/payouts (Settlement Ledger for Vendors & Riders backed by real records)
-router.get('/payouts', (req, res) => {
+router.get('/payouts', requireAdmin, (req, res) => {
   const vendorSettlements = db.data.vendor_settlements || [];
   const riderSettlements = db.data.rider_settlements || [];
   const payoutBatches = db.data.payout_batches || [];
@@ -250,13 +410,13 @@ router.get('/payouts', (req, res) => {
 });
 
 // GET /api/admin/reconciliation (Double-entry reconciliation monitor)
-router.get('/reconciliation', (req, res) => {
+router.get('/reconciliation', requireAdmin, (req, res) => {
   const result = db.getReconciliationReport(req.auth);
   res.json(result);
 });
 
 // PATCH /api/admin/settings
-router.patch('/settings', (req, res) => {
+router.patch('/settings', requireAdmin, (req, res) => {
   const updated = db.updateSettings(req.body);
   res.json({ success: true, settings: updated });
 });

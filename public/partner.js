@@ -4,10 +4,16 @@ const PARTNER_STATE = {
   currentRole: 'vendor', // 'vendor' or 'rider'
   stalls: [],
   vendorStallId: null,
+  vendorStallData: null,
+  vendorGates: null,
+  vendorCanAcceptOrders: false,
   vendorOrders: [],
   vendorMenu: [],
   riderOrders: [],
   riderActiveOrder: null,
+  riderData: null,
+  riderGates: null,
+  riderCanClaimGigs: false,
   currentRiderId: 'rdr_1',
   ws: null
 };
@@ -15,10 +21,10 @@ const PARTNER_STATE = {
 function getPartnerAuthHeaders(forRole = PARTNER_STATE.currentRole) {
   const headers = { 'Content-Type': 'application/json' };
   if (forRole === 'vendor') {
-    const token = localStorage.getItem('thela_vendor_token') || `thela_tok_vendor_${PARTNER_STATE.vendorStallId || 'stall_1'}`;
+    const token = localStorage.getItem('thela_vendor_token') || localStorage.getItem('thela_applicant_token') || `thela_tok_vendor_${PARTNER_STATE.vendorStallId || 'stall_1'}`;
     headers['Authorization'] = `Bearer ${token}`;
   } else {
-    const token = localStorage.getItem('thela_rider_token') || `thela_tok_rider_${PARTNER_STATE.currentRiderId || 'rdr_1'}`;
+    const token = localStorage.getItem('thela_rider_token') || localStorage.getItem('thela_applicant_token') || `thela_tok_rider_${PARTNER_STATE.currentRiderId || 'rdr_1'}`;
     headers['Authorization'] = `Bearer ${token}`;
   }
   return headers;
@@ -26,9 +32,13 @@ function getPartnerAuthHeaders(forRole = PARTNER_STATE.currentRole) {
 
 document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
-  const stallIdParam = urlParams.get('stallId');
+  const stallIdParam = urlParams.get('stallId') || localStorage.getItem('thela_vendor_stall_id');
   if (stallIdParam) {
     PARTNER_STATE.vendorStallId = stallIdParam;
+  }
+  const riderIdParam = urlParams.get('riderId') || localStorage.getItem('thela_rider_id');
+  if (riderIdParam) {
+    PARTNER_STATE.currentRiderId = riderIdParam;
   }
 
   initWebSocket();
@@ -249,6 +259,28 @@ async function loadStalls() {
     const data = await res.json();
     PARTNER_STATE.stalls = data.stalls || [];
 
+    // If a specific stallId is targeted (or stored), fetch authoritative application status
+    if (PARTNER_STATE.vendorStallId) {
+      try {
+        const stRes = await fetch(`/api/onboard/vendor/status/${PARTNER_STATE.vendorStallId}`, {
+          headers: getPartnerAuthHeaders('vendor')
+        });
+        const stData = await stRes.json();
+        if (stData.success && stData.stall) {
+          PARTNER_STATE.vendorStallData = stData.stall;
+          PARTNER_STATE.vendorGates = stData.gates || [];
+          PARTNER_STATE.vendorCanAcceptOrders = Boolean(stData.can_accept_orders);
+
+          // If this stall is not in public LIVE stalls, add it to options
+          if (!PARTNER_STATE.stalls.some(s => s.id === stData.stall.id)) {
+            PARTNER_STATE.stalls.unshift(stData.stall);
+          }
+        }
+      } catch (err) {
+        console.warn('Could not fetch vendor status:', err);
+      }
+    }
+
     const select = document.getElementById('vendorStallSelect');
     if (PARTNER_STATE.stalls.length === 0) {
       PARTNER_STATE.vendorStallId = null;
@@ -261,7 +293,9 @@ async function loadStalls() {
 
     if (select) {
       select.innerHTML = PARTNER_STATE.stalls.map(s => `
-        <option value="${s.id}" ${s.id === PARTNER_STATE.vendorStallId ? 'selected' : ''}>${s.name}</option>
+        <option value="${s.id}" ${s.id === PARTNER_STATE.vendorStallId ? 'selected' : ''}>
+          ${s.name} ${s.status === 'LIVE' ? '🟢 (LIVE)' : `⏳ (${s.status || 'SUBMITTED'})`}
+        </option>
       `).join('');
     }
 
@@ -270,13 +304,143 @@ async function loadStalls() {
       if (select) select.value = PARTNER_STATE.vendorStallId;
     }
 
+    // Refresh stall data pointer
+    const curStall = PARTNER_STATE.stalls.find(s => s.id === PARTNER_STATE.vendorStallId);
+    if (curStall && !PARTNER_STATE.vendorStallData) {
+      PARTNER_STATE.vendorStallData = curStall;
+    }
+
     subscribeToStall(PARTNER_STATE.vendorStallId);
+    renderVendorActivationStatus();
     updateVendorTrustCard();
     loadVendorOrders();
     loadVendorMenuItems();
   } catch (err) {
     console.error('Failed to fetch stalls:', err);
   }
+}
+
+function renderVendorActivationStatus() {
+  const stall = PARTNER_STATE.vendorStallData || PARTNER_STATE.stalls.find(s => s.id === PARTNER_STATE.vendorStallId);
+  const card = document.getElementById('vendorActivationStatusCard');
+  if (!card || !stall) return;
+
+  card.classList.remove('hidden');
+
+  const status = stall.status || 'APPLICATION_SUBMITTED';
+  const statusBadge = document.getElementById('vendorStatusBadge');
+  const stageDesc = document.getElementById('vendorStageDesc');
+  const posBadge = document.getElementById('vendorCanAcceptOrdersBadge');
+  const gatesList = document.getElementById('vendorActivationGatesList');
+  const iconWrap = document.getElementById('vendorStageIconWrap');
+  const toggleBtn = document.getElementById('vendorToggleOpenBtn');
+  const openLabel = document.getElementById('vendorOpenLabel');
+
+  if (status === 'LIVE') {
+    statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800';
+    statusBadge.innerText = 'LIVE • MARKETPLACE ACTIVE';
+    stageDesc.innerText = 'Your stall has passed all 7 activation gates and is live for customer ordering.';
+    iconWrap.className = 'w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg font-black';
+    iconWrap.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+    posBadge.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 inline-flex items-center space-x-1"><i class="fa-solid fa-signal"></i><span>Kitchen POS Active</span></span>';
+
+    toggleBtn.disabled = false;
+    openLabel.innerText = stall.isOpen ? 'OPEN FOR ORDERS' : 'STORE CLOSED';
+    toggleBtn.className = stall.isOpen
+      ? 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-green-100 text-green-700 flex items-center space-x-1.5 transition cursor-pointer'
+      : 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-red-100 text-red-700 flex items-center space-x-1.5 transition cursor-pointer';
+  } else {
+    toggleBtn.disabled = true;
+    openLabel.innerText = `LOCKED (${status})`;
+    toggleBtn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-gray-200 text-gray-500 flex items-center space-x-1.5 cursor-not-allowed opacity-80';
+
+    if (status === 'SUSPENDED') {
+      statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-800';
+      statusBadge.innerText = 'SUSPENDED';
+      stageDesc.innerText = `Stall operations suspended: ${stall.suspension_reason || 'Compliance violation'}. Re-review required before reinstatement.`;
+      iconWrap.className = 'w-10 h-10 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-lg font-black';
+      iconWrap.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+    } else if (status === 'APPROVED') {
+      statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800';
+      statusBadge.innerText = 'APPROVED (PENDING FINAL ACTIVATION)';
+      stageDesc.innerText = 'Application approved! Final launch checks in progress.';
+      iconWrap.className = 'w-10 h-10 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-black';
+      iconWrap.innerHTML = '<i class="fa-solid fa-stamp"></i>';
+    } else if (status === 'PHYSICAL_INSPECTION') {
+      statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800';
+      statusBadge.innerText = 'PHYSICAL INSPECTION';
+      stageDesc.innerText = 'On-site physical & hygiene audit scheduled. Field auditor will inspect cart and verify physical location.';
+      iconWrap.className = 'w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-black';
+      iconWrap.innerHTML = '<i class="fa-solid fa-clipboard-check"></i>';
+    } else if (status === 'DOCUMENT_VERIFICATION') {
+      statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-800';
+      statusBadge.innerText = 'DOCUMENT VERIFICATION';
+      stageDesc.innerText = 'FSSAI license and vendor identity documents under compliance review.';
+      iconWrap.className = 'w-10 h-10 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-lg font-black';
+      iconWrap.innerHTML = '<i class="fa-solid fa-file-shield"></i>';
+    } else {
+      statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800';
+      statusBadge.innerText = 'APPLICATION_SUBMITTED';
+      stageDesc.innerText = 'Application submitted. Stage 1 document verification pending.';
+      iconWrap.className = 'w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-black';
+      iconWrap.innerHTML = '<i class="fa-solid fa-hourglass-half"></i>';
+    }
+
+    posBadge.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 inline-flex items-center space-x-1"><i class="fa-solid fa-lock"></i><span>POS Inactive — Pending Approval</span></span>';
+  }
+
+  const gates = [
+    {
+      name: 'FSSAI License Verified',
+      passed: stall.fssai_status === 'verified',
+      detail: stall.fssai_number ? `No: ${stall.fssai_number}` : 'Awaiting FSSAI document'
+    },
+    {
+      name: 'Physical Hygiene Audit (Score ≥ 80)',
+      passed: stall.hygiene_status === 'verified' && (stall.hygiene_score || 0) >= 80,
+      detail: stall.hygiene_score ? `Score: ${stall.hygiene_score}/100` : 'Field inspection pending'
+    },
+    {
+      name: 'On-Site Location Verified',
+      passed: Boolean(stall.location_verified),
+      detail: stall.location_verified ? 'Verified by on-site auditor' : 'Untrusted applicant GPS evidence'
+    },
+    {
+      name: 'Active Menu Configured',
+      passed: PARTNER_STATE.vendorMenu.length > 0 || (stall.items && stall.items.length > 0),
+      detail: `${PARTNER_STATE.vendorMenu.length || (stall.items ? stall.items.length : 0)} items registered`
+    },
+    {
+      name: 'Direct Daily UPI Settled',
+      passed: Boolean(stall.upi_id && stall.upi_id.includes('@')),
+      detail: stall.upi_id || 'Missing UPI payout ID'
+    },
+    {
+      name: 'Service Radius Operational Safety',
+      passed: typeof stall.lat === 'number' && typeof stall.lng === 'number' && stall.lat >= 12.0 && stall.lat <= 13.5 && stall.lng >= 77.0 && stall.lng <= 78.0,
+      detail: stall.lat ? `${stall.lat.toFixed(4)}° N, ${stall.lng.toFixed(4)}° E` : 'Coordinates pending'
+    },
+    {
+      name: 'Platform Operations Approved',
+      passed: ['APPROVED', 'LIVE'].includes(status),
+      detail: ['APPROVED', 'LIVE'].includes(status) ? 'Formally authorized' : 'Pending final approval'
+    }
+  ];
+
+  gatesList.innerHTML = gates.map(g => `
+    <div class="p-2.5 rounded-xl border ${g.passed ? 'bg-emerald-50/50 border-emerald-200' : 'bg-gray-50 border-gray-200'} flex items-start space-x-2">
+      <span class="mt-0.5 text-xs ${g.passed ? 'text-emerald-600' : 'text-gray-400'}">
+        <i class="fa-solid ${g.passed ? 'fa-circle-check' : 'fa-circle-notch'}"></i>
+      </span>
+      <div class="flex-1 min-w-0">
+        <div class="font-bold text-gray-900 truncate">${g.name}</div>
+        <div class="text-[10px] text-gray-500">${g.detail}</div>
+      </div>
+      <span class="px-1.5 py-0.5 rounded text-[9px] font-black ${g.passed ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-600'}">
+        ${g.passed ? 'PASSED' : 'PENDING'}
+      </span>
+    </div>
+  `).join('');
 }
 
 function renderNoStallsState() {
@@ -638,14 +802,19 @@ async function declineVendorOrder(orderId, version) {
 }
 
 async function toggleStallOpenStatus() {
-  const stall = PARTNER_STATE.stalls.find(s => s.id === PARTNER_STATE.vendorStallId);
+  const stall = PARTNER_STATE.vendorStallData || PARTNER_STATE.stalls.find(s => s.id === PARTNER_STATE.vendorStallId);
   if (!stall) return;
+
+  if (stall.status !== 'LIVE') {
+    showToast(`Cannot open store: Stall is in ${stall.status || 'SUBMITTED'} stage. Marketplace activation requires all 7 verified gates.`);
+    return;
+  }
 
   const newStatus = !stall.isOpen;
   try {
     const res = await fetch(`/api/stalls/${stall.id}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getPartnerAuthHeaders('vendor'),
       body: JSON.stringify({ isOpen: newStatus })
     });
     const data = await res.json();
@@ -654,13 +823,15 @@ async function toggleStallOpenStatus() {
       const btn = document.getElementById('vendorToggleOpenBtn');
       const label = document.getElementById('vendorOpenLabel');
       if (newStatus) {
-        btn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-green-100 text-green-700 flex items-center space-x-1.5 transition';
+        btn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-green-100 text-green-700 flex items-center space-x-1.5 transition cursor-pointer';
         label.innerText = 'OPEN FOR ORDERS';
       } else {
-        btn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-red-100 text-red-700 flex items-center space-x-1.5 transition';
+        btn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-red-100 text-red-700 flex items-center space-x-1.5 transition cursor-pointer';
         label.innerText = 'STORE CLOSED';
       }
       showToast(`Stall is now ${newStatus ? 'OPEN' : 'CLOSED'}`);
+    } else {
+      showToast(data.error || 'Cannot change store status.');
     }
   } catch (e) {
     console.error('Failed to toggle open status:', e);
@@ -718,6 +889,24 @@ async function toggleItemStock(itemId, inStock) {
 // ==========================================================
 async function loadRiderOrders() {
   try {
+    // 1. Fetch authoritative rider application & gate status
+    if (PARTNER_STATE.currentRiderId) {
+      try {
+        const rdrRes = await fetch(`/api/onboard/rider/status/${PARTNER_STATE.currentRiderId}`, {
+          headers: getPartnerAuthHeaders('rider')
+        });
+        const rdrData = await rdrRes.json();
+        if (rdrData.success && rdrData.rider) {
+          PARTNER_STATE.riderData = rdrData.rider;
+          PARTNER_STATE.riderGates = rdrData.gates || [];
+          PARTNER_STATE.riderCanClaimGigs = Boolean(rdrData.can_claim_gigs);
+          renderRiderActivationStatus();
+        }
+      } catch (err) {
+        console.warn('Could not load rider status:', err);
+      }
+    }
+
     const res = await fetch('/api/orders');
     const data = await res.json();
     const orders = data.orders || [];
@@ -756,9 +945,111 @@ async function loadRiderOrders() {
   }
 }
 
+function renderRiderActivationStatus() {
+  const rider = PARTNER_STATE.riderData;
+  const card = document.getElementById('riderActivationStatusCard');
+  if (!card || !rider) return;
+
+  card.classList.remove('hidden');
+
+  const status = rider.status || 'APPLICATION_SUBMITTED';
+  const statusBadge = document.getElementById('riderStatusBadge');
+  const stageDesc = document.getElementById('riderStageDesc');
+  const gigsBadge = document.getElementById('riderCanClaimGigsBadge');
+  const gatesList = document.getElementById('riderActivationGatesList');
+  const iconWrap = document.getElementById('riderStageIconWrap');
+  const subtext = document.getElementById('riderStatusSubtext');
+  const headerVehicle = document.getElementById('riderHeaderVehicle');
+  const headerName = document.getElementById('riderHeaderName');
+
+  if (headerName) headerName.innerText = rider.name || 'Delivery Partner';
+
+  const isApproved = ['APPROVED', 'AVAILABLE'].includes(status);
+
+  if (isApproved) {
+    statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800';
+    statusBadge.innerText = status === 'AVAILABLE' ? 'AVAILABLE (ONLINE)' : 'APPROVED (READY)';
+    stageDesc.innerText = 'Your partner profile and vehicle documents have been verified by operations.';
+    iconWrap.className = 'w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg font-black';
+    iconWrap.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
+    gigsBadge.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 inline-flex items-center space-x-1"><i class="fa-solid fa-motorcycle"></i><span>Eligible for Gigs</span></span>';
+    if (subtext) subtext.innerHTML = '<span class="text-emerald-600 font-bold"><i class="fa-solid fa-signal mr-1"></i>Duty: ONLINE • Ready for pickups</span>';
+    if (headerVehicle) {
+      headerVehicle.innerText = `${rider.vehicle || 'Fleet'} • ${rider.vehicle_number || 'EV'}`;
+      headerVehicle.className = 'bg-emerald-100 text-emerald-700 font-bold px-2 py-0.5 rounded-full text-[10px]';
+    }
+  } else {
+    statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800';
+    statusBadge.innerText = status;
+    stageDesc.innerText = 'Application under review. Gigs cannot be claimed until identity and documents are verified.';
+    iconWrap.className = 'w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-black';
+    iconWrap.innerHTML = '<i class="fa-solid fa-hourglass-half"></i>';
+    gigsBadge.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-700 inline-flex items-center space-x-1"><i class="fa-solid fa-ban"></i><span>Gigs Inactive (Pending Approval)</span></span>';
+    if (subtext) subtext.innerHTML = '<span class="text-amber-600 font-bold"><i class="fa-solid fa-clock mr-1"></i>Duty: INACTIVE • Verification Pending</span>';
+    if (headerVehicle) {
+      headerVehicle.innerText = `${rider.vehicle || 'Fleet'} • ${status}`;
+      headerVehicle.className = 'bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded-full text-[10px]';
+    }
+  }
+
+  const gates = [
+    {
+      name: 'Identity & Phone Check',
+      passed: Boolean(rider.phone && rider.phone.length >= 10),
+      detail: rider.phone ? `+91 ${rider.phone}` : 'Pending'
+    },
+    {
+      name: 'Vehicle & Driving Details',
+      passed: Boolean(rider.vehicle),
+      detail: rider.vehicle ? `${rider.vehicle} (${rider.vehicle_number || 'Provided'})` : 'Pending'
+    },
+    {
+      name: 'Direct UPI Payout Account',
+      passed: Boolean(rider.upi_id && rider.upi_id.includes('@')),
+      detail: rider.upi_id || 'Missing UPI address'
+    },
+    {
+      name: 'Platform Operations Review',
+      passed: isApproved,
+      detail: isApproved ? 'Formally Approved' : 'Review in progress'
+    }
+  ];
+
+  gatesList.innerHTML = gates.map(g => `
+    <div class="p-2.5 rounded-xl border ${g.passed ? 'bg-emerald-50/50 border-emerald-200' : 'bg-gray-50 border-gray-200'} flex items-start space-x-2">
+      <span class="mt-0.5 text-xs ${g.passed ? 'text-emerald-600' : 'text-gray-400'}">
+        <i class="fa-solid ${g.passed ? 'fa-circle-check' : 'fa-circle-notch'}"></i>
+      </span>
+      <div class="flex-1 min-w-0">
+        <div class="font-bold text-gray-900 truncate">${g.name}</div>
+        <div class="text-[10px] text-gray-500">${g.detail}</div>
+      </div>
+      <span class="px-1.5 py-0.5 rounded text-[9px] font-black ${g.passed ? 'bg-emerald-100 text-emerald-800' : 'bg-gray-200 text-gray-600'}">
+        ${g.passed ? 'PASSED' : 'PENDING'}
+      </span>
+    </div>
+  `).join('');
+}
+
 function renderRiderActiveGig(gig) {
   const container = document.getElementById('riderActiveGig');
   if (!container) return;
+
+  if (PARTNER_STATE.riderData && !['APPROVED', 'AVAILABLE'].includes(PARTNER_STATE.riderData.status)) {
+    container.innerHTML = `
+      <div class="py-10 text-center text-gray-500 bg-amber-50/40 rounded-3xl border border-dashed border-amber-200 p-6">
+        <div class="w-14 h-14 mx-auto mb-3 bg-amber-100 text-amber-700 rounded-2xl flex items-center justify-center text-2xl">
+          <i class="fa-solid fa-id-card"></i>
+        </div>
+        <h3 class="font-black text-gray-900 text-base mb-1">Partner Account Under Review</h3>
+        <p class="text-xs text-gray-500 max-w-md mx-auto mb-2">Your application is currently in status <strong class="font-mono text-amber-700">${PARTNER_STATE.riderData.status}</strong>. You cannot accept delivery gigs until verified and approved by operations.</p>
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800">
+          <i class="fa-solid fa-shield mr-1.5"></i>Review In Progress
+        </span>
+      </div>
+    `;
+    return;
+  }
 
   if (!gig) {
     container.innerHTML = `
@@ -857,6 +1148,10 @@ function renderRiderActiveGig(gig) {
 }
 
 async function claimRiderGig(orderId) {
+  if (PARTNER_STATE.riderData && !['APPROVED', 'AVAILABLE'].includes(PARTNER_STATE.riderData.status)) {
+    showToast(`Cannot claim gig: Partner account is in status "${PARTNER_STATE.riderData.status}". Operations approval required.`);
+    return;
+  }
   try {
     const res = await fetch(`/api/orders/${orderId}/assign-rider`, {
       method: 'POST',

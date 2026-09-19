@@ -192,7 +192,7 @@ const I18N_DICTIONARY = {
     "sec5_title": "Direct UPI Daily Payouts",
     "upi_label": "Vendor UPI ID (For Direct Daily Settlements) *",
     "upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
-    "complete_vendor_btn": "Complete Onboarding & Launch Live Kitchen",
+    "complete_vendor_btn": "Submit Stall Application",
     "rider_hero_badge": "Earn ₹40 Per Street Delivery • Daily UPI Payouts",
     "rider_hero_title": "Become a Delivery Partner",
     "rider_hero_desc": "Deliver delicious street bites on your bike, scooter or cycle. Instant daily earnings with 100% tips to your pocket.",
@@ -215,9 +215,9 @@ const I18N_DICTIONARY = {
     "rider_upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
     "operating_area_label": "Operating Hub / Area in City *",
     "operating_area_placeholder": "e.g. Central Market, Civil Lines, West Zone",
-    "complete_rider_onboard_btn": "Complete Registration & Open Rider Console",
-    "rider_success_title": "Partner Account Activated!",
-    "rider_success_desc": "You are now registered as a verified ThelaExpress delivery partner. Start picking up food packages from local carts.",
+    "complete_rider_onboard_btn": "Submit Partner Application",
+    "rider_success_title": "Application Submitted — Review Pending",
+    "rider_success_desc": "Your delivery partner application has been submitted for identity and document review. Your account is not active yet and you cannot accept delivery gigs until verified by operations.",
     "rider_payout_rate": "Payout: ₹40.00 / Delivery (Verified with Doorstep OTP)",
     "open_rider_console_btn": "Open Rider Delivery Console ➔",
     "return_to_customer_app": "Return to Customer App",
@@ -521,7 +521,7 @@ const I18N_DICTIONARY = {
     "sec5_title": "सीधा रोज़ाना UPI भुगतान",
     "upi_label": "वेंडर UPI ID (रोज़ाना भुगतान हेतु) *",
     "upi_placeholder": "जैसे: yourname@upi, 9876543210@paytm",
-    "complete_vendor_btn": "रजिस्ट्रेशन पूरा करें और लाइव किचन शुरू करें",
+    "complete_vendor_btn": "स्टॉल आवेदन जमा करें",
     "rider_hero_badge": "हर डिलीवरी पर कमाएं ₹40 • रोज़ाना UPI भुगतान",
     "rider_hero_title": "डिलीवरी पार्टनर बनें",
     "rider_hero_desc": "अपनी बाइक, स्कूटर या साइकिल से ताज़ा स्ट्रीट फूड पहुंचाएं। 100% कस्टमर टिप आपकी जेब में।",
@@ -544,9 +544,9 @@ const I18N_DICTIONARY = {
     "rider_upi_placeholder": "जैसे: yourname@upi, 9876543210@paytm",
     "operating_area_label": "शहर का कार्य क्षेत्र *",
     "operating_area_placeholder": "जैसे: इंदिरानगर, कनाट प्लेस, गोमती नगर",
-    "complete_rider_onboard_btn": "पंजीकरण पूरा करें और राइडर कंसोल खोलें",
-    "rider_success_title": "पार्टनर खाता सक्रिय हो गया!",
-    "rider_success_desc": "अब आप एक सत्यापित ThelaExpress डिलीवरी पार्टनर हैं। स्थानीय ठेलों से ताज़ा भोजन ऑर्डर उठाना शुरू करें।",
+    "complete_rider_onboard_btn": "पार्टनर आवेदन जमा करें",
+    "rider_success_title": "आवेदन जमा किया गया — समीक्षा लंबित",
+    "rider_success_desc": "आपका डिलीवरी पार्टनर आवेदन पहचान और दस्तावेज़ समीक्षा के लिए जमा कर दिया गया है। आपका खाता अभी सक्रिय नहीं है और अनुमोदन मिलने तक आप डिलीवरी स्वीकार नहीं कर सकते।",
     "rider_payout_rate": "भुगतान: ₹40.00 / डिलीवरी (ग्राहक OTP सत्यापन के साथ)",
     "open_rider_console_btn": "राइडर डिलीवरी कंसोल खोलें ➔",
     "return_to_customer_app": "ग्राहक ऐप पर वापस जाएं",
@@ -850,7 +850,7 @@ const I18N_DICTIONARY = {
     "sec5_title": "Direct UPI Payouts",
     "upi_label": "Vendor UPI ID (Daily Payout ke liye) *",
     "upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
-    "complete_vendor_btn": "Onboarding Pura Karein & Kitchen Live Karein",
+    "complete_vendor_btn": "Stall Application Submit Karein",
     "rider_hero_badge": "Har Delivery pe ₹40 Kamayein • Daily Payouts",
     "rider_hero_title": "Delivery Partner Banein",
     "rider_hero_desc": "Apni bike, scooter ya cycle se street bites deliver karein. 100% tip aapki.",
@@ -873,9 +873,9 @@ const I18N_DICTIONARY = {
     "rider_upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
     "operating_area_label": "City me Operating Area *",
     "operating_area_placeholder": "e.g. Main Market, Commercial Area",
-    "complete_rider_onboard_btn": "Registration Pura Karein & Console Kholein",
-    "rider_success_title": "Partner Account Activate Ho Gaya!",
-    "rider_success_desc": "Aap verified ThelaExpress delivery partner ban chuke hain. Local carts se food packages pickup karna shuru karein.",
+    "complete_rider_onboard_btn": "Partner Application Submit Karein",
+    "rider_success_title": "Application Submit Ho Gaya — Review Pending",
+    "rider_success_desc": "Aapka delivery partner application identity aur document review ke liye submit ho chuka hai. Account abhi active nahi hai aur approval milne tak aap gigs claim nahi kar sakte.",
     "rider_payout_rate": "Payout: ₹40.00 / Delivery (Doorstep OTP ke saath)",
     "open_rider_console_btn": "Rider Delivery Console Kholein ➔",
     "return_to_customer_app": "Customer App Par Wapas Jaayein",
@@ -1179,7 +1179,7 @@ const I18N_DICTIONARY = {
     "sec5_title": "थेट दररोज UPI बँक खात्यात",
     "upi_label": "वेंडर UPI ID (थेट पेमेंटसाठी) *",
     "upi_placeholder": "उदा. yourname@upi",
-    "complete_vendor_btn": "नोंदणी पूर्ण करा आणि किचन लाइव्ह करा",
+    "complete_vendor_btn": "स्टॉल अर्ज सादर करा",
     "rider_hero_badge": "प्रत्येक डिलिव्हरीवर ₹४० कमवा • दररोज UPI पेमेंट",
     "rider_hero_title": "डिलिव्हरी पार्टनर बना",
     "rider_hero_desc": "आपल्या बाईक, स्कूटर किंवा सायकलवरून स्ट्रीट फूड पोहोचवा. १००% टिप आपलीच.",
@@ -1202,9 +1202,9 @@ const I18N_DICTIONARY = {
     "rider_upi_placeholder": "उदा. yourname@upi",
     "operating_area_label": "शहरातील कार्यक्षेत्र *",
     "operating_area_placeholder": "उदा. डेक्कन, कोथरूड, वाशी",
-    "complete_rider_onboard_btn": "नोंदणी पूर्ण करा आणि रायडर कन्सोल उघडा",
-    "rider_success_title": "पार्टनर खाते सक्रिय झाले!",
-    "rider_success_desc": "तुम्ही आता अधिकृत ThelaExpress डिलिव्हरी पार्टनर आहात. स्थानिक गाड्यांवरून ऑर्डर घेणे सुरू करा.",
+    "complete_rider_onboard_btn": "भागीदार अर्ज सादर करा",
+    "rider_success_title": "अर्ज सादर केला — पुनरावलोकन प्रलंबित",
+    "rider_success_desc": "तुमचा डिलिव्हरी पार्टनर अर्ज ओळख आणि कागदपत्र पुनरावलोकनासाठी सादर केला गेला आहे. तुमचे खाते अद्याप सक्रिय नाही.",
     "rider_payout_rate": "पेआउट: ₹४०.०० / डिलिव्हरी (ग्राहक OTP पडताळणीसह)",
     "open_rider_console_btn": "रायडर डिलिव्हरी कन्सोल उघडा ➔",
     "return_to_customer_app": "ग्राहक ॲपवर परत जा",
@@ -1508,7 +1508,7 @@ const I18N_DICTIONARY = {
     "sec5_title": "सीधा रोज़ाना UPI भुगतान",
     "upi_label": "वेंडर UPI ID (रोज़ाना भुगतान हेतु) *",
     "upi_placeholder": "जैसे: yourname@upi, 9876543210@paytm",
-    "complete_vendor_btn": "रजिस्ट्रेशन पूरा करें और लाइव किचन शुरू करें",
+    "complete_vendor_btn": "સ્ટોલ અરજી સબમિટ કરો",
     "rider_hero_badge": "हर डिलीवरी पर कमाएं ₹40 • रोज़ाना UPI भुगतान",
     "rider_hero_title": "डिलीवरी पार्टनर बनें",
     "rider_hero_desc": "अपनी बाइक, स्कूटर या साइकिल से ताज़ा स्ट्रीट फूड पहुंचाएं। 100% कस्टमर टिप आपकी जेब में।",
@@ -1531,9 +1531,9 @@ const I18N_DICTIONARY = {
     "rider_upi_placeholder": "जैसे: yourname@upi, 9876543210@paytm",
     "operating_area_label": "शहर का कार्य क्षेत्र *",
     "operating_area_placeholder": "जैसे: इंदिरानगर, कनाट प्लेस, गोमती नगर",
-    "complete_rider_onboard_btn": "નોંધણી પૂર્ણ કરો અને કન્સોલ ખોલો",
-    "rider_success_title": "पार्टनर खाता सक्रिय हो गया!",
-    "rider_success_desc": "अब आप एक सत्यापित ThelaExpress डिलीवरी पार्टनर हैं। स्थानीय ठेलों से ताज़ा भोजन ऑर्डर उठाना शुरू करें।",
+    "complete_rider_onboard_btn": "ભાગીદાર અરજી સબમિટ કરો",
+    "rider_success_title": "અરજી સબમિટ થઈ — સમીક્ષા બાકી",
+    "rider_success_desc": "તમારી ડિલિવરી પાર્ટનર અરજી દસ્તાવેજ ચકાસણી માટે સબમિટ કરવામાં આવી છે. મંજૂરી ન મળે ત્યાં સુધી તમારું એકાઉન્ટ સક્રિય નથી.",
     "rider_payout_rate": "भुगतान: ₹40.00 / डिलीवरी (ग्राहक OTP सत्यापन के साथ)",
     "open_rider_console_btn": "राइडर डिलीवरी कंसोल खोलें ➔",
     "return_to_customer_app": "ग्राहक ऐप पर वापस जाएं",
@@ -1837,7 +1837,7 @@ const I18N_DICTIONARY = {
     "sec5_title": "Direct UPI Daily Payouts",
     "upi_label": "Vendor UPI ID (For Direct Daily Settlements) *",
     "upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
-    "complete_vendor_btn": "Complete Onboarding & Launch Live Kitchen",
+    "complete_vendor_btn": "ஸ்டால் விண்ணப்பத்தை சமர்ப்பிக்கவும்",
     "rider_hero_badge": "Earn ₹40 Per Street Delivery • Daily UPI Payouts",
     "rider_hero_title": "Become a Delivery Partner",
     "rider_hero_desc": "Deliver delicious street bites on your bike, scooter or cycle. Instant daily earnings with 100% tips to your pocket.",
@@ -1860,9 +1860,9 @@ const I18N_DICTIONARY = {
     "rider_upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
     "operating_area_label": "Operating Hub / Area in City *",
     "operating_area_placeholder": "e.g. Central Market, Civil Lines, West Zone",
-    "complete_rider_onboard_btn": "பதிவை முடித்து கன்சோலைத் திறக்கவும்",
-    "rider_success_title": "Partner Account Activated!",
-    "rider_success_desc": "You are now registered as a verified ThelaExpress delivery partner. Start picking up food packages from local carts.",
+    "complete_rider_onboard_btn": "பங்குதாரர் விண்ணப்பத்தை சமர்ப்பிக்கவும்",
+    "rider_success_title": "விண்ணப்பம் சமர்ப்பிக்கப்பட்டது — மதிப்பாய்வு நிலுவையில் உள்ளது",
+    "rider_success_desc": "உங்கள் டெலிவரி பார்ட்னர் விண்ணப்பம் சரிபார்ப்புக்கு சமர்ப்பிக்கப்பட்டுள்ளது. ஒப்புதல் கிடைக்கும் வரை உங்கள் கணக்கு செயலில் இல்லை.",
     "rider_payout_rate": "Payout: ₹40.00 / Delivery (Verified with Doorstep OTP)",
     "open_rider_console_btn": "Open Rider Delivery Console ➔",
     "return_to_customer_app": "Return to Customer App",
@@ -2166,7 +2166,7 @@ const I18N_DICTIONARY = {
     "sec5_title": "Direct UPI Daily Payouts",
     "upi_label": "Vendor UPI ID (For Direct Daily Settlements) *",
     "upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
-    "complete_vendor_btn": "Complete Onboarding & Launch Live Kitchen",
+    "complete_vendor_btn": "స్టాల్ దరఖాస్తును సమర్పించండి",
     "rider_hero_badge": "Earn ₹40 Per Street Delivery • Daily UPI Payouts",
     "rider_hero_title": "Become a Delivery Partner",
     "rider_hero_desc": "Deliver delicious street bites on your bike, scooter or cycle. Instant daily earnings with 100% tips to your pocket.",
@@ -2189,9 +2189,9 @@ const I18N_DICTIONARY = {
     "rider_upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
     "operating_area_label": "Operating Hub / Area in City *",
     "operating_area_placeholder": "e.g. Central Market, Civil Lines, West Zone",
-    "complete_rider_onboard_btn": "నమోదు పూర్తి చేసి కన్సోల్ తెరవండి",
-    "rider_success_title": "Partner Account Activated!",
-    "rider_success_desc": "You are now registered as a verified ThelaExpress delivery partner. Start picking up food packages from local carts.",
+    "complete_rider_onboard_btn": "భాగస్వామి దరఖాస్తును సమర్పించండి",
+    "rider_success_title": "దరఖాస్తు సమర్పించబడింది — సమీక్ష పెండింగ్‌లో ఉంది",
+    "rider_success_desc": "మీ డెలివరీ భాగస్వామి దరఖాస్తు ధృవీకరణ కోసం సమర్పించబడింది. ఆమోదం పొందే వరకు మీ ఖాతా యాక్టివ్‌గా ఉండదు.",
     "rider_payout_rate": "Payout: ₹40.00 / Delivery (Verified with Doorstep OTP)",
     "open_rider_console_btn": "Open Rider Delivery Console ➔",
     "return_to_customer_app": "Return to Customer App",
@@ -2495,7 +2495,7 @@ const I18N_DICTIONARY = {
     "sec5_title": "Direct UPI Daily Payouts",
     "upi_label": "Vendor UPI ID (For Direct Daily Settlements) *",
     "upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
-    "complete_vendor_btn": "Complete Onboarding & Launch Live Kitchen",
+    "complete_vendor_btn": "ಸ್ಟಾಲ್ ಅರ್ಜಿಯನ್ನು ಸಲ್ಲಿಸಿ",
     "rider_hero_badge": "Earn ₹40 Per Street Delivery • Daily UPI Payouts",
     "rider_hero_title": "Become a Delivery Partner",
     "rider_hero_desc": "Deliver delicious street bites on your bike, scooter or cycle. Instant daily earnings with 100% tips to your pocket.",
@@ -2518,9 +2518,9 @@ const I18N_DICTIONARY = {
     "rider_upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
     "operating_area_label": "Operating Hub / Area in City *",
     "operating_area_placeholder": "e.g. Central Market, Civil Lines, West Zone",
-    "complete_rider_onboard_btn": "ನೋಂದಣಿ ಪೂರ್ಣಗೊಳಿಸಿ ಮತ್ತು ಕನ್ಸೋಲ್ ತೆರೆಯಿರಿ",
-    "rider_success_title": "Partner Account Activated!",
-    "rider_success_desc": "You are now registered as a verified ThelaExpress delivery partner. Start picking up food packages from local carts.",
+    "complete_rider_onboard_btn": "ಪಾಲುದಾರ ಅರ್ಜಿಯನ್ನು ಸಲ್ಲಿಸಿ",
+    "rider_success_title": "ಅರ್ಜಿ ಸಲ್ಲಿಸಲಾಗಿದೆ — ಪರಿಶೀಲನೆ ಬಾಕಿ ಇದೆ",
+    "rider_success_desc": "ನಿಮ್ಮ ವಿತರಣಾ ಪಾಲುದಾರ ಅರ್ಜಿಯನ್ನು ಪರಿಶೀಲನೆಗಾಗಿ ಸಲ್ಲಿಸಲಾಗಿದೆ. ಅನುಮೋದನೆ ದೊರೆಯುವವರೆಗೆ ನಿಮ್ಮ ಖಾತೆಯು ಸಕ್ರಿಯವಾಗಿರುವುದಿಲ್ಲ.",
     "rider_payout_rate": "Payout: ₹40.00 / Delivery (Verified with Doorstep OTP)",
     "open_rider_console_btn": "Open Rider Delivery Console ➔",
     "return_to_customer_app": "Return to Customer App",
@@ -2824,7 +2824,7 @@ const I18N_DICTIONARY = {
     "sec5_title": "Direct UPI Daily Payouts",
     "upi_label": "Vendor UPI ID (For Direct Daily Settlements) *",
     "upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
-    "complete_vendor_btn": "Complete Onboarding & Launch Live Kitchen",
+    "complete_vendor_btn": "স্টল আবেদন জমা দিন",
     "rider_hero_badge": "Earn ₹40 Per Street Delivery • Daily UPI Payouts",
     "rider_hero_title": "Become a Delivery Partner",
     "rider_hero_desc": "Deliver delicious street bites on your bike, scooter or cycle. Instant daily earnings with 100% tips to your pocket.",
@@ -2847,9 +2847,9 @@ const I18N_DICTIONARY = {
     "rider_upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
     "operating_area_label": "Operating Hub / Area in City *",
     "operating_area_placeholder": "e.g. Central Market, Civil Lines, West Zone",
-    "complete_rider_onboard_btn": "রেজিস্ট্রেশন সম্পন্ন করে কনসোল খুলুন",
-    "rider_success_title": "Partner Account Activated!",
-    "rider_success_desc": "You are now registered as a verified ThelaExpress delivery partner. Start picking up food packages from local carts.",
+    "complete_rider_onboard_btn": "পার্টনার আবেদন জমা দিন",
+    "rider_success_title": "আবেদন জমা হয়েছে — পর্যালোচনা মুলতুবি",
+    "rider_success_desc": "আপনার ডেলিভারি পার্টনার আবেদন পর্যালোচনার জন্য জমা দেওয়া হয়েছে। অনুমোদন না পাওয়া পর্যন্ত অ্যাকাউন্ট সক্রিয় নয়।",
     "rider_payout_rate": "Payout: ₹40.00 / Delivery (Verified with Doorstep OTP)",
     "open_rider_console_btn": "Open Rider Delivery Console ➔",
     "return_to_customer_app": "Return to Customer App",
@@ -3153,7 +3153,7 @@ const I18N_DICTIONARY = {
     "sec5_title": "Direct UPI Daily Payouts",
     "upi_label": "Vendor UPI ID (For Direct Daily Settlements) *",
     "upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
-    "complete_vendor_btn": "Complete Onboarding & Launch Live Kitchen",
+    "complete_vendor_btn": "സ്റ്റാൾ അപേക്ഷ സമർപ്പിക്കുക",
     "rider_hero_badge": "Earn ₹40 Per Street Delivery • Daily UPI Payouts",
     "rider_hero_title": "Become a Delivery Partner",
     "rider_hero_desc": "Deliver delicious street bites on your bike, scooter or cycle. Instant daily earnings with 100% tips to your pocket.",
@@ -3176,9 +3176,9 @@ const I18N_DICTIONARY = {
     "rider_upi_placeholder": "e.g. yourname@upi, 9876543210@paytm",
     "operating_area_label": "Operating Hub / Area in City *",
     "operating_area_placeholder": "e.g. Central Market, Civil Lines, West Zone",
-    "complete_rider_onboard_btn": "രജിസ്ട്രേഷൻ പൂർത്തിയാക്കി കൺസോൾ തുറക്കുക",
-    "rider_success_title": "Partner Account Activated!",
-    "rider_success_desc": "You are now registered as a verified ThelaExpress delivery partner. Start picking up food packages from local carts.",
+    "complete_rider_onboard_btn": "പാർട്ണർ അപേക്ഷ സമർപ്പിക്കുക",
+    "rider_success_title": "അപേക്ഷ സമർപ്പിച്ചു — അവലോകനം ബാക്കി",
+    "rider_success_desc": "നിങ്ങളുടെ ഡെലിവറി പാർട്ണർ അപേക്ഷ പരിശോധനയ്ക്കായി സമർപ്പിച്ചു. അംഗീകാരം ലഭിക്കുന്നത് വരെ അക്കൗണ്ട് സജീവമല്ല.",
     "rider_payout_rate": "Payout: ₹40.00 / Delivery (Verified with Doorstep OTP)",
     "open_rider_console_btn": "Open Rider Delivery Console ➔",
     "return_to_customer_app": "Return to Customer App",
@@ -3482,7 +3482,7 @@ const I18N_DICTIONARY = {
     "sec5_title": "सीधा रोज़ाना UPI भुगतान",
     "upi_label": "वेंडर UPI ID (रोज़ाना भुगतान हेतु) *",
     "upi_placeholder": "जैसे: yourname@upi, 9876543210@paytm",
-    "complete_vendor_btn": "रजिस्ट्रेशन पूरा करें और लाइव किचन शुरू करें",
+    "complete_vendor_btn": "ਸਟਾਲ ਅਰਜ਼ੀ ਜਮ੍ਹਾਂ ਕਰੋ",
     "rider_hero_badge": "हर डिलीवरी पर कमाएं ₹40 • रोज़ाना UPI भुगतान",
     "rider_hero_title": "डिलीवरी पार्टनर बनें",
     "rider_hero_desc": "अपनी बाइक, स्कूटर या साइकिल से ताज़ा स्ट्रीट फूड पहुंचाएं। 100% कस्टमर टिप आपकी जेब में।",
@@ -3505,9 +3505,9 @@ const I18N_DICTIONARY = {
     "rider_upi_placeholder": "जैसे: yourname@upi, 9876543210@paytm",
     "operating_area_label": "शहर का कार्य क्षेत्र *",
     "operating_area_placeholder": "जैसे: इंदिरानगर, कनाट प्लेस, गोमती नगर",
-    "complete_rider_onboard_btn": "ਰਜਿਸਟ੍ਰੇਸ਼ਨ ਪੂਰੀ ਕਰੋ ਅਤੇ ਕੰਸੋਲ ਖੋਲ੍ਹੋ",
-    "rider_success_title": "पार्टनर खाता सक्रिय हो गया!",
-    "rider_success_desc": "अब आप एक सत्यापित ThelaExpress डिलीवरी पार्टनर हैं। स्थानीय ठेलों से ताज़ा भोजन ऑर्डर उठाना शुरू करें।",
+    "complete_rider_onboard_btn": "ਸਾਂਝੇਦਾਰ ਅਰਜ਼ੀ ਜਮ੍ਹਾਂ ਕਰੋ",
+    "rider_success_title": "ਅਰਜ਼ੀ ਜਮ੍ਹਾਂ ਹੋ ਗਈ — ਸਮੀਖਿਆ ਬਾਕੀ",
+    "rider_success_desc": "ਤੁਹਾਡੀ ਡਿਲਿਵਰੀ ਪਾਰਟਨਰ ਅਰਜ਼ੀ ਸਮੀਖਿਆ ਲਈ ਜਮ੍ਹਾਂ ਕਰ ਦਿੱਤੀ ਗਈ ਹੈ। ਮਨਜ਼ੂਰੀ ਮਿਲਣ ਤੱਕ ਖਾਤਾ ਸਰਗਰਮ ਨਹੀਂ ਹੈ।",
     "rider_payout_rate": "भुगतान: ₹40.00 / डिलीवरी (ग्राहक OTP सत्यापन के साथ)",
     "open_rider_console_btn": "राइडर डिलीवरी कंसोल खोलें ➔",
     "return_to_customer_app": "ग्राहक ऐप पर वापस जाएं",
@@ -4027,130 +4027,4 @@ const I18N_DICTIONARY = {
   }
 };
 
-// Global language state
-let CURRENT_LANG = localStorage.getItem('thela_lang') || 'en';
 
-function t(key, fallback = '') {
-  const dict = I18N_DICTIONARY[CURRENT_LANG] || I18N_DICTIONARY['en'];
-  if (dict && dict[key] !== undefined) {
-    return dict[key];
-  }
-  const enDict = I18N_DICTIONARY['en'];
-  if (enDict && enDict[key] !== undefined) {
-    return enDict[key];
-  }
-  return fallback || key;
-}
-
-function setLanguage(langCode) {
-  if (!I18N_LANGUAGES.some(l => l.code === langCode)) {
-    langCode = 'en';
-  }
-  CURRENT_LANG = langCode;
-  localStorage.setItem('thela_lang', langCode);
-
-  document.documentElement.lang = langCode;
-  applyTranslations();
-  updateLanguageDropdownUI();
-
-  window.dispatchEvent(new CustomEvent('thela_language_changed', { detail: { lang: langCode } }));
-}
-
-function applyTranslations() {
-  document.querySelectorAll('[data-i18n]').forEach(el => {
-    const key = el.getAttribute('data-i18n');
-    const text = t(key);
-    if (text) el.innerText = text;
-  });
-
-  document.querySelectorAll('[data-i18n-html]').forEach(el => {
-    const key = el.getAttribute('data-i18n-html');
-    const html = t(key);
-    if (html) el.innerHTML = html;
-  });
-
-  document.querySelectorAll('[data-i18n-placeholder]').forEach(el => {
-    const key = el.getAttribute('data-i18n-placeholder');
-    const placeholder = t(key);
-    if (placeholder) el.placeholder = placeholder;
-  });
-
-  document.querySelectorAll('[data-i18n-title]').forEach(el => {
-    const key = el.getAttribute('data-i18n-title');
-    const title = t(key);
-    if (title) el.title = title;
-  });
-}
-
-function updateLanguageDropdownUI() {
-  const currentObj = I18N_LANGUAGES.find(l => l.code === CURRENT_LANG) || I18N_LANGUAGES[0];
-
-  const shortLabels = document.querySelectorAll('.current-lang-short');
-  shortLabels.forEach(lbl => {
-    lbl.innerText = currentObj.native.length > 8 ? currentObj.code.toUpperCase() : currentObj.native;
-  });
-
-  document.querySelectorAll('.lang-option-btn').forEach(btn => {
-    const code = btn.getAttribute('data-lang-code');
-    if (code === CURRENT_LANG) {
-      btn.className = 'lang-option-btn w-full text-left px-3 py-2 text-xs font-black bg-orange-50 text-orange-700 flex items-center justify-between rounded-xl';
-    } else {
-      btn.className = 'lang-option-btn w-full text-left px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-100 flex items-center justify-between rounded-xl';
-    }
-  });
-}
-
-function toggleLanguageMenu(event) {
-  if (event) event.stopPropagation();
-  const menus = document.querySelectorAll('.thela-lang-menu');
-  menus.forEach(menu => {
-    menu.classList.toggle('hidden');
-  });
-}
-
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.thela-lang-container')) {
-    document.querySelectorAll('.thela-lang-menu').forEach(menu => menu.classList.add('hidden'));
-  }
-});
-
-function renderLanguageDropdownWidget() {
-  const currentObj = I18N_LANGUAGES.find(l => l.code === CURRENT_LANG) || I18N_LANGUAGES[0];
-  
-  return `
-    <div class="thela-lang-container relative inline-block text-left">
-      <button type="button" onclick="toggleLanguageMenu(event)" 
-        class="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-800 hover:border-gray-300 hover:bg-gray-50 transition shadow-sm whitespace-nowrap"
-        title="Choose Language / भाषा चुनें">
-        <i class="fa-solid fa-language text-orange-600 text-sm"></i>
-        <span class="current-lang-short font-extrabold text-[11px] sm:text-xs">${currentObj.native}</span>
-        <i class="fa-solid fa-chevron-down text-[8px] text-gray-400"></i>
-      </button>
-
-      <div class="thela-lang-menu hidden absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 z-50 max-h-72 overflow-y-auto">
-        <div class="px-2 py-1 text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100 mb-1">
-          Select Language / भाषा चुनें
-        </div>
-        <div class="space-y-1">
-          ${I18N_LANGUAGES.map(lang => `
-            <button type="button" data-lang-code="${lang.code}" onclick="setLanguage('${lang.code}'); toggleLanguageMenu();" 
-              class="lang-option-btn w-full text-left px-3 py-2 text-xs rounded-xl flex items-center justify-between transition ${lang.code === CURRENT_LANG ? 'font-black bg-orange-50 text-orange-700' : 'font-semibold text-gray-700 hover:bg-gray-100'}">
-              <span class="flex items-center space-x-2">
-                <span>${lang.flag}</span>
-                <span>${lang.native}</span>
-              </span>
-              <span class="text-[10px] text-gray-400 font-normal">${lang.name}</span>
-            </button>
-          `).join('')}
-        </div>
-      </div>
-    </div>
-  `;
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.langSelectorMount').forEach(el => {
-    el.innerHTML = renderLanguageDropdownWidget();
-  });
-  setLanguage(CURRENT_LANG);
-});

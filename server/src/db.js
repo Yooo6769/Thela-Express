@@ -166,7 +166,13 @@ class Database {
       }
     }
     
-    // Ensure all financial collections exist
+    // Ensure all collections exist
+    this.data.stalls = this.data.stalls || [];
+    this.data.riders = this.data.riders || [];
+    this.data.orders = this.data.orders || [];
+    this.data.menu_items = this.data.menu_items || [];
+    this.data.users = this.data.users || [];
+    this.data.discounts = this.data.discounts || [];
     this.data.payments = this.data.payments || [];
     this.data.refunds = this.data.refunds || [];
     this.data.ledger_entries = this.data.ledger_entries || [];
@@ -329,7 +335,7 @@ class Database {
         details: `Hygiene Score: ${stall.hygiene_score || 95}/100`
       });
     }
-    if (stall.identity_status === 'verified' || stall.is_verified) {
+    if (stall.identity_status === 'verified' && stall.verification_status === 'APPROVED') {
       badges.push({
         id: 'thela_verified',
         type: 'identity',
@@ -367,11 +373,13 @@ class Database {
   getDeliveryCapacity() {
     const riders = this.data.riders || [];
     const orders = this.data.orders || [];
-    const activeRiders = riders.filter(r => r.is_online).length;
+    const activeRiders = riders.filter(r => r.verification_status === 'APPROVED' && r.status === 'AVAILABLE' && r.is_online).length;
     const activeOrders = orders.filter(o => !['DELIVERED', 'CANCELLED'].includes(o.status)).length;
     return {
       activeRiders,
+      active_riders: activeRiders,
       activeOrders,
+      active_orders: activeOrders,
       capacityAvailable: activeRiders > 0
     };
   }
@@ -384,12 +392,12 @@ class Database {
     // Genuine completed orders count from real platform orders
     const ordersCount = (this.data.orders || []).filter(o => o.stall_id === stall.id && o.status === 'DELIVERED').length;
     
-    // Real verified checks list
+    // Real verified checks list (location verification requires physical inspection/audit, not raw browser GPS)
     const completedChecks = [];
     if (stall.fssai_status === 'verified') completedChecks.push({ key: 'fssai', label: 'FSSAI License Verified', icon: 'fa-shield-check', color: 'emerald' });
     if (stall.hygiene_status === 'verified' || stall.hygiene_status === 'certified') completedChecks.push({ key: 'hygiene', label: 'Thela Hygiene Audited', icon: 'fa-sparkles', color: 'amber' });
-    if (stall.identity_status === 'verified' || stall.is_verified) completedChecks.push({ key: 'identity', label: 'Vendor KYC & ID Verified', icon: 'fa-circle-check', color: 'blue' });
-    if (stall.lat && stall.lng && stall.address) completedChecks.push({ key: 'location', label: 'Geo-Location Verified', icon: 'fa-location-dot', color: 'teal' });
+    if (stall.identity_status === 'verified' && stall.verification_status === 'APPROVED') completedChecks.push({ key: 'identity', label: 'Vendor KYC & ID Verified', icon: 'fa-circle-check', color: 'blue' });
+    if (stall.location_verified) completedChecks.push({ key: 'location', label: 'Physical Location Verified', icon: 'fa-location-dot', color: 'teal' });
 
     return {
       ...stall,
@@ -403,9 +411,14 @@ class Database {
     };
   }
 
-  // Stalls & Categories
+  // Stalls & Categories - Exposes ONLY stalls that are LIVE and satisfy all mandatory activation gates
   getStalls(category, customerLat = null, customerLng = null) {
-    let list = this.data.stalls || [];
+    let list = (this.data.stalls || []).filter(s => {
+      if (s.status !== 'LIVE' || !s.isOpen) return false;
+      const gates = this.validateVendorLiveActivationGates(s);
+      return gates.eligible;
+    });
+
     if (category && category !== 'all') {
       const target = category.toLowerCase().replace(/[^a-z0-9]/g, '');
       list = list.filter(s => {
@@ -775,6 +788,18 @@ class Database {
     const rider = this.getRiderById(riderId);
     if (!rider) return { success: false, code: 404, error: 'Rider not found.' };
 
+    const isApprovedRider = rider.verification_status ? (rider.verification_status === 'APPROVED') : true;
+    const isAvailableRider = rider.status ? (rider.status === 'AVAILABLE') : true;
+    const isOnlineRider = rider.is_online !== undefined ? rider.is_online : true;
+
+    if (!isApprovedRider || !isAvailableRider || !isOnlineRider) {
+      return {
+        success: false,
+        code: 403,
+        error: `Rider is not approved and available for gig dispatch (status: ${rider.status}, verification: ${rider.verification_status}).`
+      };
+    }
+
     if (this.ledger) {
       this.ledger.assignRiderToSettlement(order.id, rider.id);
     }
@@ -1096,43 +1121,307 @@ class Database {
     return false;
   }
 
-  // Real Vendor Self-Onboarding
+  // =========================================================================
+  // VENDOR ACTIVATION & VERIFICATION PIPELINE (SERVER-AUTHORITATIVE)
+  // =========================================================================
+
+  validateVendorLiveActivationGates(stall) {
+    if (!stall) return { eligible: false, reasons: ['Stall does not exist'] };
+
+    const reasons = [];
+
+    // Gate 1: Verification status must be APPROVED
+    if (stall.verification_status !== 'APPROVED') {
+      reasons.push(`Stall verification status must be APPROVED (currently: ${stall.verification_status || 'NONE'})`);
+    }
+
+    // Gate 2: Required owner/contact data
+    if (!stall.owner_name || !stall.owner_name.trim()) {
+      reasons.push('Owner name is required');
+    }
+    const cleanPhone = (stall.owner_phone || '').replace(/\D/g, '').slice(-10);
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      reasons.push('Valid 10-digit owner mobile phone number is required');
+    }
+
+    // Gate 3: Physical Address & Verified Location (Browser GPS alone is untrusted evidence)
+    if (!stall.address || !stall.address.trim()) {
+      reasons.push('Physical street address or cart landmark is required');
+    }
+    const lat = parseFloat(stall.lat);
+    const lng = parseFloat(stall.lng);
+    if (isNaN(lat) || isNaN(lng) || (lat === 0 && lng === 0)) {
+      reasons.push('Valid geographical coordinates (lat/lng) are required');
+    }
+    if (!stall.location_verified) {
+      reasons.push('Physical cart location must be verified by authorized auditor/reviewer before activation');
+    }
+
+    // Gate 4: At least one active server-stored menu item
+    const menuItems = this.getMenuItems(stall.id);
+    const validItems = (menuItems || []).filter(m => m.inStock && Number(m.price) > 0 && m.name && m.name.trim());
+    if (validItems.length === 0) {
+      reasons.push('At least one active, in-stock menu item with a valid price is required');
+    }
+
+    // Gate 5: Valid payout destination (UPI ID format)
+    const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+    if (!stall.upi_id || !upiRegex.test(stall.upi_id.trim())) {
+      reasons.push('Valid payout UPI ID format is required (e.g. name@bank)');
+    }
+
+    // Gate 6: FSSAI Regulatory Verification
+    if (stall.fssai_status !== 'verified') {
+      reasons.push(`Regulatory FSSAI license must be verified (currently: ${stall.fssai_status || 'not_submitted'})`);
+    }
+    if (stall.fssai_expiry_date) {
+      const exp = new Date(stall.fssai_expiry_date);
+      if (!isNaN(exp.getTime()) && exp.getTime() < Date.now()) {
+        reasons.push('Regulatory FSSAI license has expired');
+      }
+    }
+
+    // Gate 7: Platform Hygiene Physical Inspection
+    if (stall.hygiene_status !== 'verified') {
+      reasons.push(`Physical cart hygiene inspection must be verified by quality auditor (currently: ${stall.hygiene_status || 'not_inspected'})`);
+    }
+    if (stall.hygiene_score !== null && stall.hygiene_score !== undefined && stall.hygiene_score < 80) {
+      reasons.push(`Hygiene inspection score must be at least 80/100 (current score: ${stall.hygiene_score})`);
+    }
+
+    return {
+      eligible: reasons.length === 0,
+      reasons
+    };
+  }
+
+  checkStallCanAcceptOrders(stall) {
+    if (!stall) return { canAccept: false, reason: 'Stall not found.' };
+    if (stall.status !== 'LIVE') {
+      return { canAccept: false, reason: `Stall is currently undergoing verification and is not LIVE (current status: ${stall.status}).` };
+    }
+    if (!stall.isOpen) {
+      return { canAccept: false, reason: 'Stall is currently marked closed by the vendor.' };
+    }
+    // Revalidate mandatory activation gates
+    const gateCheck = this.validateVendorLiveActivationGates(stall);
+    if (!gateCheck.eligible) {
+      // Automatically close stall if mandatory gates failed post-activation
+      stall.isOpen = false;
+      this.save();
+      return { canAccept: false, reason: `Stall failed mandatory compliance gates: ${gateCheck.reasons.join('; ')}` };
+    }
+    return { canAccept: true };
+  }
+
+  transitionStallStatus(stallId, nextStatus, { expectedVersion, actorRole, actorId, reason, extra } = {}) {
+    const stall = this.getStallById(stallId);
+    if (!stall) {
+      return { success: false, code: 404, error: 'Stall not found.' };
+    }
+
+    // 1. Concurrency Check (OCC)
+    if (expectedVersion !== undefined && expectedVersion !== null) {
+      if (stall.version !== expectedVersion) {
+        return {
+          success: false,
+          code: 409,
+          error: `Stale version conflict. Expected version ${expectedVersion}, but current version is ${stall.version}. Please refresh and retry.`
+        };
+      }
+    }
+
+    // 2. Idempotency Check
+    if (stall.status === nextStatus) {
+      if (nextStatus === 'LIVE' && stall.isOpen) {
+        return { success: true, stall: this.formatStallForPublic(stall), idempotent: true };
+      }
+      if (nextStatus !== 'LIVE') {
+        return { success: true, stall: this.formatStallForPublic(stall), idempotent: true };
+      }
+    }
+
+    const currentStatus = stall.status || 'APPLICATION_SUBMITTED';
+
+    // 3. MANDATORY GATES CHECK FOR 'LIVE' TRANSITION (NO ADMIN BYPASS!)
+    if (nextStatus === 'LIVE') {
+      const gateResult = this.validateVendorLiveActivationGates(stall);
+      if (!gateResult.eligible) {
+        return {
+          success: false,
+          code: 400,
+          error: `Cannot activate stall to LIVE. Mandatory compliance gates failed: ${gateResult.reasons.join('; ')}`,
+          failedGates: gateResult.reasons
+        };
+      }
+    }
+
+    // 4. Legal Transition Matrix
+    const legalTransitions = {
+      'APPLICATION_SUBMITTED': ['DOCUMENT_VERIFICATION', 'CORRECTION_REQUIRED', 'REJECTED'],
+      'DOCUMENT_VERIFICATION': ['PHYSICAL_INSPECTION', 'CORRECTION_REQUIRED', 'REJECTED'],
+      'PHYSICAL_INSPECTION': ['APPROVED', 'CORRECTION_REQUIRED', 'REJECTED'],
+      'APPROVED': ['LIVE', 'INACTIVE', 'SUSPENDED'],
+      'LIVE': ['INACTIVE', 'SUSPENDED'],
+      'INACTIVE': ['LIVE', 'SUSPENDED'],
+      'CORRECTION_REQUIRED': ['APPLICATION_SUBMITTED'],
+      'SUSPENDED': ['DOCUMENT_VERIFICATION', 'PHYSICAL_INSPECTION', 'REJECTED'],
+      'REJECTED': [] // Terminal
+    };
+
+    const allowed = legalTransitions[currentStatus] || [];
+    if (!allowed.includes(nextStatus)) {
+      if (currentStatus === 'SUSPENDED' && (nextStatus === 'APPROVED' || nextStatus === 'LIVE')) {
+        return {
+          success: false,
+          code: 400,
+          error: `Illegal stall status transition from SUSPENDED to ${nextStatus}. SUSPENDED stall must transition to DOCUMENT_VERIFICATION or PHYSICAL_INSPECTION for re-review before reinstatement.`
+        };
+      }
+      return {
+        success: false,
+        code: 400,
+        error: `Illegal stall status transition from ${currentStatus} to ${nextStatus}. Allowed: ${allowed.join(', ') || 'None (Terminal state)'}`
+      };
+    }
+
+    // 5. Role Authorization Check
+    const adminTransitions = ['DOCUMENT_VERIFICATION', 'PHYSICAL_INSPECTION', 'APPROVED', 'REJECTED', 'CORRECTION_REQUIRED', 'SUSPENDED'];
+    if (adminTransitions.includes(nextStatus)) {
+      if (actorRole !== 'admin' && actorRole !== 'reviewer' && actorRole !== 'auditor') {
+        return {
+          success: false,
+          code: 403,
+          error: `Unauthorized: Only admin or compliance reviewers can perform transition to ${nextStatus}.`
+        };
+      }
+    }
+
+    // Correction re-submission by vendor
+    if (nextStatus === 'APPLICATION_SUBMITTED') {
+      if (actorRole !== 'vendor' && actorRole !== 'admin') {
+        return {
+          success: false,
+          code: 403,
+          error: 'Unauthorized: Only the vendor applicant or admin can resubmit after corrections.'
+        };
+      }
+    }
+
+    // LIVE & INACTIVE transitions
+    if (nextStatus === 'LIVE' || nextStatus === 'INACTIVE') {
+      if (actorRole !== 'vendor' && actorRole !== 'admin') {
+        return {
+          success: false,
+          code: 403,
+          error: 'Unauthorized: Only the authenticated stall owner or admin can toggle LIVE/INACTIVE.'
+        };
+      }
+    }
+
+    // 6. Apply State Changes
+    const fromStatus = stall.status;
+    stall.status = nextStatus;
+    stall.version = (stall.version || 1) + 1;
+    stall.updated_at = new Date().toISOString();
+
+    if (nextStatus === 'APPROVED') {
+      stall.verification_status = 'APPROVED';
+      stall.is_verified = true;
+    } else if (nextStatus === 'REJECTED') {
+      stall.verification_status = 'REJECTED';
+      stall.is_verified = false;
+      stall.isOpen = false;
+    } else if (nextStatus === 'SUSPENDED') {
+      stall.verification_status = 'SUSPENDED';
+      stall.isOpen = false;
+    } else if (nextStatus === 'CORRECTION_REQUIRED') {
+      stall.verification_status = 'CORRECTION_REQUIRED';
+      stall.isOpen = false;
+    } else if (nextStatus === 'LIVE') {
+      stall.isOpen = true;
+      stall.is_active = true;
+    } else if (nextStatus === 'INACTIVE') {
+      stall.isOpen = false;
+    }
+
+    // 7. Append-Only Audit History
+    if (!Array.isArray(stall.timeline)) {
+      stall.timeline = [];
+    }
+    const auditEntry = Object.freeze({
+      id: `aud_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      from_status: fromStatus,
+      to_status: nextStatus,
+      role: actorRole || 'system',
+      actor_id: actorId || 'system',
+      timestamp: stall.updated_at,
+      reason: reason || `Stall transitioned to ${nextStatus}`,
+      metadata: Object.assign({}, extra || {}, { version: stall.version })
+    });
+    stall.timeline.push(auditEntry);
+
+    this.save();
+    return { success: true, stall: this.formatStallForPublic(stall) };
+  }
+
   registerStall(stallData, menuItems = []) {
-    const stallId = `stall_${Date.now()}`;
+    const stallId = `stall_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
     const hasFssai = Boolean(stallData.fssai_number && stallData.fssai_number.trim());
+    const initialTimestamp = new Date().toISOString();
+    
+    // Store captured coordinates with explicit accuracy & source tracking (untrusted evidence until verified)
+    const lat = parseFloat(stallData.lat);
+    const lng = parseFloat(stallData.lng);
+    const validCoords = !isNaN(lat) && !isNaN(lng) && !(lat === 0 && lng === 0);
+
     const newStall = {
       id: stallId,
-      owner_name: stallData.owner_name || 'Vendor Partner',
-      owner_phone: stallData.owner_phone,
-      name: stallData.name,
+      owner_name: (stallData.owner_name || 'Vendor Applicant').trim(),
+      owner_phone: (stallData.owner_phone || '').replace(/\D/g, '').slice(-10),
+      name: (stallData.name || 'Street Stall').trim(),
       category: stallData.category || 'chaat',
-      rating: 5.0,
-      reviewsCount: '1 (New)',
+      rating: null,
+      ratingCount: 0,
+      reviewsCount: null,
       deliveryTime: null,
       distance: null,
       prepTime: (typeof stallData.prepTime === 'number' && stallData.prepTime > 0) ? stallData.prepTime : (parseInt(stallData.prepTime, 10) > 0 ? parseInt(stallData.prepTime, 10) : null),
-      lat: parseFloat(stallData.lat) || 0,
-      lng: parseFloat(stallData.lng) || 0,
+      lat: validCoords ? lat : null,
+      lng: validCoords ? lng : null,
+      location_source: stallData.location_source || 'browser_applicant',
+      location_accuracy: (typeof stallData.location_accuracy === 'number') ? stallData.location_accuracy : ((typeof stallData.location_accuracy_meters === 'number') ? stallData.location_accuracy_meters : (parseFloat(stallData.location_accuracy || stallData.location_accuracy_meters) || null)),
+      location_accuracy_meters: (typeof stallData.location_accuracy_meters === 'number') ? stallData.location_accuracy_meters : ((typeof stallData.location_accuracy === 'number') ? stallData.location_accuracy : (parseFloat(stallData.location_accuracy_meters || stallData.location_accuracy) || null)),
+      location_captured_at: validCoords ? initialTimestamp : null,
+      location_verified: false, // Must be verified by authorized auditor/reviewer before activation
+      location_verified_by: null,
+      location_verified_at: null,
+      landmark: stallData.landmark || '',
       specialty: stallData.specialty || 'Authentic Street Special',
-      heritageStory: stallData.heritageStory || 'Newly onboarded authentic street vendor on ThelaExpress.',
+      heritageStory: stallData.heritageStory || '',
       priceForTwo: stallData.priceForTwo ? String(stallData.priceForTwo) : null,
       discount: stallData.discount || null,
       imageUrl: stallData.imageUrl || 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=800&q=80',
-      upi_id: stallData.upi_id || 'vendor@upi',
-      address: stallData.address || 'Street Address',
-      isOpen: true,
+      upi_id: (stallData.upi_id || '').trim(),
+      address: (stallData.address || 'Street Address').trim(),
+      
+      // Server-authoritative activation status (Starts strictly in APPLICATION_SUBMITTED, NEVER LIVE)
+      status: 'APPLICATION_SUBMITTED',
+      verification_status: 'APPLICATION_SUBMITTED',
+      isOpen: false,
+      is_active: false,
       isVeg: stallData.isVeg !== undefined ? Boolean(stallData.isVeg) : true,
 
-      // 1. FSSAI Registration Lifecycle
+      // 1. FSSAI Regulatory State
       fssai_number: hasFssai ? stallData.fssai_number.trim() : '',
-      fssai_status: hasFssai ? 'submitted' : 'not_submitted', // 'not_submitted' | 'submitted' | 'under_verification' | 'verified' | 'rejected' | 'expired'
+      fssai_status: hasFssai ? 'submitted' : 'not_submitted',
       fssai_verified_at: null,
       fssai_expiry_date: null,
       fssai_rejection_reason: null,
       fssai_notes: '',
 
-      // 2. Thela Express Hygiene Inspection Lifecycle (independent of FSSAI)
-      hygiene_status: 'not_inspected', // 'not_inspected' | 'scheduled' | 'verified' | 'failed' | 'revoked'
+      // 2. Thela Express Physical Hygiene Audit
+      hygiene_status: 'not_inspected',
       hygiene_score: null,
       hygiene_verified_at: null,
       hygiene_inspected_by: null,
@@ -1144,15 +1433,29 @@ class Database {
         cleanOilPractice: false,
         cartSanitization: false
       },
-      // Self-declared requirements submitted by vendor (informational, not certified badge)
-      hygiene_self_declaration: stallData.hygieneHighlights || ['RO Clean Water', 'Covered Food Cart', 'Food-Grade Dona'],
+      hygiene_self_declaration: stallData.hygieneHighlights || [],
 
-      // 3. Vendor Identity & Location KYC
-      identity_status: 'pending', // 'pending' | 'verified' | 'rejected'
+      // 3. Identity & Documents
+      identity_status: 'pending',
       identity_verified_at: null,
       is_verified: false,
 
-      created_at: new Date().toISOString()
+      version: 1,
+      timeline: [
+        Object.freeze({
+          id: `aud_${Date.now()}_init`,
+          from_status: null,
+          to_status: 'APPLICATION_SUBMITTED',
+          role: 'vendor',
+          actor_id: stallData.owner_phone || 'applicant',
+          timestamp: initialTimestamp,
+          reason: 'Initial vendor stall application submitted for verification',
+          metadata: { initial_item_count: (menuItems || []).length },
+          version: 1
+        })
+      ],
+      created_at: initialTimestamp,
+      updated_at: initialTimestamp
     };
 
     this.data.stalls.push(newStall);
@@ -1160,15 +1463,16 @@ class Database {
     // Save menu items
     if (Array.isArray(menuItems) && menuItems.length > 0) {
       menuItems.forEach((m, idx) => {
+        if (!m.name || !m.name.trim()) return;
         const itemObj = {
           id: `item_${Date.now()}_${idx + 1}`,
           stall_id: stallId,
-          name: m.name,
+          name: m.name.trim(),
           description: m.description || 'Prepared fresh on order with authentic spices.',
           price: parseFloat(m.price) || 50,
           originalPrice: m.originalPrice ? parseFloat(m.originalPrice) : (parseFloat(m.price) + 15),
-          rating: 5.0,
-          reviews: 1,
+          rating: null,
+          reviews: 0,
           isVeg: m.isVeg !== undefined ? Boolean(m.isVeg) : true,
           bestseller: Boolean(m.bestseller),
           inStock: true,
@@ -1183,24 +1487,207 @@ class Database {
     return { stall: newStall, items: this.getMenuItems(stallId) };
   }
 
-  // Real Delivery Agent Self-Onboarding
+  // =========================================================================
+  // RIDER ACTIVATION & VERIFICATION PIPELINE (SERVER-AUTHORITATIVE)
+  // =========================================================================
+
+  validateRiderActivationGates(rider) {
+    if (!rider) return { eligible: false, reasons: ['Rider does not exist'] };
+    const reasons = [];
+
+    if (rider.verification_status !== 'APPROVED') {
+      reasons.push(`Rider partner must be approved by admin (verification status must be APPROVED, currently: ${rider.verification_status || 'NONE'})`);
+    }
+    if (!rider.name || !rider.name.trim()) {
+      reasons.push('Rider name is required');
+    }
+    const cleanPhone = (rider.phone || '').replace(/\D/g, '').slice(-10);
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      reasons.push('Valid 10-digit mobile phone number is required');
+    }
+    if (!rider.vehicle || !rider.vehicle.trim()) {
+      reasons.push('Vehicle type is required');
+    }
+    const upiRegex = /^[a-zA-Z0-9.\-_]{2,256}@[a-zA-Z]{2,64}$/;
+    if (!rider.upi_id || !upiRegex.test(rider.upi_id.trim())) {
+      reasons.push('Valid payout UPI ID format is required');
+    }
+
+    return {
+      eligible: reasons.length === 0,
+      reasons
+    };
+  }
+
+  transitionRiderStatus(riderId, nextStatus, { expectedVersion, actorRole, actorId, reason, extra } = {}) {
+    const rider = this.getRiderById(riderId);
+    if (!rider) {
+      return { success: false, code: 404, error: 'Rider not found.' };
+    }
+
+    // 1. Concurrency Check (OCC)
+    if (expectedVersion !== undefined && expectedVersion !== null) {
+      if (rider.version !== expectedVersion) {
+        return {
+          success: false,
+          code: 409,
+          error: `Stale version conflict. Expected version ${expectedVersion}, but current version is ${rider.version}. Please refresh and retry.`
+        };
+      }
+    }
+
+    // 2. Idempotency Check
+    if (rider.status === nextStatus) {
+      return { success: true, rider, idempotent: true };
+    }
+
+    const currentStatus = rider.status || 'APPLICATION_SUBMITTED';
+
+    // 3. GATES CHECK FOR 'AVAILABLE' TRANSITION
+    if (nextStatus === 'AVAILABLE') {
+      const gateResult = this.validateRiderActivationGates(rider);
+      if (!gateResult.eligible) {
+        return {
+          success: false,
+          code: 400,
+          error: `Cannot set rider AVAILABLE for dispatch. Mandatory gates failed: ${gateResult.reasons.join('; ')}`,
+          failedGates: gateResult.reasons
+        };
+      }
+    }
+
+    // 4. Legal Transition Matrix
+    const legalTransitions = {
+      'APPLICATION_SUBMITTED': ['IDENTITY_REVIEW', 'CORRECTION_REQUIRED', 'REJECTED'],
+      'IDENTITY_REVIEW': ['APPROVED', 'CORRECTION_REQUIRED', 'REJECTED'],
+      'APPROVED': ['AVAILABLE', 'OFFLINE', 'SUSPENDED'],
+      'AVAILABLE': ['OFFLINE', 'SUSPENDED'],
+      'OFFLINE': ['AVAILABLE', 'SUSPENDED'],
+      'CORRECTION_REQUIRED': ['APPLICATION_SUBMITTED'],
+      'SUSPENDED': ['IDENTITY_REVIEW', 'REJECTED'],
+      'REJECTED': [] // Terminal
+    };
+
+    const allowed = legalTransitions[currentStatus] || [];
+    if (!allowed.includes(nextStatus)) {
+      if (currentStatus === 'SUSPENDED' && (nextStatus === 'APPROVED' || nextStatus === 'AVAILABLE')) {
+        return {
+          success: false,
+          code: 400,
+          error: `Illegal rider status transition from SUSPENDED to ${nextStatus}. SUSPENDED rider must transition to IDENTITY_REVIEW for re-review before reinstatement.`
+        };
+      }
+      return {
+        success: false,
+        code: 400,
+        error: `Illegal rider status transition from ${currentStatus} to ${nextStatus}. Allowed: ${allowed.join(', ') || 'None (Terminal state)'}`
+      };
+    }
+
+    // 5. Role Authorization Check
+    const adminTransitions = ['IDENTITY_REVIEW', 'APPROVED', 'REJECTED', 'CORRECTION_REQUIRED', 'SUSPENDED'];
+    if (adminTransitions.includes(nextStatus)) {
+      if (actorRole !== 'admin' && actorRole !== 'reviewer') {
+        return {
+          success: false,
+          code: 403,
+          error: `Unauthorized: Only admin or reviewers can transition rider to ${nextStatus}.`
+        };
+      }
+    }
+
+    if (nextStatus === 'AVAILABLE' || nextStatus === 'OFFLINE') {
+      if (actorRole !== 'rider' && actorRole !== 'admin') {
+        return {
+          success: false,
+          code: 403,
+          error: 'Unauthorized: Only the delivery partner or admin can toggle availability.'
+        };
+      }
+    }
+
+    // 6. Apply State Changes
+    const fromStatus = rider.status;
+    rider.status = nextStatus;
+    rider.version = (rider.version || 1) + 1;
+    rider.updated_at = new Date().toISOString();
+
+    if (nextStatus === 'APPROVED') {
+      rider.verification_status = 'APPROVED';
+      rider.is_verified = true;
+    } else if (nextStatus === 'REJECTED') {
+      rider.verification_status = 'REJECTED';
+      rider.is_verified = false;
+      rider.is_online = false;
+    } else if (nextStatus === 'SUSPENDED') {
+      rider.verification_status = 'SUSPENDED';
+      rider.is_online = false;
+    } else if (nextStatus === 'AVAILABLE') {
+      rider.is_online = true;
+    } else if (nextStatus === 'OFFLINE') {
+      rider.is_online = false;
+    }
+
+    // 7. Append-Only Audit History
+    if (!Array.isArray(rider.timeline)) {
+      rider.timeline = [];
+    }
+    const auditEntry = Object.freeze({
+      id: `aud_${Date.now()}_${Math.random().toString(36).substr(2, 5)}`,
+      from_status: fromStatus,
+      to_status: nextStatus,
+      role: actorRole || 'system',
+      actor_id: actorId || 'system',
+      timestamp: rider.updated_at,
+      reason: reason || `Rider transitioned to ${nextStatus}`,
+      metadata: Object.assign({}, extra || {}, { version: rider.version })
+    });
+    rider.timeline.push(auditEntry);
+
+    this.save();
+    return { success: true, rider };
+  }
+
   registerRider(riderData) {
-    const riderId = `rdr_${Date.now()}`;
+    const riderId = `rdr_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`;
+    const initialTimestamp = new Date().toISOString();
+    const cleanPhone = (riderData.phone || '').replace(/\D/g, '').slice(-10);
+
     const newRider = {
       id: riderId,
-      name: riderData.name,
-      phone: riderData.phone,
+      name: (riderData.name || 'Rider Applicant').trim(),
+      phone: cleanPhone,
       vehicle: riderData.vehicle || 'EV Scooter',
-      vehicle_number: riderData.vehicle_number || '',
-      upi_id: riderData.upi_id || '',
+      vehicle_number: (riderData.vehicle_number || '').trim(),
+      upi_id: (riderData.upi_id || '').trim(),
       area: riderData.area || 'Operating Zone',
-      rating: 5.0,
+      rating: null,
       deliveriesCount: 0,
-      is_online: true,
-      is_verified: true,
+      
+      // Server-authoritative activation status (Starts strictly in APPLICATION_SUBMITTED, NEVER AVAILABLE)
+      status: 'APPLICATION_SUBMITTED',
+      verification_status: 'APPLICATION_SUBMITTED',
+      is_online: false,
+      is_verified: false,
+      
       lat: riderData.lat || 0,
       lng: riderData.lng || 0,
-      created_at: new Date().toISOString()
+      version: 1,
+      timeline: [
+        Object.freeze({
+          id: `aud_${Date.now()}_init`,
+          from_status: null,
+          to_status: 'APPLICATION_SUBMITTED',
+          role: 'rider',
+          actor_id: cleanPhone || 'applicant',
+          timestamp: initialTimestamp,
+          reason: 'Initial delivery partner application submitted for identity review',
+          metadata: { vehicle: riderData.vehicle, area: riderData.area },
+          version: 1
+        })
+      ],
+      created_at: initialTimestamp,
+      updated_at: initialTimestamp
     };
 
     this.data.riders.push(newRider);
@@ -1231,36 +1718,95 @@ class Database {
     if (expiryDate !== undefined) stall.fssai_expiry_date = expiryDate;
     if (notes !== undefined) stall.fssai_notes = notes;
 
+    // Continuous Revalidation: If FSSAI is invalidated on a LIVE stall, close it immediately
+    if (stall.status === 'LIVE' && status && status !== 'verified') {
+      stall.isOpen = false;
+      stall.status = 'SUSPENDED';
+      stall.verification_status = 'SUSPENDED';
+      if (!Array.isArray(stall.timeline)) stall.timeline = [];
+      stall.timeline.push(Object.freeze({
+        id: `aud_${Date.now()}_fssai_revoked`,
+        from_status: 'LIVE',
+        to_status: 'SUSPENDED',
+        role: 'system',
+        actor_id: 'compliance_monitor',
+        timestamp: new Date().toISOString(),
+        reason: `FSSAI regulatory status changed to ${status}`,
+        version: (stall.version || 1) + 1
+      }));
+    }
+    stall.version = (stall.version || 1) + 1;
+    stall.updated_at = new Date().toISOString();
+
     this.save();
     return this.formatStallForPublic(stall);
   }
 
-  recordHygieneInspection(stallId, { status, score, inspectedBy, checklist, checklistVerified, notes } = {}) {
+  recordHygieneInspection(stallId, { status, score, inspectedBy, checklist, checklistVerified, notes, verifyLocation = true } = {}) {
     const stall = this.getStallById(stallId);
     if (!stall) return null;
 
-    if (status) {
-      stall.hygiene_status = status;
-      if (status === 'verified' || status === 'certified') {
-        stall.hygiene_verified_at = new Date().toISOString();
-      } else if (['failed', 'revoked'].includes(status)) {
-        stall.hygiene_verified_at = null;
-      }
-    }
-    if (score !== undefined) stall.hygiene_score = parseInt(score) || 90;
-    if (inspectedBy !== undefined) stall.hygiene_inspected_by = inspectedBy;
-    const finalChecklist = checklistVerified !== undefined ? checklistVerified : checklist;
-    if (finalChecklist !== undefined) {
-      if (Array.isArray(finalChecklist)) {
-        stall.hygiene_checklist_verified = finalChecklist;
+    const auditTimestamp = new Date().toISOString();
+    const parsedScore = score !== undefined ? parseInt(score, 10) : 90;
+    const isPassing = (status === 'verified' || status === 'certified') && parsedScore >= 80;
+
+    stall.hygiene_status = isPassing ? 'verified' : (status === 'failed' ? 'failed' : 'not_inspected');
+    stall.hygiene_score = parsedScore;
+    stall.hygiene_verified_at = isPassing ? auditTimestamp : null;
+    stall.hygiene_inspected_by = inspectedBy || 'ThelaExpress Quality Auditor';
+    
+    if (checklistVerified !== undefined || checklist !== undefined) {
+      const finalCheck = checklistVerified !== undefined ? checklistVerified : checklist;
+      if (Array.isArray(finalCheck)) {
+        stall.hygiene_checklist_verified = finalCheck;
       } else {
-        stall.hygiene_checklist_verified = Object.assign(stall.hygiene_checklist_verified || {}, finalChecklist);
+        stall.hygiene_checklist_verified = Object.assign(stall.hygiene_checklist_verified || {}, finalCheck);
       }
     }
     if (notes !== undefined) stall.hygiene_notes = notes;
 
+    // Physical inspection confirms on-site cart presence & location
+    if (isPassing && verifyLocation) {
+      stall.location_verified = true;
+      stall.location_verified_by = stall.hygiene_inspected_by;
+      stall.location_verified_at = auditTimestamp;
+    }
+
+    // Continuous Revalidation: If hygiene is revoked or failed on a LIVE stall, suspend it
+    if (stall.status === 'LIVE' && !isPassing) {
+      stall.isOpen = false;
+      stall.status = 'SUSPENDED';
+      stall.verification_status = 'SUSPENDED';
+      if (!Array.isArray(stall.timeline)) stall.timeline = [];
+      stall.timeline.push(Object.freeze({
+        id: `aud_${Date.now()}_hygiene_failed`,
+        from_status: 'LIVE',
+        to_status: 'SUSPENDED',
+        role: 'system',
+        actor_id: 'compliance_monitor',
+        timestamp: auditTimestamp,
+        reason: `Hygiene inspection failed (score: ${parsedScore})`,
+        version: (stall.version || 1) + 1
+      }));
+    }
+
+    stall.version = (stall.version || 1) + 1;
+    stall.updated_at = auditTimestamp;
     this.save();
     return this.formatStallForPublic(stall);
+  }
+
+  updateStallLocationVerification(stallId, { verified, verifiedBy, notes } = {}) {
+    const stall = this.getStallById(stallId);
+    if (!stall) return null;
+
+    stall.location_verified = Boolean(verified);
+    stall.location_verified_by = verifiedBy || 'Reviewer';
+    stall.location_verified_at = verified ? new Date().toISOString() : null;
+    if (notes) stall.location_notes = notes;
+    stall.version = (stall.version || 1) + 1;
+    stall.updated_at = new Date().toISOString();
+    this.save();
   }
 
   updateStallIdentity(stallId, { status, notes } = {}) {
@@ -1273,6 +1819,8 @@ class Database {
       stall.identity_verified_at = (status === 'verified') ? new Date().toISOString() : null;
     }
     if (notes !== undefined) stall.identity_notes = notes;
+    stall.version = (stall.version || 1) + 1;
+    stall.updated_at = new Date().toISOString();
 
     this.save();
     return this.formatStallForPublic(stall);
@@ -1286,6 +1834,10 @@ class Database {
     const rider = this.getRiderById(riderId);
     if (rider) {
       rider.is_verified = isApproved;
+      rider.verification_status = isApproved ? 'APPROVED' : 'REJECTED';
+      if (!isApproved) rider.is_online = false;
+      rider.version = (rider.version || 1) + 1;
+      rider.updated_at = new Date().toISOString();
       this.save();
     }
     return rider;

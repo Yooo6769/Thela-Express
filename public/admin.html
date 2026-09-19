@@ -504,6 +504,13 @@
             <div class="p-3 bg-gray-900 rounded-xl text-gray-300 font-mono text-[11px]" id="auditIdentityAddress">
               Registered Address
             </div>
+            <div class="pt-2">
+              <button type="button" onclick="certifyLocationVerification()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl py-2 font-bold text-xs transition flex items-center justify-center space-x-1">
+                <i class="fa-solid fa-map-location-dot mr-1"></i>
+                <span>Certify On-Site Physical Location (Auditor Sign-off)</span>
+              </button>
+              <p class="text-[10px] text-gray-400 mt-1">Browser GPS is untrusted evidence. Mandatory physical on-site inspection sign-off required for marketplace activation.</p>
+            </div>
           </div>
 
           <div class="space-y-1">
@@ -528,11 +535,89 @@
       </div>
     </div>
 
+    <!-- Status Transition Modal for Stall or Rider -->
+    <div id="adminTransitionModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-gray-800 border border-gray-700 max-w-lg w-full rounded-3xl p-6 space-y-4 shadow-2xl">
+        <div class="flex items-center justify-between border-b border-gray-700 pb-3">
+          <div>
+            <h3 class="text-base font-extrabold text-white" id="transModalTitle">Advance Stage / Status</h3>
+            <p class="text-xs text-gray-400" id="transModalSubtitle">Authoritative Stage Transition</p>
+          </div>
+          <button onclick="closeTransitionModal()" class="text-gray-400 hover:text-white text-lg">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="space-y-3 text-xs">
+          <div>
+            <label class="font-bold text-gray-300 block mb-1">Current Lifecycle Status</label>
+            <div class="p-2.5 bg-gray-900 border border-gray-700 rounded-xl text-white font-mono font-bold" id="transCurrentStatus">-</div>
+          </div>
+
+          <div>
+            <label class="font-bold text-gray-300 block mb-1">Target Next Status *</label>
+            <select id="transNextStatus" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 font-bold text-white focus:ring-2 focus:ring-orange-500">
+              <!-- Populated based on entity type and current status -->
+            </select>
+          </div>
+
+          <div id="transFailedGatesNotice" class="hidden p-3 bg-red-900/40 border border-red-700 rounded-xl text-red-200 space-y-1">
+            <div class="font-bold flex items-center space-x-1.5">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span>Activation Gates Failed (Zero Admin Bypass)</span>
+            </div>
+            <ul id="transFailedGatesList" class="list-disc pl-4 text-[11px] space-y-0.5"></ul>
+          </div>
+
+          <div>
+            <label class="font-bold text-gray-300 block mb-1">Reason / Audit Notes *</label>
+            <textarea id="transReason" rows="2" placeholder="e.g. Completed physical inspection and certified all 5 hygiene criteria."
+              class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-gray-200 focus:ring-2 focus:ring-orange-500"></textarea>
+          </div>
+        </div>
+
+        <div class="flex items-center space-x-2 pt-2">
+          <button type="button" onclick="closeTransitionModal()" class="flex-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-xl py-2.5 font-bold text-xs transition">
+            Cancel
+          </button>
+          <button type="button" id="transSubmitBtn" onclick="submitStatusTransition()" class="flex-1 bg-orange-600 hover:bg-orange-500 text-white rounded-xl py-2.5 font-bold text-xs transition">
+            Confirm Status Transition
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline / Audit Modal -->
+    <div id="adminTimelineModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-gray-800 border border-gray-700 max-w-lg w-full rounded-3xl p-6 space-y-4 shadow-2xl max-h-[85vh] flex flex-col">
+        <div class="flex items-center justify-between border-b border-gray-700 pb-3">
+          <div>
+            <h3 class="text-base font-extrabold text-white" id="timelineModalTitle">Audit Trail History</h3>
+            <p class="text-xs text-gray-400" id="timelineModalSubtitle">Immutable status history</p>
+          </div>
+          <button onclick="closeTimelineModal()" class="text-gray-400 hover:text-white text-lg">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div id="timelineModalList" class="flex-1 overflow-y-auto space-y-3 text-xs pr-1">
+          <!-- Rendered dynamically -->
+        </div>
+
+        <div class="pt-2 border-t border-gray-700 text-right">
+          <button type="button" onclick="closeTimelineModal()" class="bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-xl px-4 py-2 font-bold text-xs transition">
+            Close Audit History
+          </button>
+        </div>
+      </div>
+    </div>
+
   </main>
 
   <!-- Multi-Language Localization Engine -->
   <script src="/i18n.js"></script>
   <script>
+    const ADMIN_AUTH_TOKEN = 'Bearer thela_tok_admin';
     let ADMIN_DATA = { stats: {}, stalls: [], riders: [], recentOrders: [] };
 
     document.addEventListener('DOMContentLoaded', () => {
@@ -552,7 +637,9 @@
 
     async function loadAdminData() {
       try {
-        const res = await fetch('/api/admin/overview');
+        const res = await fetch('/api/admin/overview', {
+          headers: { 'Authorization': ADMIN_AUTH_TOKEN }
+        });
         const data = await res.json();
         ADMIN_DATA = data;
 
@@ -583,8 +670,6 @@
       }
     }
 
-    const ADMIN_AUTH_TOKEN = 'Bearer thela_tok_admin';
-
     async function loadPayoutsData() {
       try {
         const [payoutsRes, reconRes] = await Promise.all([
@@ -612,6 +697,16 @@
       }
 
       tbody.innerHTML = stalls.map(s => {
+        const status = s.status || 'APPLICATION_SUBMITTED';
+        let stBadgeClass = 'bg-amber-900/60 text-amber-300 border border-amber-700/50';
+        if (status === 'LIVE') stBadgeClass = 'bg-emerald-900/60 text-emerald-300 border border-emerald-700/50';
+        else if (status === 'APPROVED') stBadgeClass = 'bg-blue-900/60 text-blue-300 border border-blue-700/50';
+        else if (status === 'SUSPENDED') stBadgeClass = 'bg-red-900/60 text-red-300 border border-red-700/50';
+        else if (status === 'DOCUMENT_VERIFICATION') stBadgeClass = 'bg-purple-900/60 text-purple-300 border border-purple-700/50';
+        else if (status === 'PHYSICAL_INSPECTION') stBadgeClass = 'bg-indigo-900/60 text-indigo-300 border border-indigo-700/50';
+
+        const isLocVerified = Boolean(s.location_verified);
+
         const fStatus = s.fssai_status || (s.fssai_number ? 'submitted' : 'not_submitted');
         let fBadgeClass = 'bg-gray-700 text-gray-300';
         let fText = 'Not Submitted';
@@ -651,7 +746,9 @@
             <td class="p-3 font-bold text-white">
               <div class="flex items-center space-x-1.5">
                 <span>${s.name}</span>
-                ${s.is_verified ? '<i class="fa-solid fa-circle-check text-blue-400 text-xs" title="Identity Verified"></i>' : ''}
+                <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${stBadgeClass}">
+                  ${status}
+                </span>
               </div>
               <div class="text-[10px] text-gray-400 font-mono capitalize">${s.category} • ${s.priceForTwo || '₹120 for two'}</div>
             </td>
@@ -659,7 +756,15 @@
               <div class="text-gray-300 font-semibold">${s.owner_name || 'Owner'}</div>
               <div class="text-[11px] text-orange-400 font-mono">+91 ${s.owner_phone}</div>
             </td>
-            <td class="p-3 text-gray-300 text-xs">${s.address || 'Address pending'}</td>
+            <td class="p-3 text-gray-300 text-xs">
+              <div>${s.address || 'Address pending'}</div>
+              <div class="mt-0.5">
+                ${isLocVerified
+                  ? '<span class="text-[10px] font-bold text-emerald-400"><i class="fa-solid fa-circle-check mr-1"></i>Location Audited</span>'
+                  : '<span class="text-[10px] text-amber-400 font-medium"><i class="fa-solid fa-triangle-exclamation mr-1"></i>Untrusted GPS</span>'
+                }
+              </div>
+            </td>
             <td class="p-3">
               <div>
                 <span class="px-2 py-0.5 rounded text-[10px] font-black ${fBadgeClass}">
@@ -677,14 +782,21 @@
               <div class="text-[10px] text-gray-400 mt-0.5">${s.hygiene_inspected_by ? `By: ${s.hygiene_inspected_by}` : 'Self-declared only'}</div>
             </td>
             <td class="p-3">
-              <span class="px-2 py-0.5 rounded text-[10px] font-black ${s.isOpen ? 'bg-emerald-900/60 text-emerald-300' : 'bg-red-900/60 text-red-300'}">
-                ${s.isOpen ? 'OPEN' : 'CLOSED'}
+              <span class="px-2 py-0.5 rounded text-[10px] font-black ${status === 'LIVE' && s.isOpen ? 'bg-emerald-900/60 text-emerald-300' : 'bg-gray-700 text-gray-400'}">
+                ${status === 'LIVE' ? (s.isOpen ? 'OPEN' : 'CLOSED') : 'INACTIVE'}
               </span>
             </td>
-            <td class="p-3 text-right space-x-1.5 whitespace-nowrap">
-              <button type="button" onclick="openAuditModal('${s.id}')" class="px-2.5 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-[11px] font-black transition inline-flex items-center space-x-1">
+            <td class="p-3 text-right space-x-1 whitespace-nowrap">
+              <button type="button" onclick="openAuditModal('${s.id}')" class="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1" title="Audit Regulatory & Hygiene">
                 <i class="fa-solid fa-clipboard-check"></i>
-                <span>Audit & Verify</span>
+                <span>Audit</span>
+              </button>
+              <button type="button" onclick="openStallTransitionModal('${s.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1" title="Transition Lifecycle Status">
+                <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                <span>Stage</span>
+              </button>
+              <button type="button" onclick="openTimelineModal('${s.id}', 'stall')" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1" title="View Audit Trail">
+                <i class="fa-solid fa-clock-rotate-left"></i>
               </button>
               <a href="/partner.html?role=vendor&stallId=${s.id}" target="_blank" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-[10px] font-bold inline-block">
                 POS ➔
@@ -766,7 +878,7 @@
       try {
         const res = await fetch(`/api/admin/stalls/${currentAuditStallId}/fssai`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': ADMIN_AUTH_TOKEN },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -802,7 +914,7 @@
       try {
         const res = await fetch(`/api/admin/stalls/${currentAuditStallId}/hygiene-inspection`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': ADMIN_AUTH_TOKEN },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -829,7 +941,7 @@
       try {
         const res = await fetch(`/api/admin/stalls/${currentAuditStallId}/identity`, {
           method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', 'Authorization': ADMIN_AUTH_TOKEN },
           body: JSON.stringify(payload)
         });
         const data = await res.json();
@@ -846,30 +958,251 @@
       }
     }
 
+    async function certifyLocationVerification() {
+      if (!currentAuditStallId) return;
+      try {
+        const res = await fetch(`/api/admin/stalls/${currentAuditStallId}/location-verify`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': ADMIN_AUTH_TOKEN },
+          body: JSON.stringify({
+            verified: true,
+            auditorId: 'auditor_hq',
+            notes: 'On-site physical inspection confirmed street stall address and operational safety.'
+          })
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert('Physical location certified by auditor!');
+          closeAuditModal();
+          loadAdminData();
+        } else {
+          alert(data.error || 'Failed to certify location');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Server error certifying location');
+      }
+    }
+
     function renderRidersTable(riders) {
       const tbody = document.getElementById('ridersTableBody');
-      tbody.innerHTML = riders.map(r => `
-        <tr class="hover:bg-gray-800/80 transition">
-          <td class="p-3 font-bold text-white">${r.name}</td>
-          <td class="p-3 text-emerald-400 font-mono">+91 ${r.phone}</td>
-          <td class="p-3">
-            <div>${r.vehicle}</div>
-            <div class="text-[10px] text-gray-500 font-mono">${r.vehicle_number || 'EV'}</div>
-          </td>
-          <td class="p-3 text-gray-300">${r.area || 'Zone pending'}</td>
-          <td class="p-3 font-mono text-gray-300">${r.upi_id || `${r.phone}@upi`}</td>
-          <td class="p-3">
-            <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.is_online ? 'bg-emerald-900/60 text-emerald-300' : 'bg-gray-700 text-gray-400'}">
-              ${r.is_online ? 'ONLINE' : 'OFFLINE'}
-            </span>
-          </td>
-          <td class="p-3 text-right">
-            <a href="/rider.html?riderId=${r.id}" target="_blank" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold inline-block">
-              ${t('open_rider_console_btn', 'Console ➔')}
-            </a>
-          </td>
-        </tr>
-      `).join('');
+      if (!riders || riders.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">No delivery partners registered yet.</td></tr>`;
+        return;
+      }
+      tbody.innerHTML = riders.map(r => {
+        const status = r.status || 'APPLICATION_SUBMITTED';
+        let rBadge = 'bg-amber-900/60 text-amber-300 border border-amber-700/50';
+        if (['APPROVED', 'AVAILABLE'].includes(status)) rBadge = 'bg-emerald-900/60 text-emerald-300 border border-emerald-700/50';
+        else if (status === 'SUSPENDED') rBadge = 'bg-red-900/60 text-red-300 border border-red-700/50';
+        else if (status === 'IDENTITY_REVIEW') rBadge = 'bg-purple-900/60 text-purple-300 border border-purple-700/50';
+
+        return `
+          <tr class="hover:bg-gray-800/80 transition">
+            <td class="p-3 font-bold text-white">
+              <div class="flex items-center space-x-1.5">
+                <span>${r.name}</span>
+                <span class="px-2 py-0.5 rounded text-[9px] font-black uppercase ${rBadge}">
+                  ${status}
+                </span>
+              </div>
+            </td>
+            <td class="p-3 text-emerald-400 font-mono">+91 ${r.phone}</td>
+            <td class="p-3">
+              <div>${r.vehicle}</div>
+              <div class="text-[10px] text-gray-500 font-mono">${r.vehicle_number || 'EV'}</div>
+            </td>
+            <td class="p-3 text-gray-300">${r.area || 'Zone pending'}</td>
+            <td class="p-3 font-mono text-gray-300">${r.upi_id || `${r.phone}@upi`}</td>
+            <td class="p-3">
+              <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.is_online ? 'bg-emerald-900/60 text-emerald-300' : 'bg-gray-700 text-gray-400'}">
+                ${r.is_online ? 'ONLINE' : 'OFFLINE'}
+              </span>
+            </td>
+            <td class="p-3 text-right space-x-1 whitespace-nowrap">
+              <button type="button" onclick="openRiderTransitionModal('${r.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1">
+                <i class="fa-solid fa-arrows-split-up-and-left"></i>
+                <span>Review</span>
+              </button>
+              <button type="button" onclick="openTimelineModal('${r.id}', 'rider')" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1">
+                <i class="fa-solid fa-clock-rotate-left"></i>
+              </button>
+              <a href="/partner.html?role=rider&riderId=${r.id}" target="_blank" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold inline-block">
+                ${t('open_rider_console_btn', 'Console ➔')}
+              </a>
+            </td>
+          </tr>
+        `;
+      }).join('');
+    }
+
+    // Modal logic for Stage Transitions
+    let currentTransEntity = { type: null, id: null, version: 1 };
+
+    function openStallTransitionModal(stallId) {
+      const stall = (ADMIN_DATA.stalls || []).find(s => s.id === stallId);
+      if (!stall) return;
+      currentTransEntity = { type: 'stall', id: stall.id, version: stall.version || 1 };
+
+      document.getElementById('transModalTitle').innerText = `${stall.name} — Stage Transition`;
+      document.getElementById('transModalSubtitle').innerText = `Target Stall: ${stall.id} (Version: ${stall.version || 1})`;
+      document.getElementById('transCurrentStatus').innerText = stall.status || 'APPLICATION_SUBMITTED';
+
+      const validTransitions = {
+        'APPLICATION_SUBMITTED': ['DOCUMENT_VERIFICATION', 'REJECTED'],
+        'DOCUMENT_VERIFICATION': ['PHYSICAL_INSPECTION', 'CORRECTION_REQUIRED', 'REJECTED'],
+        'PHYSICAL_INSPECTION': ['APPROVED', 'CORRECTION_REQUIRED', 'REJECTED'],
+        'APPROVED': ['LIVE', 'SUSPENDED'],
+        'LIVE': ['SUSPENDED'],
+        'SUSPENDED': ['DOCUMENT_VERIFICATION', 'PHYSICAL_INSPECTION'],
+        'CORRECTION_REQUIRED': ['DOCUMENT_VERIFICATION', 'REJECTED'],
+        'REJECTED': ['APPLICATION_SUBMITTED']
+      };
+
+      const currentSt = stall.status || 'APPLICATION_SUBMITTED';
+      const options = validTransitions[currentSt] || ['DOCUMENT_VERIFICATION', 'REJECTED'];
+
+      const select = document.getElementById('transNextStatus');
+      select.innerHTML = options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+
+      document.getElementById('transReason').value = '';
+      document.getElementById('transFailedGatesNotice').classList.add('hidden');
+      document.getElementById('adminTransitionModal').classList.remove('hidden');
+    }
+
+    function openRiderTransitionModal(riderId) {
+      const rider = (ADMIN_DATA.riders || []).find(r => r.id === riderId);
+      if (!rider) return;
+      currentTransEntity = { type: 'rider', id: rider.id, version: rider.version || 1 };
+
+      document.getElementById('transModalTitle').innerText = `${rider.name} — Delivery Partner Review`;
+      document.getElementById('transModalSubtitle').innerText = `Target Rider: ${rider.id} (Version: ${rider.version || 1})`;
+      document.getElementById('transCurrentStatus').innerText = rider.status || 'APPLICATION_SUBMITTED';
+
+      const validTransitions = {
+        'APPLICATION_SUBMITTED': ['IDENTITY_REVIEW', 'REJECTED'],
+        'IDENTITY_REVIEW': ['APPROVED', 'CORRECTION_REQUIRED', 'REJECTED'],
+        'APPROVED': ['AVAILABLE', 'SUSPENDED'],
+        'AVAILABLE': ['APPROVED', 'SUSPENDED'],
+        'SUSPENDED': ['IDENTITY_REVIEW'],
+        'CORRECTION_REQUIRED': ['IDENTITY_REVIEW', 'REJECTED'],
+        'REJECTED': ['APPLICATION_SUBMITTED']
+      };
+
+      const currentSt = rider.status || 'APPLICATION_SUBMITTED';
+      const options = validTransitions[currentSt] || ['IDENTITY_REVIEW', 'REJECTED'];
+
+      const select = document.getElementById('transNextStatus');
+      select.innerHTML = options.map(opt => `<option value="${opt}">${opt}</option>`).join('');
+
+      document.getElementById('transReason').value = '';
+      document.getElementById('transFailedGatesNotice').classList.add('hidden');
+      document.getElementById('adminTransitionModal').classList.remove('hidden');
+    }
+
+    function closeTransitionModal() {
+      document.getElementById('adminTransitionModal').classList.add('hidden');
+      currentTransEntity = { type: null, id: null, version: 1 };
+    }
+
+    async function submitStatusTransition() {
+      if (!currentTransEntity.id || !currentTransEntity.type) return;
+
+      const nextStatus = document.getElementById('transNextStatus').value;
+      const reason = document.getElementById('transReason').value.trim();
+
+      if (!reason && ['REJECTED', 'SUSPENDED', 'CORRECTION_REQUIRED'].includes(nextStatus)) {
+        alert('A reason is mandatory for rejection, suspension, or correction requests.');
+        return;
+      }
+
+      const endpoint = currentTransEntity.type === 'stall'
+        ? `/api/admin/stalls/${currentTransEntity.id}/transition`
+        : `/api/admin/riders/${currentTransEntity.id}/transition`;
+
+      const btn = document.getElementById('transSubmitBtn');
+      btn.disabled = true;
+      btn.innerText = 'Transitioning...';
+
+      try {
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': ADMIN_AUTH_TOKEN },
+          body: JSON.stringify({
+            nextStatus,
+            expectedVersion: currentTransEntity.version,
+            reason: reason || `Admin transitioned to ${nextStatus}`
+          })
+        });
+
+        const data = await res.json();
+        if (data.success) {
+          alert(`Status successfully transitioned to ${nextStatus}!`);
+          closeTransitionModal();
+          loadAdminData();
+        } else {
+          if (data.failedGates && data.failedGates.length > 0) {
+            const notice = document.getElementById('transFailedGatesNotice');
+            const list = document.getElementById('transFailedGatesList');
+            list.innerHTML = data.failedGates.map(g => `<li>${g}</li>`).join('');
+            notice.classList.remove('hidden');
+          }
+          alert(`Transition Failed: ${data.error}`);
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Server error executing status transition.');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Confirm Status Transition';
+      }
+    }
+
+    // Modal logic for Audit Timeline History
+    function openTimelineModal(entityId, entityType) {
+      let entity = null;
+      if (entityType === 'stall') {
+        entity = (ADMIN_DATA.stalls || []).find(s => s.id === entityId);
+      } else {
+        entity = (ADMIN_DATA.riders || []).find(r => r.id === entityId);
+      }
+
+      if (!entity) return;
+
+      document.getElementById('timelineModalTitle').innerText = `${entity.name || entity.id} — Audit Trail`;
+      document.getElementById('timelineModalSubtitle').innerText = `${entityType.toUpperCase()} ID: ${entity.id} • Version: ${entity.version || 1}`;
+
+      const list = document.getElementById('timelineModalList');
+      const timeline = entity.timeline || [];
+
+      if (timeline.length === 0) {
+        list.innerHTML = `<div class="py-6 text-center text-gray-500">No timeline audit events recorded yet.</div>`;
+      } else {
+        list.innerHTML = timeline.map(evt => `
+          <div class="p-3 bg-gray-900 border border-gray-700/80 rounded-2xl space-y-1.5">
+            <div class="flex items-center justify-between">
+              <span class="font-bold text-white text-[11px]">
+                ${evt.previousStatus ? `${evt.previousStatus} ➔ ${evt.nextStatus}` : evt.action || 'INITIAL_REGISTRATION'}
+              </span>
+              <span class="text-[10px] text-gray-400 font-mono">
+                ${new Date(evt.timestamp).toLocaleString()}
+              </span>
+            </div>
+            <div class="text-[11px] text-orange-400 font-medium">
+              Actor: <strong>${evt.actorRole || 'system'}</strong> (${evt.actorId || 'system'})
+            </div>
+            <p class="text-[11px] text-gray-300">
+              Reason: ${evt.reason || 'Status update recorded'}
+            </p>
+          </div>
+        `).join('');
+      }
+
+      document.getElementById('adminTimelineModal').classList.remove('hidden');
+    }
+
+    function closeTimelineModal() {
+      document.getElementById('adminTimelineModal').classList.add('hidden');
     }
 
     function renderOrdersTable(orders) {
