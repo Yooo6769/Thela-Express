@@ -806,15 +806,15 @@
             </div>
 
             <!-- Distance -->
-            <div class="flex items-center space-x-1 text-stone-600 font-bold bg-stone-100 px-2 py-1 rounded-xl text-[11px]">
+            <div id="modalDistBlock" class="hidden flex items-center space-x-1 text-stone-600 font-bold bg-stone-100 px-2 py-1 rounded-xl text-[11px]">
               <i class="fa-solid fa-location-dot text-amber-600"></i>
-              <span id="modalStallDistance">0.8 km</span>
+              <span id="modalStallDistance"></span>
             </div>
 
             <!-- Dynamically Calculated Delivery Time -->
-            <div class="flex items-center space-x-1 text-stone-800 font-black bg-stone-100 px-2.5 py-1 rounded-xl text-[11px]">
+            <div id="modalEtaBlock" class="hidden flex items-center space-x-1 text-stone-800 font-black bg-stone-100 px-2.5 py-1 rounded-xl text-[11px]">
               <i class="fa-regular fa-clock text-amber-600"></i>
-              <span id="modalStallEta">18-24 min</span>
+              <span id="modalStallEta"></span>
             </div>
           </div>
 
@@ -824,7 +824,7 @@
               <i class="fa-solid fa-map-pin text-stone-400 text-[11px]"></i>
               <span id="modalStallAddress" class="truncate font-medium text-stone-700"></span>
             </div>
-            <span id="modalStallPriceForTwo" class="font-bold text-stone-800 text-[11px] shrink-0">₹120 for two</span>
+            <span id="modalStallPriceForTwo" class="hidden font-bold text-stone-800 text-[11px] shrink-0"></span>
           </div>
         </div>
 
