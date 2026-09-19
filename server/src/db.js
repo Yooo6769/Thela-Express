@@ -5,7 +5,9 @@ const crypto = require('crypto');
 const { calculateOrderPricing } = require('./payments/pricing_engine');
 const LedgerService = require('./payments/ledger_service');
 
-const DB_FILE = path.join(__dirname, '..', 'data', 'thela.db.json');
+function getDefaultDbFile() {
+  return process.env.THELA_DB_FILE || path.join(__dirname, '..', 'data', 'thela.db.json');
+}
 const OTP_SECRET = process.env.OTP_SECRET || 'thela_express_otp_secret_key_prod_2026';
 
 // Cryptographic helpers for single-use doorstep delivery OTPs
@@ -114,26 +116,27 @@ const SEED_DATA = {
 };
 
 class Database {
-  constructor() {
+  constructor(dbFile = null) {
+    this.dbFile = dbFile || getDefaultDbFile();
     this.ensureDirectory();
     this.load();
     this.ledger = new LedgerService(this);
   }
 
   ensureDirectory() {
-    const dir = path.dirname(DB_FILE);
+    const dir = path.dirname(this.dbFile);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
   }
 
   load() {
-    if (!fs.existsSync(DB_FILE)) {
+    if (!fs.existsSync(this.dbFile)) {
       this.data = JSON.parse(JSON.stringify(SEED_DATA));
       this.save();
     } else {
       try {
-        const raw = fs.readFileSync(DB_FILE, 'utf8');
+        const raw = fs.readFileSync(this.dbFile, 'utf8');
         this.data = JSON.parse(raw);
         if (!this.data.settings) {
           this.data.settings = {
@@ -174,7 +177,7 @@ class Database {
 
   save() {
     try {
-      fs.writeFileSync(DB_FILE, JSON.stringify(this.data, null, 2), 'utf8');
+      fs.writeFileSync(this.dbFile, JSON.stringify(this.data, null, 2), 'utf8');
     } catch (e) {
       console.error('Failed to write DB file:', e);
     }
@@ -1553,4 +1556,6 @@ class Database {
   }
 }
 
-module.exports = new Database();
+const defaultInstance = new Database();
+module.exports = defaultInstance;
+module.exports.Database = Database;

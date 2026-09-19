@@ -1,6 +1,16 @@
 // ThelaExpress - Comprehensive Payments, Money Flow & Financial Ledger Test Suite
 // Verifies server-authoritative calculations, append-only ledger, RBAC, and mathematical balance invariant.
 
+process.env.NODE_ENV = 'test';
+const path = require('path');
+const fs = require('fs');
+
+const tempDbPath = path.join(__dirname, 'test_payments_temp.db.json');
+if (fs.existsSync(tempDbPath)) {
+  try { fs.unlinkSync(tempDbPath); } catch (e) {}
+}
+process.env.THELA_DB_FILE = tempDbPath;
+
 const assert = require('assert');
 const crypto = require('crypto');
 const db = require('../server/src/db');
@@ -39,8 +49,8 @@ async function asyncTest(name, fn) {
   // Setup Test Stall and Catalog
   const testStall = {
     id: `stall_fin_${Date.now()}`,
-    name: 'Sharma Chaat & Snacks',
-    owner_name: 'Ramesh Sharma',
+    name: 'Street Flavors & Snacks',
+    owner_name: 'Vendor Owner 1',
     owner_phone: '9876543201',
     isOpen: true
   };
@@ -64,7 +74,7 @@ async function asyncTest(name, fn) {
 
   const testRider = {
     id: `rdr_fin_${Date.now()}`,
-    name: 'Sanjay Rider',
+    name: 'Fleet Delivery Partner',
     phone: '9876543299',
     is_verified: true,
     is_online: true
@@ -511,4 +521,8 @@ async function asyncTest(name, fn) {
   db.save();
 
   console.log(`\n🎉 All ${passedTests}/${passedTests} Payments, Money Flow & Financial Ledger tests passed successfully!\n`);
+
+  if (fs.existsSync(tempDbPath)) {
+    try { fs.unlinkSync(tempDbPath); } catch (e) {}
+  }
 })();

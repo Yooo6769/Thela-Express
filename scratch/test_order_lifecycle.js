@@ -3,6 +3,14 @@
 // Single-Use Doorstep OTP, Reassignment Flows, and Decoupled Payment/Refund Lifecycles.
 
 process.env.NODE_ENV = 'test';
+const path = require('path');
+const fs = require('fs');
+
+const tempDbPath = path.join(__dirname, 'test_lifecycle_temp.db.json');
+if (fs.existsSync(tempDbPath)) {
+  try { fs.unlinkSync(tempDbPath); } catch (e) {}
+}
+process.env.THELA_DB_FILE = tempDbPath;
 
 const assert = require('assert');
 const db = require('../server/src/db');
@@ -28,30 +36,30 @@ function test(description, fn) {
 // Setup test fixtures in DB
 const testStall1 = {
   id: 'stall_test_1',
-  name: 'Sharma Chaat Bhandar',
-  owner_name: 'Ramesh Sharma',
+  name: 'Street Flavors Hub',
+  owner_name: 'Vendor Partner 1',
   owner_phone: '9876543201',
   isOpen: true
 };
 
 const testStall2 = {
   id: 'stall_test_2',
-  name: 'Gupta Pav Bhaji',
-  owner_name: 'Suresh Gupta',
+  name: 'Tawa Street Bites',
+  owner_name: 'Vendor Partner 2',
   owner_phone: '9876543202',
   isOpen: true
 };
 
 const testRider1 = {
   id: 'rdr_test_1',
-  name: 'Amit Kumar',
+  name: 'Delivery Fleet 1',
   phone: '9876543301',
   vehicle: 'Ather 450X'
 };
 
 const testRider2 = {
   id: 'rdr_test_2',
-  name: 'Vikram Singh',
+  name: 'Delivery Fleet 2',
   phone: '9876543302',
   vehicle: 'Ola S1 Pro'
 };
@@ -550,3 +558,7 @@ test('Timeline preserves complete immutable audit trail of every state change', 
 });
 
 console.log(`\n🎉 All ${passedTests}/${totalTests} Order Lifecycle Engine tests passed successfully!`);
+
+if (fs.existsSync(tempDbPath)) {
+  try { fs.unlinkSync(tempDbPath); } catch (e) {}
+}

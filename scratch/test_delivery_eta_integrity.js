@@ -263,7 +263,7 @@ console.log('  ✅ Vendor cards render prominent, frosted ETA badge with exact d
 const mockModalStall = {
   stall: {
     id: 'stall_modal_1',
-    name: 'Sharma Chaat Bhandar',
+    name: 'Authentic Street Bites',
     lat: sampleVendor.lat,
     lng: sampleVendor.lng,
     prepTime: 16
