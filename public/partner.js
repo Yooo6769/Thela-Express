@@ -8,8 +8,21 @@ const PARTNER_STATE = {
   vendorMenu: [],
   riderOrders: [],
   riderActiveOrder: null,
+  currentRiderId: 'rdr_1',
   ws: null
 };
+
+function getPartnerAuthHeaders(forRole = PARTNER_STATE.currentRole) {
+  const headers = { 'Content-Type': 'application/json' };
+  if (forRole === 'vendor') {
+    const token = localStorage.getItem('thela_vendor_token') || `thela_tok_vendor_${PARTNER_STATE.vendorStallId || 'stall_1'}`;
+    headers['Authorization'] = `Bearer ${token}`;
+  } else {
+    const token = localStorage.getItem('thela_rider_token') || `thela_tok_rider_${PARTNER_STATE.currentRiderId || 'rdr_1'}`;
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -480,18 +493,21 @@ function renderVendorOrders(orders) {
 
         <div class="pt-2 border-t border-gray-100 flex items-center justify-end space-x-2">
           ${order.status === 'PLACED' ? `
-            <button onclick="advanceCookingStage('${order.id}', 'ACCEPTED')" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
+            <button onclick="advanceCookingStage('${order.id}', 'ACCEPTED', ${order.version || 1})" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
               ${t('accept_btn', 'Accept Order')}
             </button>
+            <button onclick="declineVendorOrder('${order.id}', ${order.version || 1})" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs rounded-xl transition">
+              ${t('decline_btn', 'Decline')}
+            </button>
           ` : ''}
-          ${['PLACED', 'ACCEPTED'].includes(order.status) ? `
-            <button onclick="advanceCookingStage('${order.id}', 'COOKING')" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5">
+          ${order.status === 'ACCEPTED' ? `
+            <button onclick="advanceCookingStage('${order.id}', 'PREPARING', ${order.version || 1})" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5">
               <i class="fa-solid fa-fire"></i>
               <span>${t('start_cooking_btn', 'Start Cooking')}</span>
             </button>
           ` : ''}
-          ${order.status === 'COOKING' ? `
-            <button onclick="advanceCookingStage('${order.id}', 'READY_FOR_PICKUP')" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5">
+          ${order.status === 'PREPARING' ? `
+            <button onclick="advanceCookingStage('${order.id}', 'READY_FOR_PICKUP', ${order.version || 1})" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5">
               <i class="fa-solid fa-box"></i>
               <span>${t('packed_ready_btn', 'Packed & Ready')}</span>
             </button>
@@ -507,20 +523,49 @@ function renderVendorOrders(orders) {
   }).join('');
 }
 
-async function advanceCookingStage(orderId, nextStatus) {
+async function advanceCookingStage(orderId, nextStatus, version) {
   try {
     const res = await fetch(`/api/orders/${orderId}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: nextStatus })
+      headers: getPartnerAuthHeaders('vendor'),
+      body: JSON.stringify({
+        status: nextStatus,
+        expectedVersion: version
+      })
     });
     const data = await res.json();
     if (data.success) {
       showToast(`Order #${orderId} moved to ${formatStatus(nextStatus)}`);
       loadVendorOrders();
+    } else {
+      showToast(data.error || 'Failed to update order stage.');
     }
   } catch (e) {
     console.error('Failed to advance stage:', e);
+  }
+}
+
+async function declineVendorOrder(orderId, version) {
+  const reason = prompt('Please enter reason for declining order (e.g., Sold out, kitchen rush):') || 'Vendor unable to fulfill order at this time';
+  try {
+    const res = await fetch(`/api/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: getPartnerAuthHeaders('vendor'),
+      body: JSON.stringify({
+        status: 'REJECTED',
+        reason: reason,
+        expectedVersion: version
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast(`Order #${orderId} declined.`);
+      loadVendorOrders();
+    } else {
+      showToast(data.error || 'Failed to decline order.');
+    }
+  } catch (e) {
+    console.error('Failed to decline order:', e);
   }
 }
 
@@ -609,8 +654,8 @@ async function loadRiderOrders() {
     const data = await res.json();
     const orders = data.orders || [];
 
-    // Active gig: first order that is READY_FOR_PICKUP or OUT_FOR_DELIVERY
-    const activeGig = orders.find(o => ['READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'COOKING'].includes(o.status));
+    // Active gig: order in any active rider fulfillment stage
+    const activeGig = orders.find(o => ['READY_FOR_PICKUP', 'RIDER_ASSIGNED', 'RIDER_ARRIVING', 'PICKED_UP', 'OUT_FOR_DELIVERY'].includes(o.status));
     const completedTrips = orders.filter(o => o.status === 'DELIVERED');
 
     renderRiderActiveGig(activeGig);
@@ -670,12 +715,39 @@ function renderRiderActiveGig(gig) {
       </div>
     </div>
 
-    <!-- Gig Action Buttons -->
+    <!-- Gig Action Buttons (Canonical Progression) -->
     <div class="flex flex-col sm:flex-row items-center gap-2 pt-2">
-      ${gig.status === 'READY_FOR_PICKUP' || gig.status === 'COOKING' ? `
-        <button onclick="advanceRiderStage('${gig.id}', 'OUT_FOR_DELIVERY')" class="w-full sm:flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+      ${gig.status === 'READY_FOR_PICKUP' ? `
+        <button onclick="claimRiderGig('${gig.id}')" class="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-hand-holding-hand"></i>
+          <span>${t('rider_claim_btn', 'Accept Delivery Gig')}</span>
+        </button>
+      ` : ''}
+
+      ${gig.status === 'RIDER_ASSIGNED' ? `
+        <button onclick="advanceRiderStage('${gig.id}', 'RIDER_ARRIVING', ${gig.version || 1})" class="w-full sm:flex-1 py-3 bg-amber-600 hover:bg-amber-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center space-x-2">
           <i class="fa-solid fa-motorcycle"></i>
-          <span>${t('rider_pickup_btn', 'Picked Up — Start Delivery Ride')}</span>
+          <span>${t('rider_arriving_btn', 'Heading to Stall')}</span>
+        </button>
+        <button onclick="releaseRiderGig('${gig.id}', ${gig.version || 1})" class="px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-xs rounded-xl transition">
+          <span>Release Gig</span>
+        </button>
+      ` : ''}
+
+      ${gig.status === 'RIDER_ARRIVING' ? `
+        <button onclick="advanceRiderStage('${gig.id}', 'PICKED_UP', ${gig.version || 1})" class="w-full sm:flex-1 py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-box-open"></i>
+          <span>${t('rider_collect_btn', 'Collected Food from Counter')}</span>
+        </button>
+        <button onclick="releaseRiderGig('${gig.id}', ${gig.version || 1})" class="px-4 py-3 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-xs rounded-xl transition">
+          <span>Release Gig</span>
+        </button>
+      ` : ''}
+
+      ${gig.status === 'PICKED_UP' ? `
+        <button onclick="advanceRiderStage('${gig.id}', 'OUT_FOR_DELIVERY', ${gig.version || 1})" class="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs rounded-xl shadow-md transition flex items-center justify-center space-x-2">
+          <i class="fa-solid fa-route"></i>
+          <span>${t('rider_start_ride_btn', 'Start Delivery Ride (En Route)')}</span>
         </button>
       ` : ''}
 
@@ -683,7 +755,7 @@ function renderRiderActiveGig(gig) {
         <div class="w-full space-y-2">
           <div class="text-xs font-bold text-purple-700 bg-purple-50 p-2.5 rounded-xl border border-purple-200 flex items-center justify-between">
             <span>🛵 Rider en-route to customer doorstep</span>
-            <span class="font-mono font-black text-purple-900">Required OTP: ${gig.otp}</span>
+            <span class="text-xs text-purple-600 font-bold">Ask customer for 4-digit OTP</span>
           </div>
           <div class="flex items-center space-x-2">
             <input type="text" id="riderVerifyOtpInput" placeholder="${t('rider_otp_placeholder', 'Enter Customer 4-digit OTP')}" maxlength="4"
@@ -698,17 +770,64 @@ function renderRiderActiveGig(gig) {
   `;
 }
 
-async function advanceRiderStage(orderId, nextStatus) {
+async function claimRiderGig(orderId) {
+  try {
+    const res = await fetch(`/api/orders/${orderId}/assign-rider`, {
+      method: 'POST',
+      headers: getPartnerAuthHeaders('rider')
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('🛵 Delivery gig accepted! Heading to stall.');
+      loadRiderOrders();
+    } else {
+      showToast(data.error || 'Failed to claim gig.');
+    }
+  } catch (e) {
+    console.error('Failed to claim gig:', e);
+  }
+}
+
+async function releaseRiderGig(orderId, version) {
+  if (!confirm('Release this gig back to the fleet dispatch pool?')) return;
   try {
     const res = await fetch(`/api/orders/${orderId}/status`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status: nextStatus })
+      headers: getPartnerAuthHeaders('rider'),
+      body: JSON.stringify({
+        status: 'READY_FOR_PICKUP',
+        reason: 'Rider released gig for reassignment',
+        expectedVersion: version
+      })
+    });
+    const data = await res.json();
+    if (data.success) {
+      showToast('Gig returned to dispatch pool.');
+      loadRiderOrders();
+    } else {
+      showToast(data.error || 'Failed to release gig.');
+    }
+  } catch (e) {
+    console.error('Failed to release gig:', e);
+  }
+}
+
+async function advanceRiderStage(orderId, nextStatus, version) {
+  try {
+    const res = await fetch(`/api/orders/${orderId}/status`, {
+      method: 'PATCH',
+      headers: getPartnerAuthHeaders('rider'),
+      body: JSON.stringify({
+        status: nextStatus,
+        expectedVersion: version
+      })
     });
     const data = await res.json();
     if (data.success) {
       showToast(`Order #${orderId} marked as ${formatStatus(nextStatus)}`);
       loadRiderOrders();
+    } else {
+      showToast(data.error || 'Failed to update delivery stage.');
     }
   } catch (e) {
     console.error('Failed to advance rider stage:', e);
@@ -727,7 +846,7 @@ async function verifyDoorstepOtp(orderId) {
   try {
     const res = await fetch(`/api/orders/${orderId}/verify-otp`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getPartnerAuthHeaders('rider'),
       body: JSON.stringify({ otp: otp })
     });
     const data = await res.json();
@@ -735,10 +854,10 @@ async function verifyDoorstepOtp(orderId) {
       showToast(`🎉 Delivery Verified! ₹40 credited to your partner account.`);
       loadRiderOrders();
     } else {
-      showToast(data.message || 'Invalid OTP. Please check with customer.');
+      showToast(data.error || 'Invalid OTP. Please check with customer.');
     }
   } catch (e) {
-    console.error('OTP verification error:', e);
+    console.error('Failed to verify OTP:', e);
   }
 }
 

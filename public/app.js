@@ -41,6 +41,33 @@ const STATE = {
 // ==========================================================
 // 1. INITIALIZATION & LIFECYCLE
 // ==========================================================
+function getAuthHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  const token = localStorage.getItem('thela_token');
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+  return headers;
+}
+
+function rehydrateActiveTrackingSession() {
+  try {
+    const activeId = localStorage.getItem('thela_active_tracking_id');
+    if (!activeId) return;
+
+    fetch(`/api/orders/${activeId}`, {
+      headers: getAuthHeaders()
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data && data.order) {
+          openTrackingModal(data.order);
+        }
+      })
+      .catch(e => console.warn('Could not rehydrate tracking session:', e));
+  } catch (e) {}
+}
+
 document.addEventListener('DOMContentLoaded', () => {
   AtmosphereManager.init();
   loadStoredUser();
@@ -49,6 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
   loadStalls();
   loadCustomerOrders();
   setupRadarCanvas();
+  rehydrateActiveTrackingSession();
 
   const urlParams = new URLSearchParams(window.location.search);
   const view = urlParams.get('view');
@@ -628,11 +656,28 @@ function calculateMarketplaceEta(stall, customerCoords = null, capacity = null) 
 
 function calculateTrackingEta(order, liveRiderTelemetry = null) {
   if (!order) return { text: 'Order details unavailable', isLive: false };
+  if (order.status === 'COMPLETED') {
+    return { text: typeof t === 'function' ? t('track_completed', 'Delivered & Completed ★') : 'Delivered & Completed ★', isLive: false };
+  }
   if (order.status === 'DELIVERED') {
     return { text: typeof t === 'function' ? t('track_delivered', 'Delivered to your doorstep') : 'Delivered to your doorstep', isLive: false };
   }
   if (order.status === 'CANCELLED') {
-    return { text: typeof t === 'function' ? t('track_cancelled', 'Order cancelled') : 'Order cancelled', isLive: false };
+    const refundNote = order.payment_status === 'REFUND_PENDING' ? ' (Refund processing)' : (order.payment_status === 'REFUNDED' ? ' (Refunded)' : '');
+    return { text: `Order cancelled${refundNote}`, isLive: false };
+  }
+  if (order.status === 'REJECTED') {
+    const refundNote = order.payment_status === 'REFUND_PENDING' ? ' (Refund initiated)' : '';
+    return { text: `Order declined by stall kitchen${refundNote}`, isLive: false };
+  }
+  if (order.status === 'VENDOR_UNAVAILABLE') {
+    return { text: 'Stall did not respond in time (Refund initiated)', isLive: false };
+  }
+  if (order.status === 'RIDER_UNAVAILABLE') {
+    return { text: 'No delivery partner available in area (Refund initiated)', isLive: false };
+  }
+  if (order.status === 'PAYMENT_FAILED') {
+    return { text: 'Payment authorization failed', isLive: false };
   }
   if (order.etaMinutes && typeof order.etaMinutes === 'number') {
     const label = typeof t === 'function' ? t('estimated_delivery_time', 'Estimated delivery time') : 'Estimated delivery time';
@@ -642,11 +687,29 @@ function calculateTrackingEta(order, liveRiderTelemetry = null) {
     const label = typeof t === 'function' ? t('estimated_delivery_time', 'Estimated delivery time') : 'Estimated delivery time';
     return { text: `${label}: ${order.estimated_delivery}`, isLive: true };
   }
-  if (order.status === 'OUT_FOR_DELIVERY' || order.status === 'PICKED_UP') {
-    return { text: '🛵 Out for delivery — arriving shortly', isLive: true };
+  if (order.status === 'OUT_FOR_DELIVERY') {
+    return { text: '🛵 Out for delivery — arriving at your doorstep', isLive: true };
   }
-  if (order.status === 'PREPARING' || order.status === 'ACCEPTED') {
-    return { text: '🍳 Freshly preparing your street bite at thela', isLive: true };
+  if (order.status === 'PICKED_UP') {
+    return { text: '🛵 Order collected from thela — en route', isLive: true };
+  }
+  if (order.status === 'RIDER_ARRIVING') {
+    return { text: '🛵 Delivery partner arriving at street thela', isLive: true };
+  }
+  if (order.status === 'RIDER_ASSIGNED') {
+    return { text: '🛵 Delivery partner assigned to your order', isLive: true };
+  }
+  if (order.status === 'READY_FOR_PICKUP') {
+    return { text: '📦 Freshly packed in eco dona — waiting for rider', isLive: true };
+  }
+  if (order.status === 'PREPARING' || order.status === 'COOKING') {
+    return { text: '🍳 Freshly preparing your street bite on tawa', isLive: true };
+  }
+  if (order.status === 'ACCEPTED') {
+    return { text: '👨‍🍳 Stall vendor accepted order — preparation starting', isLive: true };
+  }
+  if (order.status === 'PLACED') {
+    return { text: '🔔 Order received — awaiting stall confirmation', isLive: true };
   }
   return { text: typeof t === 'function' ? t('track_eta_pending', 'Calculating live delivery estimate...') : 'Calculating live delivery estimate...', isLive: true };
 }
@@ -2651,7 +2714,7 @@ async function handlePlaceOrder() {
   try {
     const res = await fetch('/api/orders', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getAuthHeaders(),
       body: JSON.stringify({
         customer_id: STATE.user.id,
         customer_name: STATE.user.name || 'Customer',
@@ -2715,6 +2778,11 @@ function openTrackingModal(order) {
   STATE.trackingOrder = order;
   STATE.radarProgress = 0.2; // initial rider progress
 
+  // Save active tracking session to localStorage for rehydration on refresh
+  try {
+    localStorage.setItem('thela_active_tracking_id', order.id);
+  } catch (e) {}
+
   document.getElementById('trackOrderId').innerText = `#${order.id}`;
   document.getElementById('trackDeliveryOtp').innerText = order.otp || '----';
   updateTrackingEta(order);
@@ -2739,28 +2807,106 @@ function openTrackingModal(order) {
 function closeTrackingModal() {
   document.getElementById('trackingModal').classList.add('hidden');
   AtmosphereManager.popOverride('trackingModal');
+  const terminalStatuses = ['DELIVERED', 'COMPLETED', 'CANCELLED', 'REJECTED', 'VENDOR_UNAVAILABLE', 'PAYMENT_FAILED', 'RIDER_UNAVAILABLE'];
+  if (STATE.trackingOrder && terminalStatuses.includes(STATE.trackingOrder.status)) {
+    try {
+      localStorage.removeItem('thela_active_tracking_id');
+    } catch (e) {}
+  }
 }
 
 function renderTrackerSteps(order) {
+  const failureStatuses = ['PAYMENT_FAILED', 'VENDOR_UNAVAILABLE', 'REJECTED', 'CANCELLED', 'RIDER_UNAVAILABLE'];
+  const container = document.getElementById('trackerStepsList');
+  if (!container) return;
+
+  if (failureStatuses.includes(order.status)) {
+    const failureTitles = {
+      PAYMENT_FAILED: 'Payment Failed',
+      VENDOR_UNAVAILABLE: 'Stall Kitchen Unavailable',
+      REJECTED: 'Order Declined by Vendor',
+      CANCELLED: 'Order Cancelled',
+      RIDER_UNAVAILABLE: 'Delivery Fleet Unavailable'
+    };
+    const failureDescs = {
+      PAYMENT_FAILED: 'Your UPI transaction could not be processed. No funds were debited.',
+      VENDOR_UNAVAILABLE: 'The vendor did not accept the order within the time limit. Full refund initiated.',
+      REJECTED: 'The stall was unable to accept this order due to rush or sold-out items. Full refund initiated.',
+      CANCELLED: 'This order was cancelled. Any settled payments are queued for refund.',
+      RIDER_UNAVAILABLE: 'No delivery partners were available in this operating zone. Full refund initiated.'
+    };
+
+    let refundBadge = '';
+    if (order.payment_status === 'REFUND_PENDING') {
+      refundBadge = `
+        <div class="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-2xl flex items-center justify-between text-xs text-amber-900">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-clock-rotate-left text-amber-600"></i>
+            <div>
+              <div class="font-extrabold">Refund Processing (₹${order.grand_total})</div>
+              <div class="text-[11px] text-amber-700">Bank processing to your original payment method.</div>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 rounded-md font-black bg-amber-200 text-amber-900 text-[10px]">PENDING</span>
+        </div>
+      `;
+    } else if (order.payment_status === 'REFUNDED') {
+      refundBadge = `
+        <div class="mt-3 p-3 bg-emerald-50 border border-emerald-200 rounded-2xl flex items-center justify-between text-xs text-emerald-900">
+          <div class="flex items-center space-x-2">
+            <i class="fa-solid fa-check-circle text-emerald-600"></i>
+            <div>
+              <div class="font-extrabold">Refund Completed (₹${order.grand_total})</div>
+              <div class="text-[11px] text-emerald-700">Credited back to your original payment method.</div>
+            </div>
+          </div>
+          <span class="px-2 py-0.5 rounded-md font-black bg-emerald-200 text-emerald-900 text-[10px]">REFUNDED</span>
+        </div>
+      `;
+    }
+
+    container.innerHTML = `
+      <div class="p-4 bg-red-50 border-2 border-red-200 rounded-3xl text-left space-y-2">
+        <div class="flex items-center space-x-2 text-red-700">
+          <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+          <h4 class="text-sm font-black">${failureTitles[order.status] || 'Order Incomplete'}</h4>
+        </div>
+        <p class="text-xs text-red-800">${failureDescs[order.status] || 'Order could not be fulfilled.'}</p>
+        ${refundBadge}
+      </div>
+    `;
+    return;
+  }
+
   const steps = [
-    { key: 'PLACED', title: 'Order Confirmed', desc: 'Thela received your order' },
-    { key: 'COOKING', title: 'Preparing on Tawa', desc: 'Authentic spices sizzling fresh' },
-    { key: 'READY_FOR_PICKUP', title: 'Packed in Thermal Box', desc: 'Rider reaching stall' },
-    { key: 'OUT_FOR_DELIVERY', title: 'Out for Delivery', desc: 'Rider on Ather 450X EV' },
-    { key: 'DELIVERED', title: 'Delivered at Doorstep', desc: 'Verified with OTP' }
+    { key: 'PLACED', title: 'Order Received', desc: 'Awaiting stall kitchen confirmation' },
+    { key: 'ACCEPTED', title: 'Order Accepted', desc: 'Vendor confirmed street food order' },
+    { key: 'PREPARING', title: 'Cooking on Tawa', desc: 'Fresh ingredients sizzling on cart' },
+    { key: 'READY_FOR_PICKUP', title: 'Packed & Ready', desc: 'Eco dona packed for rider collection' },
+    { key: 'RIDER_ASSIGNED', title: 'Rider Assigned', desc: 'Delivery partner assigned to trip' },
+    { key: 'RIDER_ARRIVING', title: 'Rider at Thela', desc: 'Reaching food stall counter' },
+    { key: 'PICKED_UP', title: 'Order Collected', desc: 'Collected in thermal bag' },
+    { key: 'OUT_FOR_DELIVERY', title: 'Out for Delivery', desc: 'Rider heading to your doorstep' },
+    { key: 'DELIVERED', title: 'Delivered', desc: 'Doorstep delivery completed with OTP' },
+    { key: 'COMPLETED', title: 'Completed & Rated', desc: 'Street food enjoyed & settled' }
   ];
 
-  const statusOrder = ['PLACED', 'ACCEPTED', 'COOKING', 'READY_FOR_PICKUP', 'OUT_FOR_DELIVERY', 'DELIVERED'];
-  const currentIndex = statusOrder.indexOf(order.status);
+  const canonicalFlow = [
+    'PLACED', 'ACCEPTED', 'PREPARING', 'READY_FOR_PICKUP',
+    'RIDER_ASSIGNED', 'RIDER_ARRIVING', 'PICKED_UP', 'OUT_FOR_DELIVERY',
+    'DELIVERED', 'COMPLETED'
+  ];
 
-  const container = document.getElementById('trackerStepsList');
+  // Map legacy COOKING to PREPARING for tracker index
+  const normalizedStatus = order.status === 'COOKING' ? 'PREPARING' : order.status;
+  const currentIdx = canonicalFlow.indexOf(normalizedStatus);
+
   container.innerHTML = steps.map((step, idx) => {
-    const stepIdx = statusOrder.indexOf(step.key);
-    const isCompleted = currentIndex >= stepIdx;
-    const isCurrent = (order.status === step.key) || (order.status === 'ACCEPTED' && step.key === 'PLACED');
+    const isCompleted = currentIdx >= idx;
+    const isCurrent = (normalizedStatus === step.key);
 
     return `
-      <div class="relative flex items-start space-x-3">
+      <div class="relative flex items-start space-x-3 pb-3">
         <!-- Step Indicator Dot -->
         <span class="absolute -left-[31px] top-0.5 w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
           isCompleted 
@@ -3384,6 +3530,9 @@ async function handleVerifyOtp() {
     if (data.success) {
       STATE.user = data.user;
       localStorage.setItem('thela_user', JSON.stringify(data.user));
+      if (data.token) {
+        localStorage.setItem('thela_token', data.token);
+      }
       updateAuthUI();
       closeAuthModal();
       showToast(`Welcome, ${data.user.name}!`);
@@ -3537,6 +3686,7 @@ async function handleUpdateProfile(event) {
 
 function handleLogout() {
   localStorage.removeItem('thela_user');
+  localStorage.removeItem('thela_token');
   STATE.user = null;
   STATE.activeAddress = null;
   STATE.favorites = [];
