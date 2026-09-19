@@ -83,32 +83,53 @@ assert.strictEqual(sandbox.calculateDynamicDeliveryTime(-1), null, 'Negative dis
 assert.strictEqual(sandbox.calculateDynamicDeliveryTime('abc'), null, 'Non-numeric distance must return null');
 console.log('  ✅ calculateDynamicDeliveryTime returns null when distance is unknown (no fake ETAs)');
 
-// Test 3: CURATED_DISCOVERY Data Integrity & Image Uniqueness
-console.log('\nTest 3: CURATED_DISCOVERY Zero-Fiction & Image Uniqueness');
+// Test 3: Zero Mock Discovery Cards & Dynamic Section Visibility
+console.log('\nTest 3: Zero Mock Discovery Cards & Dynamic Section Visibility');
 const CURATED_DISCOVERY = vm.runInContext('CURATED_DISCOVERY', sandbox);
 assert(CURATED_DISCOVERY, 'CURATED_DISCOVERY must exist');
 const categories = Object.keys(CURATED_DISCOVERY);
 assert(categories.length >= 6, `Expected at least 6 categories, got ${categories.length}`);
 
-const seenImages = new Set();
 let totalCurated = 0;
 for (const cat of categories) {
   const items = CURATED_DISCOVERY[cat];
-  assert(Array.isArray(items) && items.length > 0, `Category ${cat} must have items`);
-  for (const item of items) {
-    totalCurated++;
-    // Zero fake ratings or review counts
-    assert.strictEqual(item.rating, undefined, `Item ${item.name} must not have hardcoded rating`);
-    assert.strictEqual(item.reviewsCount, undefined, `Item ${item.name} must not have hardcoded reviewsCount`);
-    assert.strictEqual(item.distance, undefined, `Item ${item.name} must not have hardcoded distance`);
-    assert.strictEqual(item.prepMin, undefined, `Item ${item.name} must not have hardcoded prepMin`);
-    // Unique photo
-    assert(item.image && typeof item.image === 'string', `Item ${item.name} must have image`);
-    assert(!seenImages.has(item.image), `Duplicate image found across categories: ${item.image}`);
-    seenImages.add(item.image);
-  }
+  assert(Array.isArray(items), `Category ${cat} must be an array`);
+  assert.strictEqual(items.length, 0, `Category ${cat} must contain 0 mock cards (strict zero-fiction policy)`);
+  totalCurated += items.length;
 }
-console.log(`  ✅ All ${totalCurated} curated category spotlights have 100% unique photos and ZERO fake metrics`);
+assert.strictEqual(totalCurated, 0, 'CURATED_DISCOVERY must have exactly 0 hardcoded items');
+console.log('  ✅ CURATED_DISCOVERY contains 0 mock cards (zero hardcoded vendors)');
+
+// Verify renderDiscoverySections hides sections when no matching stalls exist
+const mockSections = {};
+const mockTracks = {};
+['Trending', 'Popular', 'Under100', 'Legends', 'LateNight', 'HiddenGems'].forEach(name => {
+  mockSections['sec' + name] = {
+    classList: {
+      classes: new Set(['hidden']),
+      add(cls) { this.classes.add(cls); },
+      remove(cls) { this.classes.delete(cls); },
+      contains(cls) { return this.classes.has(cls); }
+    }
+  };
+  mockTracks['sec' + name + 'Track'] = { innerHTML: 'dummy' };
+});
+
+const origGetElementById = sandbox.document.getElementById;
+sandbox.document.getElementById = (id) => {
+  if (mockSections[id]) return mockSections[id];
+  if (mockTracks[id]) return mockTracks[id];
+  return origGetElementById ? origGetElementById(id) : null;
+};
+
+sandbox.renderDiscoverySections([]);
+['Trending', 'Popular', 'Under100', 'Legends', 'LateNight', 'HiddenGems'].forEach(name => {
+  assert(mockSections['sec' + name].classList.contains('hidden'), `sec${name} must remain hidden when stalls is empty`);
+  assert.strictEqual(mockTracks['sec' + name + 'Track'].innerHTML, '', `sec${name}Track must be empty when stalls is empty`);
+});
+console.log('  ✅ renderDiscoverySections keeps all discovery sections hidden when 0 live stalls exist');
+
+sandbox.document.getElementById = origGetElementById;
 
 // Test 4: renderStalls Mock Testing (Data Integrity & Known For Strip)
 console.log('\nTest 4: renderStalls Rendering Logic & Data Integrity');

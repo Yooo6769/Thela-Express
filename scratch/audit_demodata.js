@@ -27,6 +27,9 @@ function checkFile(filePath) {
     if (/Rahul Sharma|Ramesh Sharma|Sharma Ji Chaat|Suresh Gupta|Sanjay Rider/i.test(l)) {
       errors.push(filePath + ':' + (idx+1) + ': [Fake Name Leak] ' + l.trim());
     }
+    if (/Nizam Kathi Rolls|Hing Water Pani Puri|Mumbai Batata Vada Pav|Darjeeling Steamed Momos/i.test(l)) {
+      errors.push(filePath + ':' + (idx+1) + ': [Mock Vendor Card Leak] ' + l.trim());
+    }
   });
 }
 

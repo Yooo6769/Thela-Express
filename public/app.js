@@ -808,275 +808,30 @@ function handleFoodImageError(imgEl, category = 'streetfood', name = '') {
   imgEl.src = getThelaFoodPlaceholder(category, name);
 }
 
-// Honest Category Craving Spotlights (Zero fake ratings, zero fake reviews, zero fake distances)
+// Discovery categories data (Dynamically populated strictly from live backend database; zero mock cards)
 const CURATED_DISCOVERY = {
-  trending: [
-    {
-      id: 'spotlight_trending_1',
-      name: 'Nizam Kathi Rolls & Frankies',
-      specialty: 'Double egg, tandoori paneer & chicken kathi rolls',
-      isVeg: false,
-      badgeText: 'Trending Craving',
-      badgeColor: 'bg-amber-600/90 text-white',
-      category: 'rolls',
-      image: 'https://images.unsplash.com/photo-1626777552726-4a6b54c97e46?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_trending_2',
-      name: 'Hing Water Pani Puri & Chaat',
-      specialty: 'Mint water, sweet tamarind & potato chickpea filling',
-      isVeg: true,
-      badgeText: 'Street Favorite',
-      badgeColor: 'bg-orange-600/90 text-white',
-      category: 'chaat',
-      image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_trending_3',
-      name: 'Extra Butter Tawa Pav Bhaji',
-      specialty: 'Slow-simmered spiced bhaji served with buttered pav',
-      isVeg: true,
-      badgeText: 'Tawa Special',
-      badgeColor: 'bg-amber-700/90 text-white',
-      category: 'pavbhaji',
-      image: 'https://images.unsplash.com/photo-1626132647523-66f5bf380027?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_trending_4',
-      name: 'Benne Masala Dosa & Idli',
-      specialty: 'Crispy butter podi dosa with fresh coconut chutney',
-      isVeg: true,
-      badgeText: 'South Indian',
-      badgeColor: 'bg-emerald-600/90 text-white',
-      category: 'south',
-      image: 'https://images.unsplash.com/photo-1589301760014-d929f3979dbc?auto=format&fit=crop&w=700&q=80'
-    }
-  ],
-  popular: [
-    {
-      id: 'spotlight_popular_1',
-      name: 'Mumbai Batata Vada Pav',
-      specialty: 'Spiced potato fritter with garlic dry chutney & green chili',
-      isVeg: true,
-      badgeText: 'Street Icon',
-      badgeColor: 'bg-orange-600/90 text-white',
-      category: 'vadapav',
-      image: 'https://images.unsplash.com/photo-1606491956689-2ea866880c84?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_popular_2',
-      name: 'Darjeeling Steamed Momos',
-      specialty: 'Pleated dumplings served with fiery garlic chili dip',
-      isVeg: false,
-      badgeText: 'Himalayan Bite',
-      badgeColor: 'bg-amber-600/90 text-white',
-      category: 'momos',
-      image: 'https://images.unsplash.com/photo-1625246333195-78d9c38ad449?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_popular_3',
-      name: 'Amritsari Chole & Kulche',
-      specialty: 'Spiced pindi chole with crisp layered tawa kulcha',
-      isVeg: true,
-      badgeText: 'Punjabi Treat',
-      badgeColor: 'bg-amber-700/90 text-white',
-      category: 'parathas',
-      image: 'https://images.unsplash.com/photo-1626082927389-6cd097cdc6ec?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_popular_4',
-      name: 'Desi Ghee Jalebi & Rabri',
-      specialty: 'Crispy hot saffron jalebis with slow-reduced malai rabri',
-      isVeg: true,
-      badgeText: 'Sweet Feast',
-      badgeColor: 'bg-yellow-600/90 text-white',
-      category: 'sweets',
-      image: 'https://images.unsplash.com/photo-1599488615731-7e5c2823ff28?auto=format&fit=crop&w=700&q=80'
-    }
-  ],
-  under100: [
-    {
-      id: 'spotlight_budget_1',
-      name: 'Crispy Khasta Samosa & Kachori',
-      specialty: 'Flaky pastry stuffed with spiced potatoes & peas',
-      isVeg: true,
-      badgeText: 'Pocket Bite',
-      badgeColor: 'bg-emerald-600/90 text-white',
-      category: 'samosa',
-      image: 'https://images.unsplash.com/photo-1546833999-b9f581a1996d?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_budget_2',
-      name: 'Dahi Sev Batata Puri',
-      specialty: 'Crisp puris with yogurt, sweet chutney & nylon sev',
-      isVeg: true,
-      badgeText: 'Chaat Special',
-      badgeColor: 'bg-emerald-700/90 text-white',
-      category: 'chaat',
-      image: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_budget_3',
-      name: 'Irani Bun Maska & Kadak Chai',
-      specialty: 'Warm buttered bun paired with cardamom milk chai',
-      isVeg: true,
-      badgeText: 'Chai Time',
-      badgeColor: 'bg-amber-600/90 text-white',
-      category: 'beverages',
-      image: 'https://images.unsplash.com/photo-1544787219-7f47ccb76574?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_budget_4',
-      name: 'Steamed Butter Sweet Corn',
-      specialty: 'Hot juicy corn kernels tossed in butter and chaat masala',
-      isVeg: true,
-      badgeText: 'Fresh Snack',
-      badgeColor: 'bg-emerald-600/90 text-white',
-      category: 'chaat',
-      image: 'https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&w=700&q=80'
-    }
-  ],
-  legends: [
-    {
-      id: 'spotlight_legend_1',
-      name: 'Heritage Chole Bhature',
-      specialty: 'Generational dark chole recipe with fluffy golden bhature',
-      isVeg: true,
-      badgeText: 'Heritage Recipe',
-      badgeColor: 'bg-yellow-600/95 text-white',
-      category: 'parathas',
-      image: 'https://images.unsplash.com/photo-1589302168068-964664d93dc0?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_legend_2',
-      name: 'Charcoal Smoked Seekh Frankie',
-      specialty: 'Slow-grilled spiced kebabs wrapped in rumali roti',
-      isVeg: false,
-      badgeText: 'Charcoal Grilled',
-      badgeColor: 'bg-stone-900/90 text-amber-300',
-      category: 'rolls',
-      image: 'https://images.unsplash.com/photo-1544025162-d76694265947?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_legend_3',
-      name: 'Traditional Ghee Podi Idlis',
-      specialty: 'Steamed rice button idlis drenched in gunpowder ghee',
-      isVeg: true,
-      badgeText: 'Generational Craft',
-      badgeColor: 'bg-amber-600/90 text-white',
-      category: 'south',
-      image: 'https://images.unsplash.com/photo-1516714435131-44d6b64dc6a2?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_legend_4',
-      name: 'Mumbai Butter Tawa Pulao',
-      specialty: 'Rice stir-fried on giant iron tawa with pav bhaji spices',
-      isVeg: true,
-      badgeText: 'Tawa Icon',
-      badgeColor: 'bg-amber-700/90 text-white',
-      category: 'pavbhaji',
-      image: 'https://images.unsplash.com/photo-1563379091339-03b21ab4a4f8?auto=format&fit=crop&w=700&q=80'
-    }
-  ],
-  latenight: [
-    {
-      id: 'spotlight_late_1',
-      name: 'Midnight Paneer Frankie',
-      specialty: 'Sizzling cottage cheese roll with mint yogurt spread',
-      isVeg: true,
-      badgeText: 'Night Craving',
-      badgeColor: 'bg-indigo-900/90 text-indigo-100',
-      category: 'rolls',
-      image: 'https://images.unsplash.com/photo-1529042410759-befb1204b468?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_late_2',
-      name: 'Desi Schezwan Chowmein',
-      specialty: 'Spicy wok-tossed street noodles with garlic chili dip',
-      isVeg: true,
-      badgeText: 'Midnight Wok',
-      badgeColor: 'bg-indigo-800/90 text-white',
-      category: 'chinese',
-      image: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_late_3',
-      name: 'Street Double Cheese Maggi',
-      specialty: 'Piping hot 2-minute noodles loaded with butter and cheese',
-      isVeg: true,
-      badgeText: 'Night Comfort',
-      badgeColor: 'bg-purple-900/90 text-purple-100',
-      category: 'chaat',
-      image: 'https://images.unsplash.com/photo-1612927601601-6638404737ce?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_late_4',
-      name: 'Saffron Kadhai Doodh',
-      specialty: 'Boiling milk from copper cauldron with crushed almonds',
-      isVeg: true,
-      badgeText: 'Night Warmth',
-      badgeColor: 'bg-amber-700/90 text-white',
-      category: 'beverages',
-      image: 'https://images.unsplash.com/photo-1571934811356-5cc061b6821f?auto=format&fit=crop&w=700&q=80'
-    }
-  ],
-  hiddengems: [
-    {
-      id: 'spotlight_gem_1',
-      name: 'Handmade Matka Kulfi',
-      specialty: 'Slow-reduced milk kulfi infused with cardamom & pista',
-      isVeg: true,
-      badgeText: 'Alleyway Gem',
-      badgeColor: 'bg-purple-700/90 text-white',
-      category: 'sweets',
-      image: 'https://images.unsplash.com/photo-1579954115545-a95591f28bfc?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_gem_2',
-      name: 'Pahari Tingmo & Dimsums',
-      specialty: 'Steamed flower bread served with fiery fermented sauce',
-      isVeg: true,
-      badgeText: 'Himalayan Secret',
-      badgeColor: 'bg-purple-800/90 text-white',
-      category: 'momos',
-      image: 'https://images.unsplash.com/photo-1534422298391-e4f8c172dddb?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_gem_3',
-      name: 'Nagpur Saoji Tarri Poha',
-      specialty: 'Steamed flattened rice served with spicy black gram curry',
-      isVeg: true,
-      badgeText: 'Regional Craft',
-      badgeColor: 'bg-red-700/90 text-white',
-      category: 'chaat',
-      image: 'https://images.unsplash.com/photo-1505253758473-96b46deae6f9?auto=format&fit=crop&w=700&q=80'
-    },
-    {
-      id: 'spotlight_gem_4',
-      name: 'Banarasi Tamatar Chaat',
-      specialty: 'Spicy tangy mashed tomatoes topped with crispy namakpare',
-      isVeg: true,
-      badgeText: 'Street Specialty',
-      badgeColor: 'bg-amber-600/90 text-white',
-      category: 'chaat',
-      image: 'https://images.unsplash.com/photo-1512621776951-a57141f2eefd?auto=format&fit=crop&w=700&q=80'
-    }
-  ]
+  trending: [],
+  popular: [],
+  under100: [],
+  legends: [],
+  latenight: [],
+  hiddengems: []
 };
 
 function renderDiscoverySections(stalls) {
   const sections = [
-    { key: 'trending', trackId: 'secTrendingTrack', defaultBadge: '🔥 Trending' },
-    { key: 'popular', trackId: 'secPopularTrack', defaultBadge: '⭐ Popular' },
-    { key: 'under100', trackId: 'secUnder100Track', defaultBadge: '💰 Under ₹100' },
-    { key: 'legends', trackId: 'secLegendsTrack', defaultBadge: '👑 Legend' },
-    { key: 'latenight', trackId: 'secLateNightTrack', defaultBadge: '🌙 Late Night' },
-    { key: 'hiddengems', trackId: 'secHiddenGemsTrack', defaultBadge: '💎 Gem' }
+    { key: 'trending', sectionId: 'secTrending', trackId: 'secTrendingTrack', defaultBadge: '🔥 Trending' },
+    { key: 'popular', sectionId: 'secPopular', trackId: 'secPopularTrack', defaultBadge: '⭐ Popular' },
+    { key: 'under100', sectionId: 'secUnder100', trackId: 'secUnder100Track', defaultBadge: '💰 Under ₹100' },
+    { key: 'legends', sectionId: 'secLegends', trackId: 'secLegendsTrack', defaultBadge: '👑 Legend' },
+    { key: 'latenight', sectionId: 'secLateNight', trackId: 'secLateNightTrack', defaultBadge: '🌙 Late Night' },
+    { key: 'hiddengems', sectionId: 'secHiddenGems', trackId: 'secHiddenGemsTrack', defaultBadge: '💎 Gem' }
   ];
 
   const tr = (k, fb) => (typeof t === 'function' ? t(k, fb) : fb);
 
-  sections.forEach(({ key, trackId, defaultBadge }) => {
+  sections.forEach(({ key, sectionId, trackId, defaultBadge }) => {
+    const secEl = document.getElementById(sectionId);
     const track = document.getElementById(trackId);
     if (!track) return;
 
@@ -1101,6 +856,16 @@ function renderDiscoverySections(stalls) {
     if (STATE.vegOnly) {
       matchingStalls = matchingStalls.filter(s => s.isVeg);
     }
+
+    // If no genuine matching live stalls exist, keep the entire section completely hidden
+    if (!matchingStalls || matchingStalls.length === 0) {
+      if (secEl) secEl.classList.add('hidden');
+      track.innerHTML = '';
+      return;
+    }
+
+    // Reveal section only when authentic live street carts exist
+    if (secEl) secEl.classList.remove('hidden');
 
     // Convert matching live stalls to cards with STRICT DATA INTEGRITY (zero invented metrics)
     const liveCards = matchingStalls.map(s => {
@@ -1128,183 +893,103 @@ function renderDiscoverySections(stalls) {
       };
     });
 
-    // Curated spotlight fallback cards (Category Craving cards with ZERO fake metrics)
-    let curatedCards = (CURATED_DISCOVERY[key] || []);
-    if (STATE.vegOnly) {
-      curatedCards = curatedCards.filter(c => c.isVeg);
-    }
-    const mappedCurated = curatedCards.map(c => ({
-      ...c,
-      isRealStall: false
-    }));
-
-    // Combine: live stalls first, then curated to reach at least 4 items
-    const displayCards = [...liveCards, ...mappedCurated].slice(0, 5);
     const custCoords = getActiveCustomerCoordinates();
 
-    track.innerHTML = displayCards.map(card => {
-      const isFav = card.isRealStall && STATE.favorites.includes(card.id);
-      const eta = card.isRealStall ? calculateMarketplaceEta(card, custCoords, STATE.deliveryCapacity) : null;
+    track.innerHTML = liveCards.slice(0, 10).map(card => {
+      const isFav = STATE.favorites.includes(card.id);
+      const eta = calculateMarketplaceEta(card, custCoords, STATE.deliveryCapacity);
       const safeName = card.name.replace(/'/g, "\\'");
       const fallbackImg = getThelaFoodPlaceholder(card.category, card.name);
 
-      if (card.isRealStall) {
-        return `
-          <div onclick="handleDiscoveryCardClick('${card.id}', true, '${card.category}', '${safeName}')"
-            class="shrink-0 w-64 sm:w-72 bg-white rounded-3xl border border-stone-200/90 overflow-hidden shadow-xs hover:shadow-xl hover:border-amber-300 transition-all duration-300 cursor-pointer group flex flex-col snap-start">
+      return `
+        <div onclick="handleDiscoveryCardClick('${card.id}', true, '${card.category}', '${safeName}')"
+          class="shrink-0 w-64 sm:w-72 bg-white rounded-3xl border border-stone-200/90 overflow-hidden shadow-xs hover:shadow-xl hover:border-amber-300 transition-all duration-300 cursor-pointer group flex flex-col snap-start">
+          
+          <!-- Food Hero Photo (Dominant visual hero) -->
+          <div class="relative h-44 sm:h-48 w-full overflow-hidden bg-stone-100">
+            <img src="${card.image || fallbackImg}" alt="${card.name}" class="w-full h-full object-cover group-hover:scale-106 transition-transform duration-500 ease-out" loading="lazy" decoding="async" onerror="handleFoodImageError(this, '${card.category}', '${safeName}')">
             
-            <!-- Food Hero Photo (Dominant visual hero) -->
-            <div class="relative h-44 sm:h-48 w-full overflow-hidden bg-stone-100">
-              <img src="${card.image || fallbackImg}" alt="${card.name}" class="w-full h-full object-cover group-hover:scale-106 transition-transform duration-500 ease-out" loading="lazy" decoding="async" onerror="handleFoodImageError(this, '${card.category}', '${safeName}')">
-              
-              <!-- Gradient Overlay -->
-              <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent pointer-events-none"></div>
+            <!-- Gradient Overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent pointer-events-none"></div>
 
-              <!-- Top-Left Badge -->
-              <div class="absolute top-2.5 left-2.5 flex items-center space-x-1.5 flex-wrap gap-y-1">
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider backdrop-blur shadow-md ${card.badgeColor}">
-                  ${card.badgeIcon ? card.badgeIcon + ' ' : ''}${card.badgeText}
-                </span>
-                ${card.isOpen 
-                  ? `<span class="bg-emerald-600/90 backdrop-blur text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-md">OPEN</span>`
-                  : `<span class="bg-stone-900/90 backdrop-blur text-stone-200 text-[9px] font-black px-2 py-0.5 rounded-full shadow-md">CLOSED</span>`
-                }
-              </div>
-
-              <!-- Top-Right Favorite Heart -->
-              <button onclick="event.stopPropagation(); toggleFavoriteStall('${card.id}')"
-                class="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/95 backdrop-blur flex items-center justify-center text-xs shadow-md transition hover:scale-110 active:scale-95 z-10"
-                title="${isFav ? 'Remove from favorites' : 'Save as favorite'}">
-                <i class="${isFav ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart text-stone-400 hover:text-red-500'}"></i>
-              </button>
-
-              <!-- Bottom Overlay Pills (Prominent Dynamic Delivery ETA & Geographic Distance) -->
-              <div class="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">
-                <div class="thela-eta-badge bg-stone-900/90 backdrop-blur px-2.5 py-1 rounded-lg text-[10px] font-black text-white shadow-md flex items-center space-x-1 border border-white/20">
-                  <i class="fa-solid fa-motorcycle text-amber-400 text-[10px]"></i>
-                  <span>${eta.pillText}</span>
-                </div>
-
-                ${eta.distanceText ? `
-                  <div class="bg-stone-900/85 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-bold text-stone-200 shadow-sm flex items-center space-x-1">
-                    <i class="fa-solid fa-location-dot text-amber-400 text-[9px]"></i>
-                    <span>${eta.distanceText}</span>
-                  </div>
-                ` : ''}
-              </div>
+            <!-- Top-Left Badge -->
+            <div class="absolute top-2.5 left-2.5 flex items-center space-x-1.5 flex-wrap gap-y-1">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider backdrop-blur shadow-md ${card.badgeColor}">
+                ${card.badgeIcon ? card.badgeIcon + ' ' : ''}${card.badgeText}
+              </span>
+              ${card.isOpen 
+                ? `<span class="bg-emerald-600/90 backdrop-blur text-white text-[9px] font-black px-2 py-0.5 rounded-full shadow-md">OPEN</span>`
+                : `<span class="bg-stone-900/90 backdrop-blur text-stone-200 text-[9px] font-black px-2 py-0.5 rounded-full shadow-md">CLOSED</span>`
+              }
             </div>
 
-            <!-- Clean Card Body -->
-            <div class="p-3.5 flex-1 flex flex-col justify-between space-y-2">
-              <div>
-                <div class="flex items-start justify-between gap-1.5">
-                  <h4 class="font-extrabold text-sm text-stone-900 leading-snug group-hover:text-amber-700 transition-colors line-clamp-1">
-                    ${card.name}
-                  </h4>
-                  <div class="flex items-center space-x-1 shrink-0 mt-0.5">
-                    ${card.isVeg ? `
-                      <span class="w-3.5 h-3.5 rounded border border-green-600 flex items-center justify-center p-0.5" title="Pure Veg">
-                        <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
-                      </span>
-                    ` : `
-                      <span class="w-3.5 h-3.5 rounded border border-red-600 flex items-center justify-center p-0.5" title="Non-Veg">
-                        <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                      </span>
-                    `}
-                  </div>
-                </div>
-                ${card.specialty ? `<p class="text-xs text-stone-500 font-medium mt-0.5 line-clamp-1">${card.specialty}</p>` : ''}
+            <!-- Top-Right Favorite Heart -->
+            <button onclick="event.stopPropagation(); toggleFavoriteStall('${card.id}')"
+              class="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/95 backdrop-blur flex items-center justify-center text-xs shadow-md transition hover:scale-110 active:scale-95 z-10"
+              title="${isFav ? 'Remove from favorites' : 'Save as favorite'}">
+              <i class="${isFav ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart text-stone-400 hover:text-red-500'}"></i>
+            </button>
+
+            <!-- Bottom Overlay Pills (Prominent Dynamic Delivery ETA & Geographic Distance) -->
+            <div class="absolute bottom-2.5 left-2.5 right-2.5 flex items-center justify-between pointer-events-none">
+              <div class="thela-eta-badge bg-stone-900/90 backdrop-blur px-2.5 py-1 rounded-lg text-[10px] font-black text-white shadow-md flex items-center space-x-1 border border-white/20">
+                <i class="fa-solid fa-motorcycle text-amber-400 text-[10px]"></i>
+                <span>${eta.pillText}</span>
               </div>
 
-              <div class="pt-2 border-t border-stone-100 flex items-center justify-between text-xs">
-                ${card.rating ? `
-                  <div class="flex items-center space-x-1">
-                    <span class="bg-amber-50 text-amber-900 font-black text-[10px] px-1.5 py-0.5 rounded flex items-center">
-                      <i class="fa-solid fa-star text-amber-500 mr-1 text-[9px]"></i>${card.rating}
+              ${eta.distanceText ? `
+                <div class="bg-stone-900/85 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-bold text-stone-200 shadow-sm flex items-center space-x-1">
+                  <i class="fa-solid fa-location-dot text-amber-400 text-[9px]"></i>
+                  <span>${eta.distanceText}</span>
+                </div>
+              ` : ''}
+            </div>
+          </div>
+
+          <!-- Clean Card Body -->
+          <div class="p-3.5 flex-1 flex flex-col justify-between space-y-2">
+            <div>
+              <div class="flex items-start justify-between gap-1.5">
+                <h4 class="font-extrabold text-sm text-stone-900 leading-snug group-hover:text-amber-700 transition-colors line-clamp-1">
+                  ${card.name}
+                </h4>
+                <div class="flex items-center space-x-1 shrink-0 mt-0.5">
+                  ${card.isVeg ? `
+                    <span class="w-3.5 h-3.5 rounded border border-green-600 flex items-center justify-center p-0.5" title="Pure Veg">
+                      <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
                     </span>
-                    <span class="text-[10px] text-stone-400 font-medium">(${card.reviewsCount})</span>
-                  </div>
-                ` : `
-                  <span class="bg-emerald-50 text-emerald-800 font-bold text-[10px] px-1.5 py-0.5 rounded flex items-center">
-                    <i class="fa-solid fa-seedling mr-1 text-emerald-600 text-[9px]"></i>New
-                  </span>
-                `}
-                ${card.priceForTwo ? `
-                  <span class="text-xs font-bold text-stone-800">₹${card.priceForTwo} ${tr('for_two', 'for two')}</span>
-                ` : `
-                  <span class="text-[10px] font-bold text-stone-400">Street Cart</span>
-                `}
-              </div>
-            </div>
-          </div>
-        `;
-      } else {
-        // Curated Category Craving card: Zero fake ratings, zero fake distance
-        return `
-          <div onclick="handleDiscoveryCardClick('${card.id}', false, '${card.category}', '${safeName}')"
-            class="shrink-0 w-64 sm:w-72 bg-white rounded-3xl border border-stone-200/90 overflow-hidden shadow-xs hover:shadow-xl hover:border-amber-300 transition-all duration-300 cursor-pointer group flex flex-col snap-start">
-            
-            <!-- Food Hero Photo (Dominant visual hero) -->
-            <div class="relative h-44 sm:h-48 w-full overflow-hidden bg-stone-100">
-              <img src="${card.image || fallbackImg}" alt="${card.name}" class="w-full h-full object-cover group-hover:scale-106 transition-transform duration-500 ease-out" loading="lazy" decoding="async" onerror="handleFoodImageError(this, '${card.category}', '${safeName}')">
-              
-              <!-- Gradient Overlay -->
-              <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-black/10 to-transparent pointer-events-none"></div>
-
-              <!-- Top-Left Badge -->
-              <div class="absolute top-2.5 left-2.5">
-                <span class="px-2.5 py-1 rounded-full text-[10px] font-black uppercase tracking-wider backdrop-blur shadow-md ${card.badgeColor}">
-                  ${card.badgeText}
-                </span>
-              </div>
-
-              <!-- Top-Right Craving Heart -->
-              <button onclick="event.stopPropagation(); showToast('❤️ Saved to cravings!')"
-                class="absolute top-2.5 right-2.5 w-8 h-8 rounded-full bg-white/95 backdrop-blur flex items-center justify-center text-xs shadow-md transition hover:scale-110 active:scale-95 z-10"
-                title="Save to cravings">
-                <i class="fa-regular fa-heart text-stone-400 hover:text-red-500"></i>
-              </button>
-
-              <!-- Bottom Overlay: Category Spotlight Pill -->
-              <div class="absolute bottom-2.5 left-2.5 bg-stone-900/85 backdrop-blur px-2.5 py-1 rounded-lg text-[10px] font-extrabold text-amber-400 shadow-sm flex items-center space-x-1">
-                <i class="fa-solid fa-utensils text-[9px]"></i>
-                <span>Street Food Spotlight</span>
-              </div>
-            </div>
-
-            <!-- Clean Card Body -->
-            <div class="p-3.5 flex-1 flex flex-col justify-between space-y-2">
-              <div>
-                <div class="flex items-start justify-between gap-1.5">
-                  <h4 class="font-extrabold text-sm text-stone-900 leading-snug group-hover:text-amber-700 transition-colors line-clamp-1">
-                    ${card.name}
-                  </h4>
-                  <div class="flex items-center space-x-1 shrink-0 mt-0.5">
-                    ${card.isVeg ? `
-                      <span class="w-3.5 h-3.5 rounded border border-green-600 flex items-center justify-center p-0.5" title="Pure Veg">
-                        <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
-                      </span>
-                    ` : `
-                      <span class="w-3.5 h-3.5 rounded border border-red-600 flex items-center justify-center p-0.5" title="Non-Veg">
-                        <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                      </span>
-                    `}
-                  </div>
+                  ` : `
+                    <span class="w-3.5 h-3.5 rounded border border-red-600 flex items-center justify-center p-0.5" title="Non-Veg">
+                      <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+                    </span>
+                  `}
                 </div>
-                <p class="text-xs text-stone-500 font-medium mt-0.5 line-clamp-1">${card.specialty}</p>
               </div>
+              ${card.specialty ? `<p class="text-xs text-stone-500 font-medium mt-0.5 line-clamp-1">${card.specialty}</p>` : ''}
+            </div>
 
-              <div class="pt-2 border-t border-stone-100 flex items-center justify-between text-xs">
-                <span class="text-xs font-bold text-amber-700 flex items-center space-x-1 group-hover:text-amber-800">
-                  <span>Explore Carts Nearby</span>
-                  <i class="fa-solid fa-arrow-right text-[10px] ml-1 group-hover:translate-x-1 transition-transform"></i>
+            <div class="pt-2 border-t border-stone-100 flex items-center justify-between text-xs">
+              ${card.rating ? `
+                <div class="flex items-center space-x-1">
+                  <span class="bg-amber-50 text-amber-900 font-black text-[10px] px-1.5 py-0.5 rounded flex items-center">
+                    <i class="fa-solid fa-star text-amber-500 mr-1 text-[9px]"></i>${card.rating}
+                  </span>
+                  <span class="text-[10px] text-stone-400 font-medium">(${card.reviewsCount})</span>
+                </div>
+              ` : `
+                <span class="bg-emerald-50 text-emerald-800 font-bold text-[10px] px-1.5 py-0.5 rounded flex items-center">
+                  <i class="fa-solid fa-seedling mr-1 text-emerald-600 text-[9px]"></i>New
                 </span>
-                <span class="text-[10px] font-bold text-stone-400 uppercase tracking-wider">${card.category || 'bites'}</span>
-              </div>
+              `}
+              ${card.priceForTwo ? `
+                <span class="text-xs font-bold text-stone-800">₹${card.priceForTwo} ${tr('for_two', 'for two')}</span>
+              ` : `
+                <span class="text-[10px] font-bold text-stone-400">Street Cart</span>
+              `}
             </div>
           </div>
-        `;
-      }
+        </div>
+      `;
     }).join('');
   });
 }
