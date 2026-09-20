@@ -2,8 +2,8 @@
 
 **Product Name**: Thela Express  
 **Description**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.0.0`  
-**Current Date**: September 19, 2026  
+**Current Production Version**: `v2.0.1`  
+**Current Date**: September 20, 2026  
 **Repository**: [https://github.com/Yooo6769/Thela-Express.git](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [https://thela-express.onrender.com](https://thela-express.onrender.com)  
 
@@ -27,10 +27,10 @@ Over the course of development, the system evolved from an initial multi-portal 
 ## Semantic Version Release Breakdown
 
 ```
-v1.0.0 ──► v1.1.0 ──► v1.2.0 ──► v1.3.0 ──► v1.4.0 ──► v1.5.0 ──► v1.6.0 ──► v1.7.0 ──► v1.8.0 ──► v1.9.0 ──► v2.0.0
-Initial     12-Lang   Two-Tier   Dynamic    Vendor     Adaptive   Food Photo  Dynamic   Centralized Payments &  Server
-Cloud       Indian    Trust &    Discovery  Profiles   Density &  & Dynamic   Delivery  Order       Ledger &    Authoritative
-Setup       i18n      Infra      & No Fiction & Clean  Atmosphere Hiding      ETA       Lifecycle   Settlement  Activation
+v1.0.0 ──► v1.1.0 ──► v1.2.0 ──► v1.3.0 ──► v1.4.0 ──► v1.5.0 ──► v1.6.0 ──► v1.7.0 ──► v1.8.0 ──► v1.9.0 ──► v2.0.0 ──► v2.0.1
+Initial     12-Lang   Two-Tier   Dynamic    Vendor     Adaptive   Food Photo  Dynamic   Centralized Payments &  Server      Authoritative
+Cloud       Indian    Trust &    Discovery  Profiles   Density &  & Dynamic   Delivery  Order       Ledger &    Activation  Store Status
+Setup       i18n      Infra      & No Fiction & Clean  Atmosphere Hiding      ETA       Lifecycle   Settlement  Pipeline    Resolution
 ```
 
 ---
@@ -260,10 +260,51 @@ Setup       i18n      Infra      & No Fiction & Clean  Atmosphere Hiding      ET
 
 ---
 
+### Version 2.0.1 — Server-Authoritative Store Status Derivation & Activation Contradiction Fix
+- **Release Date**: September 20, 2026
+- **Git Commit**: `d67801c` (`fix(partner): resolve store status contradiction with server-authoritative state derivation and regression tests`)
+- **Theme**: Operational Invariant Integrity & Partner Portal Store Status Normalization
+
+#### Problem Solved
+In production, stalls in intake stages (`APPLICATION_SUBMITTED`, `DOCUMENT_VERIFICATION`, `PHYSICAL_INSPECTION`, `CORRECTION_REQUIRED`, `REJECTED`, `APPROVED-but-not-LIVE`, `INACTIVE`, or `SUSPENDED`) previously suffered from a UI contradiction where the Partner header rendered "Store Status: OPEN FOR ORDERS" in bright green while the body of the page correctly showed "Kitchen POS Locked" and pending onboarding verification gates. This contradiction was caused by static i18n attribute overwrites (`data-i18n="store_open"`) and optimistic client-side fallback status labels.
+
+#### Key Features & Changes
+- **Single Backend Source of Truth (`server/src/db.js` -> `getStallStoreStatus`)**:
+  - Implemented centralized backend state machine method that authoritatively evaluates verification status, activation gates, and `isOpen` flag, returning canonical status objects.
+  - Strict canonical labels enforced:
+    - `APPLICATION_SUBMITTED` $\to$ `"APPLICATION PENDING"`
+    - `DOCUMENT_VERIFICATION` $\to$ `"VERIFICATION IN PROGRESS"`
+    - `PHYSICAL_INSPECTION` $\to$ `"VERIFICATION IN PROGRESS"`
+    - `CORRECTION_REQUIRED` $\to$ `"CORRECTION REQUIRED"`
+    - `REJECTED` $\to$ `"APPLICATION REJECTED"`
+    - `APPROVED` (not LIVE) $\to$ `"APPROVED — NOT LIVE"`
+    - `INACTIVE` $\to$ `"INACTIVE"`
+    - `SUSPENDED` $\to$ `"SUSPENDED"`
+    - `LIVE` + `isOpen === false` $\to$ `"STORE CLOSED"`
+    - `LIVE` + `isOpen === true` (all 7 mandatory activation gates pass) $\to$ `"OPEN FOR ORDERS"`
+- **Strict Endpoint Hardening**:
+  - `formatStallForPublic(stall)` strictly sets `isOpen: storeStatus.isOpen`. Unactivated stalls can never return `isOpen: true` to any customer or partner client.
+  - `GET /api/stalls/:id/status` delivers the comprehensive status payload (`store_status`, `store_status_label`, `can_accept_orders`, `isOpen`, `can_toggle_open`, `failed_gates`).
+  - `GET /api/onboard/vendor/status/:id` returns authoritative `store_status` and `store_status_label`.
+  - `PATCH ['/:id/status', '/:id/toggle-open', '/:id/toggle-live']` strictly rejects open toggle requests on any stall not in `APPROVED`, `LIVE`, or `INACTIVE` with passing gates (`HTTP 400 Bad Request`).
+- **Partner Frontend Normalization (`public/partner.html`, `public/partner.js`)**:
+  - Removed `data-i18n="store_open"` from `#vendorOpenLabel` to eliminate i18n DOM translation collisions.
+  - Initialized status button to neutral disabled: `CHECKING STATUS...` with gray indicator dot.
+  - Integrated `renderStoreStatus()` responding synchronously to stall data, language updates, and WebSocket `STALL_STATUS_CHANGED` broadcasts.
+- **12-Language Localization (`public/i18n.js`)**:
+  - Added translation keys for all 8 canonical store status states across all 12 Indian languages (English, Hindi, Bengali, Telugu, Marathi, Tamil, Urdu, Gujarati, Kannada, Malayalam, Odia, Punjabi). Verified with 0 missing keys.
+- **Automated Regression Suite (`scratch/test_store_status_contradiction.js`)**:
+  - 5-suite comprehensive test suite testing static DOM invariants, application isolation, full lifecycle transitions, LIVE vs. closed states, and suspended state protection.
+
+---
+
 ## Complete Git Commit Log History
 
 | Commit Hash | Commit Date | Scope / Area | Commit Summary |
 | :--- | :--- | :--- | :--- |
+| `d67801c` | 2026-09-20 | Partner App | `fix(partner): resolve store status contradiction with server-authoritative state derivation and regression tests` |
+| `790a35b` | 2026-09-20 | Packaging | `chore: bump version to 2.0.0 and generate version-stamped zip archives` |
+| `865621e` | 2026-09-20 | Documentation | `docs: add comprehensive application version history and changelog from v1.0.0 to v2.0.0` |
 | `8bf2187` | 2026-09-19 | Verification | `feat: implement server-authoritative vendor and rider activation pipeline with 7 mandatory gates` |
 | `e793837` | 2026-09-19 | Discovery | `feat(discovery): remove all mock discovery vendor cards and enforce dynamic zero-vendor hiding` |
 | `bb15488` | 2026-09-19 | Data Integrity | `Clean demo vendors, fake names, and header LIVE badge; isolate test fixtures` |
@@ -351,23 +392,25 @@ Setup       i18n      Infra      & No Fiction & Clean  Atmosphere Hiding      ET
 
 ## Verification Test Suites & Engineering Compliance
 
-The platform includes **8 automated verification suites** covering all aspects of the system:
+The platform includes **9 automated verification suites** covering all aspects of the system:
 
-1. **[`scratch/test_vendor_rider_activation.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_vendor_rider_activation.js)**:
+1. **[`scratch/test_store_status_contradiction.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_store_status_contradiction.js)**:
+   - Validates server-authoritative store status derivation, HTML DOM i18n invariants, non-activation isolation, canonical stage progression labels, and suspended state protection.
+2. **[`scratch/test_vendor_rider_activation.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_vendor_rider_activation.js)**:
    - Validates initial `APPLICATION_SUBMITTED` state, zero admin bypass, step-by-step activation lifecycle, post-activation continuous revalidation, suspension re-review rules, applicant token scoping (`HTTP 403`), rider dispatch gating, and public HTML content rendering.
-2. **[`scratch/test_payments_ledger.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_payments_ledger.js)**:
+3. **[`scratch/test_payments_ledger.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_payments_ledger.js)**:
    - Validates server pricing manipulation defense, 100% tip isolation, vendor vs. platform discounts, append-only double-entry ledger, full & partial proportional refunds, and EOD mathematical balance reconciliation.
-3. **[`scratch/test_order_lifecycle.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_order_lifecycle.js)**:
+4. **[`scratch/test_order_lifecycle.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_order_lifecycle.js)**:
    - Validates canonical 10-stage progression, illegal transition prevention, role impersonation defense, single-use doorstep OTP replay defense, rate-limiting, and OCC conflict handling.
-4. **[`scratch/test_all_i18n.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_all_i18n.js)**:
+5. **[`scratch/test_all_i18n.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_all_i18n.js)**:
    - Enforces 100% dictionary key coverage across all 5 applications and 12 Indian languages (0 missing keys).
-5. **[`scratch/audit_demodata.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/audit_demodata.js)**:
+6. **[`scratch/audit_demodata.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/audit_demodata.js)**:
    - Audits frontend scripts, backend code, and JSON database to guarantee zero mock vendors, fake names, or hardcoded tokens exist.
-6. **[`scratch/test_food_cards.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_food_cards.js)**:
+7. **[`scratch/test_food_cards.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_food_cards.js)**:
    - Verifies 3-tier visual hierarchy, vector placeholder generation, and dynamic hiding of discovery sections when 0 vendors exist.
-7. **[`scratch/test_delivery_eta_integrity.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_delivery_eta_integrity.js)**:
+8. **[`scratch/test_delivery_eta_integrity.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_delivery_eta_integrity.js)**:
    - Validates Haversine distance accuracy, fleet telemetry buffer scaling, and neutral fallback states for missing location data.
-8. **[`scratch/test_atmosphere.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_atmosphere.js)**:
+9. **[`scratch/test_atmosphere.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_atmosphere.js)**:
    - Verifies street-food atmosphere motifs, adaptive density states, and modal stack tracking.
 
 ---
