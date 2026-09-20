@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Description**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.0.2`  
+**Current Production Version**: `v2.0.3`  
 **Current Date**: September 20, 2026  
 **Repository**: [https://github.com/Yooo6769/Thela-Express.git](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [https://thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -27,10 +27,10 @@ Over the course of development, the system evolved from an initial multi-portal 
 ## Semantic Version Release Breakdown
 
 ```
-v1.0.0 ──► v1.1.0 ──► v1.2.0 ──► v1.3.0 ──► v1.4.0 ──► v1.5.0 ──► v1.6.0 ──► v1.7.0 ──► v1.8.0 ──► v1.9.0 ──► v2.0.0 ──► v2.0.1 ──► v2.0.2
-Initial     12-Lang   Two-Tier   Dynamic    Vendor     Adaptive   Food Photo  Dynamic   Centralized Payments &  Server      Store Status  Hoisting Fix &
-Cloud       Indian    Trust &    Discovery  Profiles   Density &  & Dynamic   Delivery  Order       Ledger &    Activation  Normalization Cache Defense &
-Setup       i18n      Infra      & No Fiction & Clean  Atmosphere Hiding      ETA       Lifecycle   Settlement  Pipeline    Contract      Radius Alignment
+v1.0.0 ──► v1.1.0 ──► v1.2.0 ──► v1.3.0 ──► v1.4.0 ──► v1.5.0 ──► v1.6.0 ──► v1.7.0 ──► v1.8.0 ──► v1.9.0 ──► v2.0.0 ──► v2.0.1 ──► v2.0.2 ──► v2.0.3
+Initial     12-Lang   Two-Tier   Dynamic    Vendor     Adaptive   Food Photo  Dynamic   Centralized Payments &  Server      Store Status  Hoisting Fix & Universal
+Cloud       Indian    Trust &    Discovery  Profiles   Density &  & Dynamic   Delivery  Order       Ledger &    Activation  Normalization Cache Defense & Theme Engine
+Setup       i18n      Infra      & No Fiction & Clean  Atmosphere Hiding      ETA       Lifecycle   Settlement  Pipeline    Contract      Radius Alignment (White/Black/OS)
 ```
 
 ---
@@ -334,11 +334,43 @@ Despite backend contract changes in v2.0.1, the LIVE Partner Web App in browsers
 
 ---
 
+### Version 2.0.3 — Universal Theme Engine & Background Colors (White, Black, System Default)
+- **Release Date**: September 20, 2026
+- **Git Commit**: `0e47812` (`feat(theme): add universal background color engine supporting White, Black, and System Default across all 5 apps`)
+- **Theme**: Cross-Portal Visual Accessibility, AMO-LED Black Mode & Adaptive Daylight White
+
+#### Problem Solved
+Vendors operating carts in bright outdoor sunlight needed maximum contrast clean white backgrounds, while delivery riders navigating dimly lit night alleys and platform operators in dark rooms needed pure AMOLED black backgrounds to reduce eye strain and conserve battery life. Furthermore, users across different devices expect applications to automatically honor their operating system's color scheme settings (`prefers-color-scheme`) without visual flicker.
+
+#### Key Features & Changes
+- **Universal 3-State Theme Engine (`public/theme.js`)**:
+  - Engineered centralized client-side theme manager supporting:
+    - **White (Light)**: High-contrast pure white surface (`#ffffff` / `#f8fafc`), dark slate typography (`#0f172a`), clean card borders.
+    - **Black (Dark)**: Deep AMOLED midnight black surface (`#09090b` / `#121215`), soft slate borders (`#27272a`), glowing saffron & emerald status indicators.
+    - **System Default (Auto)**: Reactive synchronization with host device OS mode (`window.matchMedia('(prefers-color-scheme: dark)')`).
+  - **Zero Flash of Unstyled Content (FOUC)**: Added synchronous `<head>` bootloaders across all 5 portals executing before DOM rendering.
+  - **Cross-Tab Synchronization**: Integrated `storage` event listener ensuring theme toggles in one tab instantly propagate to all open portals.
+  - **Multi-Language Reactivity**: Listens to `thela_language_changed` to dynamically update theme dropdown labels without full page reload.
+- **Semantic Design Tokens (`public/theme.css`)**:
+  - Implemented CSS variables (`--thela-bg`, `--thela-surface`, `--thela-border`, `--thela-text-primary`, `--thela-text-muted`).
+  - Comprehensive dark-mode overrides for cards, sticky headers, bottom navigation bars, dropdown menus, modals, and input controls across `index.html`, `partner.html`, `onboard-vendor.html`, `onboard-rider.html`, and `admin.html`.
+  - Added dedicated `.admin-theme-adaptive` classes allowing Platform Admin HQ to seamlessly morph between dark command center and crisp white executive dashboard.
+- **Universal Header Selector Component (`.themeSelectorMount`)**:
+  - Mounted elegant, accessible theme dropdown widget directly adjacent to the 12-Language Selector (`.langSelectorMount`) across all 5 portals.
+  - Matches platform aesthetic with icon cues (☀️ Sun for White, 🌙 Moon for Black, 💻 Desktop for System Default) and active checkmarks.
+- **12-Language Localization Dictionary (`public/i18n.js`)**:
+  - Added theme dictionary keys (`theme_selector`, `theme_white`, `theme_black`, `theme_system`) across all 12 Indian languages with 0 missing keys.
+- **Automated Verification Suite (`scratch/test_themes.js`)**:
+  - 46 automated assertions covering HTML head bootloaders, DOM class toggles, storage listeners, CSS tokens, and 12-language coverage (all passed).
+
+---
+
 ## Complete Git Commit Log History
 
 | Commit Hash | Commit Date | Scope / Area | Commit Summary |
 | :--- | :--- | :--- | :--- |
-| `089ea3b` | 2026-09-20 | Partner App | `fix(partner): eliminate hoisted functions, enforce no-cache headers, audit delivery radius, and expand anti-bypass tests` |
+| `0e47812` | 2026-09-20 | Theme Engine | `feat(theme): add universal background color engine supporting White, Black, and System Default across all 5 apps` |
+| `d7506cd` | 2026-09-20 | Partner App | `fix(partner): eliminate hoisted functions, enforce no-cache headers, audit delivery radius, and bump v2.0.2` |
 | `d67801c` | 2026-09-20 | Partner App | `fix(partner): resolve store status contradiction with server-authoritative state derivation and regression tests` |
 | `790a35b` | 2026-09-20 | Packaging | `chore: bump version to 2.0.0 and generate version-stamped zip archives` |
 | `865621e` | 2026-09-20 | Documentation | `docs: add comprehensive application version history and changelog from v1.0.0 to v2.0.0` |
@@ -429,7 +461,7 @@ Despite backend contract changes in v2.0.1, the LIVE Partner Web App in browsers
 
 ## Verification Test Suites & Engineering Compliance
 
-The platform includes **9 automated verification suites** covering all aspects of the system:
+The platform includes **10 automated verification suites** covering all aspects of the system:
 
 1. **[`scratch/test_store_status_contradiction.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_store_status_contradiction.js)**:
    - Validates server-authoritative store status derivation, HTML DOM i18n invariants, non-activation isolation, canonical stage progression labels, and suspended state protection.
@@ -449,6 +481,8 @@ The platform includes **9 automated verification suites** covering all aspects o
    - Validates Haversine distance accuracy, fleet telemetry buffer scaling, and neutral fallback states for missing location data.
 9. **[`scratch/test_atmosphere.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_atmosphere.js)**:
    - Verifies street-food atmosphere motifs, adaptive density states, and modal stack tracking.
+10. **[`scratch/test_themes.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_themes.js)**:
+   - Validates universal theme switching (White, Black, System Default), FOUC head bootloaders, multi-tab sync, CSS tokens, and 12-language localization coverage.
 
 ---
 

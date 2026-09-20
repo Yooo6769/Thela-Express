@@ -9,9 +9,25 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/theme.css?v=2.0.3">
+
+  <script>
+    (function() {
+      try {
+        var m = localStorage.getItem('thela_theme_mode') || 'system';
+        var d = m === 'white' ? false : (m === 'black' ? true : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches));
+        var root = document.documentElement;
+        root.classList.remove('dark', 'light');
+        root.classList.add(d ? 'dark' : 'light');
+        root.setAttribute('data-theme', m);
+        root.setAttribute('data-resolved-theme', d ? 'dark' : 'light');
+      } catch (e) {}
+    })();
+  </script>
 
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: {
@@ -400,8 +416,9 @@
 
       <!-- Consumer Action Controls (Language Selector, Pure Veg Toggle, Header Cart, Profile) -->
       <div class="flex items-center space-x-1.5 sm:space-x-2">
-        <!-- Language Switcher Mount -->
+        <!-- Language & Theme Switcher Mounts -->
         <div class="langSelectorMount"></div>
+        <div class="themeSelectorMount"></div>
 
         <!-- Quick Pure Veg Filter Toggle -->
         <button id="vegFilterBtn" onclick="toggleVegFilter()" 
@@ -1708,8 +1725,10 @@
   </div>
 
   <!-- Multi-Language Localization Engine -->
-  <script src="/i18n.js?v=2.0.2"></script>
+  <script src="/i18n.js?v=2.0.3"></script>
+  <!-- Universal Theme Engine (White, Black, System Default) -->
+  <script src="/theme.js?v=2.0.3"></script>
   <!-- Client-side Logic Script -->
-  <script src="/app.js?v=2.0.2"></script>
+  <script src="/app.js?v=2.0.3"></script>
 </body>
 </html>

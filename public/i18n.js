@@ -412,7 +412,11 @@ const I18N_DICTIONARY = {
     "add_to_cart_btn": "ADD",
     "view_cart_btn": "View Cart",
     "customizable_tag": "Customizable",
-    "orders_delivered_suffix": "orders delivered"
+    "orders_delivered_suffix": "orders delivered",
+    "theme_selector": "Theme",
+    "theme_white": "White (Light)",
+    "theme_black": "Black (Dark)",
+    "theme_system": "System Default"
   },
   "hi": {
     "select_location": "डिलीवरी स्थान चुनें",
@@ -749,7 +753,11 @@ const I18N_DICTIONARY = {
     "add_to_cart_btn": "ADD",
     "view_cart_btn": "View Cart",
     "customizable_tag": "Customizable",
-    "orders_delivered_suffix": "orders delivered"
+    "orders_delivered_suffix": "orders delivered",
+    "theme_selector": "थीम",
+    "theme_white": "सफेद (लाइट)",
+    "theme_black": "काला (डार्क)",
+    "theme_system": "सिस्टम डिफ़ॉल्ट"
   },
   "hinglish": {
     "select_location": "Delivery Location Chuno",
@@ -1086,7 +1094,11 @@ const I18N_DICTIONARY = {
     "add_to_cart_btn": "ADD",
     "view_cart_btn": "View Cart",
     "customizable_tag": "Customizable",
-    "orders_delivered_suffix": "orders delivered"
+    "orders_delivered_suffix": "orders delivered",
+    "theme_selector": "Theme",
+    "theme_white": "White (Light)",
+    "theme_black": "Black (Dark)",
+    "theme_system": "System Default"
   },
   "mr": {
     "select_location": "डिलिव्हरी ठिकाण निवडा",
@@ -1423,7 +1435,11 @@ const I18N_DICTIONARY = {
     "add_to_cart_btn": "ADD",
     "view_cart_btn": "View Cart",
     "customizable_tag": "Customizable",
-    "orders_delivered_suffix": "orders delivered"
+    "orders_delivered_suffix": "orders delivered",
+    "theme_selector": "थीम",
+    "theme_white": "पांढरा (लाइट)",
+    "theme_black": "काळा (डार्क)",
+    "theme_system": "सिस्टम डीफॉल्ट"
   },
   "gu": {
     "select_location": "ડિલિવરી સ્થળ પસંદ કરો",
@@ -1760,7 +1776,11 @@ const I18N_DICTIONARY = {
     "add_to_cart_btn": "ADD",
     "view_cart_btn": "View Cart",
     "customizable_tag": "Customizable",
-    "orders_delivered_suffix": "orders delivered"
+    "orders_delivered_suffix": "orders delivered",
+    "theme_selector": "થીમ",
+    "theme_white": "સફેદ (લાઇટ)",
+    "theme_black": "કાળો (ડાર્ક)",
+    "theme_system": "સિસ્ટમ ડિફૉલ્ટ"
   },
   "ta": {
     "select_location": "டெலிவரி இடத்தை தேர்வுசெய்க",
@@ -2097,7 +2117,11 @@ const I18N_DICTIONARY = {
     "add_to_cart_btn": "ADD",
     "view_cart_btn": "View Cart",
     "customizable_tag": "Customizable",
-    "orders_delivered_suffix": "orders delivered"
+    "orders_delivered_suffix": "orders delivered",
+    "theme_selector": "தீம்",
+    "theme_white": "வெள்ளை (லைட்)",
+    "theme_black": "கருப்பு (டார்க்)",
+    "theme_system": "சிஸ்டம் இயல்புநிலை"
   },
   "te": {
     "select_location": "డెలివరీ స్థానాన్ని ఎంచుకోండి",
@@ -2434,7 +2458,11 @@ const I18N_DICTIONARY = {
     "add_to_cart_btn": "ADD",
     "view_cart_btn": "View Cart",
     "customizable_tag": "Customizable",
-    "orders_delivered_suffix": "orders delivered"
+    "orders_delivered_suffix": "orders delivered",
+    "theme_selector": "థీమ్",
+    "theme_white": "తెలుపు (లైట్)",
+    "theme_black": "నలుపు (డార్క్)",
+    "theme_system": "సిస్టమ్ డిఫాల్ట్"
   },
   "kn": {
     "select_location": "ಡೆಲಿವರಿ ಸ್ಥಳವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
@@ -2771,7 +2799,11 @@ const I18N_DICTIONARY = {
     "add_to_cart_btn": "ADD",
     "view_cart_btn": "View Cart",
     "customizable_tag": "Customizable",
-    "orders_delivered_suffix": "orders delivered"
+    "orders_delivered_suffix": "orders delivered",
+    "theme_selector": "ಥೀಮ್",
+    "theme_white": "ಬಿಳಿ (ಲೈಟ್)",
+    "theme_black": "ಕಪ್ಪು (ಡಾರ್ಕ್)",
+    "theme_system": "ಸಿಸ್ಟಮ್ ಡೀಫಾಲ್ಟ್"
   },
   "bn": {
     "select_location": "ডেলিভারি লোকেশন বেছে নিন",
@@ -3108,7 +3140,11 @@ const I18N_DICTIONARY = {
     "add_to_cart_btn": "ADD",
     "view_cart_btn": "View Cart",
     "customizable_tag": "Customizable",
-    "orders_delivered_suffix": "orders delivered"
+    "orders_delivered_suffix": "orders delivered",
+    "theme_selector": "থিম",
+    "theme_white": "সাদা (লাইট)",
+    "theme_black": "কালো (ডার্ক)",
+    "theme_system": "সিস্টেম ডিফল্ট"
   },
   "ml": {
     "select_location": "ഡെലിവറി ലൊക്കേഷൻ തിരഞ്ഞെടുക്കുക",
@@ -3445,7 +3481,11 @@ const I18N_DICTIONARY = {
     "add_to_cart_btn": "ADD",
     "view_cart_btn": "View Cart",
     "customizable_tag": "Customizable",
-    "orders_delivered_suffix": "orders delivered"
+    "orders_delivered_suffix": "orders delivered",
+    "theme_selector": "തീം",
+    "theme_white": "വെള്ള (ലൈറ്റ്)",
+    "theme_black": "കറുപ്പ് (ഡാർക്ക്)",
+    "theme_system": "സിസ്റ്റം ഡിഫോൾട്ട്"
   },
   "pa": {
     "select_location": "ਡਿਲੀਵਰੀ ਟਿਕਾਣਾ ਚੁਣੋ",
@@ -3782,7 +3822,11 @@ const I18N_DICTIONARY = {
     "add_to_cart_btn": "ADD",
     "view_cart_btn": "View Cart",
     "customizable_tag": "Customizable",
-    "orders_delivered_suffix": "orders delivered"
+    "orders_delivered_suffix": "orders delivered",
+    "theme_selector": "ਥੀਮ",
+    "theme_white": "ਚਿੱਟਾ (ਲਾਈਟ)",
+    "theme_black": "ਕਾਲਾ (ਡਾਰਕ)",
+    "theme_system": "ਸਿਸਟਮ ਡਿਫੌਲਟ"
   },
   "or": {
     "select_location": "ଡେଲିଭରୀ ସ୍ଥାନ ବାଛନ୍ତୁ",
@@ -4119,7 +4163,11 @@ const I18N_DICTIONARY = {
     "add_to_cart_btn": "ADD",
     "view_cart_btn": "View Cart",
     "customizable_tag": "Customizable",
-    "orders_delivered_suffix": "orders delivered"
+    "orders_delivered_suffix": "orders delivered",
+    "theme_selector": "ଥିମ୍",
+    "theme_white": "ଧଳା (ଲାଇଟ୍)",
+    "theme_black": "କଳା (ଡାର୍କ)",
+    "theme_system": "ସିଷ୍ଟମ୍ ଡିଫଲ୍ଟ"
   }
 };
 

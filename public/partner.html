@@ -7,8 +7,25 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="/theme.css?v=2.0.3">
+
+  <script>
+    (function() {
+      try {
+        var m = localStorage.getItem('thela_theme_mode') || 'system';
+        var d = m === 'white' ? false : (m === 'black' ? true : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches));
+        var root = document.documentElement;
+        root.classList.remove('dark', 'light');
+        root.classList.add(d ? 'dark' : 'light');
+        root.setAttribute('data-theme', m);
+        root.setAttribute('data-resolved-theme', d ? 'dark' : 'light');
+      } catch (e) {}
+    })();
+  </script>
+
   <script>
     tailwind.config = {
+      darkMode: 'class',
       theme: {
         extend: {
           fontFamily: { sans: ['Plus Jakarta Sans', 'sans-serif'] }
@@ -63,8 +80,9 @@
           <span class="hidden sm:inline" data-i18n="sound_test">Test Bell</span>
         </button>
 
-        <!-- Multi-Language Selector Mount -->
+        <!-- Multi-Language & Theme Selector Mounts -->
         <div class="langSelectorMount"></div>
+        <div class="themeSelectorMount"></div>
 
         <!-- Segmented Role Switcher -->
         <div class="bg-gray-800 p-1 rounded-xl flex items-center text-xs font-bold border border-gray-700">
@@ -444,8 +462,10 @@
   </footer>
 
   <!-- Multi-Language Localization Engine -->
-  <script src="/i18n.js?v=2.0.2"></script>
+  <script src="/i18n.js?v=2.0.3"></script>
+  <!-- Universal Theme Engine (White, Black, System Default) -->
+  <script src="/theme.js?v=2.0.3"></script>
   <!-- Script logic for Partner App -->
-  <script src="/partner.js?v=2.0.2"></script>
+  <script src="/partner.js?v=2.0.3"></script>
 </body>
 </html>
