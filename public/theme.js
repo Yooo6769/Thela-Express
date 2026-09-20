@@ -96,12 +96,12 @@
     }
 
     return `
-      <div class="thela-theme-container relative inline-block text-left">
+      <div class="thela-theme-container relative inline-block text-left shrink-0">
         <button type="button" onclick="ThelaTheme.toggleMenu(event)" 
-          class="thela-theme-btn flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl text-xs font-bold transition shadow-sm whitespace-nowrap"
+          class="thela-theme-btn flex items-center justify-center space-x-1 px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-xl text-xs font-bold transition shadow-sm whitespace-nowrap shrink-0"
           title="${getThemeText('theme_selector', 'Choose Theme / थीम चुनें')}">
           <i class="${currentIcon} text-sm"></i>
-          <span class="theme-current-label font-extrabold text-[11px] sm:text-xs">${currentLabel}</span>
+          <span class="theme-current-label hidden md:inline font-extrabold text-[11px] sm:text-xs">${currentLabel}</span>
           <i class="fa-solid fa-chevron-down text-[8px] opacity-60"></i>
         </button>
 

@@ -4262,12 +4262,12 @@ function renderLanguageDropdownWidget() {
   const currentObj = I18N_LANGUAGES.find(l => l.code === CURRENT_LANG) || I18N_LANGUAGES[0];
   
   return `
-    <div class="thela-lang-container relative inline-block text-left">
+    <div class="thela-lang-container relative inline-block text-left shrink-0">
       <button type="button" onclick="toggleLanguageMenu(event)" 
-        class="flex items-center space-x-1.5 px-2.5 py-1.5 sm:px-3 sm:py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-800 hover:border-gray-300 hover:bg-gray-50 transition shadow-sm whitespace-nowrap"
+        class="thela-lang-btn flex items-center justify-center space-x-1 px-2 py-1.5 sm:px-2.5 sm:py-2 rounded-xl border border-gray-200 bg-white text-xs font-bold text-gray-800 hover:border-gray-300 hover:bg-gray-50 transition shadow-sm whitespace-nowrap shrink-0"
         title="Choose Language / भाषा चुनें">
         <i class="fa-solid fa-language text-orange-600 text-sm"></i>
-        <span class="current-lang-short font-extrabold text-[11px] sm:text-xs">${currentObj.native}</span>
+        <span class="current-lang-short hidden md:inline font-extrabold text-[11px] sm:text-xs">${currentObj.native}</span>
         <i class="fa-solid fa-chevron-down text-[8px] text-gray-400"></i>
       </button>
 

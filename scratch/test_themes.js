@@ -40,7 +40,7 @@ portals.forEach(portalPath => {
   const html = fs.readFileSync(fullPath, 'utf8');
 
   it(`${portalPath} includes theme.css link`, () => {
-    assert(html.includes('/theme.css?v=2.0.3'), `Missing /theme.css?v=2.0.3 in ${portalPath}`);
+    assert(html.includes('/theme.css?v=2.0.4'), `Missing /theme.css?v=2.0.4 in ${portalPath}`);
   });
 
   it(`${portalPath} includes inline FOUC prevention script in head`, () => {
@@ -57,7 +57,7 @@ portals.forEach(portalPath => {
   });
 
   it(`${portalPath} includes theme.js script`, () => {
-    assert(html.includes('/theme.js?v=2.0.3'), `Missing /theme.js?v=2.0.3 in ${portalPath}`);
+    assert(html.includes('/theme.js?v=2.0.4'), `Missing /theme.js?v=2.0.4 in ${portalPath}`);
   });
 });
 
@@ -156,6 +156,50 @@ const appJs = fs.readFileSync(appJsPath, 'utf8');
 it('server/src/app.js enforces no-cache headers for .css files', () => {
   assert(appJs.includes("filePath.endsWith('.css')"), 'Missing .css check in server static headers');
   assert(appJs.includes('no-cache, no-store, must-revalidate'), 'Missing no-cache header string');
+});
+
+// -------------------------------------------------------------
+// SUITE 6: HIGH CONTRAST TYPOGRAPHY & VIEWPORT CONTAINMENT
+// -------------------------------------------------------------
+console.log('\n--- SUITE 6: High Contrast Typography & Mobile Viewport Containment ---');
+
+it('theme.css enforces viewport overflow containment (overflow-x: hidden, max-width: 100vw)', () => {
+  assert(themeCss.includes('overflow-x: hidden !important'), 'Missing overflow-x: hidden !important in theme.css');
+  assert(themeCss.includes('max-width: 100vw !important'), 'Missing max-width: 100vw !important in theme.css');
+});
+
+it('theme.css overrides .text-stone-900 through .text-stone-400 for high-contrast dark readability', () => {
+  assert(themeCss.includes('.text-stone-900'), 'Missing .text-stone-900 override in theme.css');
+  assert(themeCss.includes('.text-stone-800'), 'Missing .text-stone-800 override in theme.css');
+  assert(themeCss.includes('.text-stone-700'), 'Missing .text-stone-700 override in theme.css');
+  assert(themeCss.includes('.text-stone-600'), 'Missing .text-stone-600 override in theme.css');
+  assert(themeCss.includes('.text-stone-500'), 'Missing .text-stone-500 override in theme.css');
+  assert(themeCss.includes('.text-stone-400'), 'Missing .text-stone-400 override in theme.css');
+});
+
+it('theme.css overrides .bg-stone-50, .bg-stone-100, .bg-stone-200 and borders for dark surfaces', () => {
+  assert(themeCss.includes('.bg-stone-50'), 'Missing .bg-stone-50 override in theme.css');
+  assert(themeCss.includes('.bg-stone-100'), 'Missing .bg-stone-100 override in theme.css');
+  assert(themeCss.includes('.border-stone-200'), 'Missing .border-stone-200 override in theme.css');
+});
+
+it('theme.css enforces high contrast for all headings h1-h6 in dark mode', () => {
+  assert(themeCss.includes('html.dark h1'), 'Missing html.dark h1 in theme.css');
+  assert(themeCss.includes('color: #f8fafc !important'), 'Missing crisp light heading color in theme.css');
+});
+
+it('theme.js hides theme label on mobile (<768px) to eliminate header width blowout', () => {
+  assert(themeJs.includes('theme-current-label hidden md:inline'), 'theme.js must use hidden md:inline for mobile compactness');
+});
+
+it('i18n.js hides language label on mobile (<768px) to eliminate header width blowout', () => {
+  assert(i18nContent.includes('current-lang-short hidden md:inline'), 'i18n.js must use hidden md:inline for mobile compactness');
+});
+
+it('index.html body and header prevent horizontal overflow', () => {
+  const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+  assert(indexHtml.includes('overflow-x-hidden'), 'index.html body must contain overflow-x-hidden');
+  assert(indexHtml.includes('overflow-hidden'), 'index.html header must contain overflow-hidden');
 });
 
 // -------------------------------------------------------------
