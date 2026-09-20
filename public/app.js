@@ -3012,12 +3012,14 @@ async function loadVendorMenuItems() {
     const stall = data.stall;
     const btn = document.getElementById('vendorToggleOpenBtn');
     const label = document.getElementById('vendorOpenLabel');
-    if (stall.isOpen) {
-      btn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-green-100 text-green-700 flex items-center space-x-1.5 transition';
-      label.innerText = 'OPEN FOR ORDERS';
-    } else {
-      btn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-red-100 text-red-700 flex items-center space-x-1.5 transition';
-      label.innerText = 'CLOSED';
+    if (stall && btn && label) {
+      if (stall.status === 'LIVE' && Boolean(stall.isOpen)) {
+        btn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-green-100 text-green-700 flex items-center space-x-1.5 transition';
+        label.innerText = 'OPEN FOR ORDERS';
+      } else {
+        btn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-gray-100 text-gray-700 flex items-center space-x-1.5 transition cursor-not-allowed';
+        label.innerText = stall.store_status_label || (stall.status === 'LIVE' ? 'STORE CLOSED' : 'APPLICATION PENDING');
+      }
     }
 
     container.innerHTML = STATE.vendorMenu.map(item => `

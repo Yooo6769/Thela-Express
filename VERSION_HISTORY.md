@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Description**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.0.1`  
+**Current Production Version**: `v2.0.2`  
 **Current Date**: September 20, 2026  
 **Repository**: [https://github.com/Yooo6769/Thela-Express.git](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [https://thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -20,17 +20,17 @@ Over the course of development, the system evolved from an initial multi-portal 
 3. **Strict State Machine Enactment**: Both orders and participant registrations follow formal deterministic state machines guarded by Optimistic Concurrency Control (OCC `version`), role-based access control (RBAC), and explicit transition rules.
 4. **Cryptographic Doorstep Delivery Proof**: Delivery completion requires single-use, AES-256-GCM encrypted doorstep OTP verification with cryptographic salt hashing, preventing driver fraud and replay attacks.
 5. **Progressive 7-Gate Verification (Zero Admin Bypass)**: Registration is treated strictly as an application (`APPLICATION_SUBMITTED`). A stall can only go `LIVE` after fulfilling 7 mandatory server-side gates (FSSAI verified, physical hygiene score $\ge 80$, on-site location verified, active menu, UPI ID, valid contact, and operations approval).
-6. **Zero Fictional Data**: Elimination of all mock vendors, fake craving cards, hardcoded sample OTPs, and fabricated "15-minute" delivery claims in favor of real-time Haversine distance, vendor prep times, and fleet capacity telemetry.
+6. **Zero Fictional Data**: Elimination of all mock vendors, fake craving cards, hardcoded sample OTPs, and fabricated delivery promises in favor of real-time Haversine distance, vendor prep times, and fleet capacity telemetry.
 
 ---
 
 ## Semantic Version Release Breakdown
 
 ```
-v1.0.0 ──► v1.1.0 ──► v1.2.0 ──► v1.3.0 ──► v1.4.0 ──► v1.5.0 ──► v1.6.0 ──► v1.7.0 ──► v1.8.0 ──► v1.9.0 ──► v2.0.0 ──► v2.0.1
-Initial     12-Lang   Two-Tier   Dynamic    Vendor     Adaptive   Food Photo  Dynamic   Centralized Payments &  Server      Authoritative
-Cloud       Indian    Trust &    Discovery  Profiles   Density &  & Dynamic   Delivery  Order       Ledger &    Activation  Store Status
-Setup       i18n      Infra      & No Fiction & Clean  Atmosphere Hiding      ETA       Lifecycle   Settlement  Pipeline    Resolution
+v1.0.0 ──► v1.1.0 ──► v1.2.0 ──► v1.3.0 ──► v1.4.0 ──► v1.5.0 ──► v1.6.0 ──► v1.7.0 ──► v1.8.0 ──► v1.9.0 ──► v2.0.0 ──► v2.0.1 ──► v2.0.2
+Initial     12-Lang   Two-Tier   Dynamic    Vendor     Adaptive   Food Photo  Dynamic   Centralized Payments &  Server      Store Status  Hoisting Fix &
+Cloud       Indian    Trust &    Discovery  Profiles   Density &  & Dynamic   Delivery  Order       Ledger &    Activation  Normalization Cache Defense &
+Setup       i18n      Infra      & No Fiction & Clean  Atmosphere Hiding      ETA       Lifecycle   Settlement  Pipeline    Contract      Radius Alignment
 ```
 
 ---
@@ -298,10 +298,47 @@ In production, stalls in intake stages (`APPLICATION_SUBMITTED`, `DOCUMENT_VERIF
 
 ---
 
+### Version 2.0.2 — JS Hoisting Elimination, Zero-Cache Defense & Delivery Radius Alignment
+- **Release Date**: September 20, 2026
+- **Git Commit**: `089ea3b` (`fix(partner): eliminate hoisted functions, enforce no-cache headers, audit delivery radius, and expand anti-bypass tests`)
+- **Theme**: Runtime Hoisting Bug Eradication, Aggressive Client Cache Defense & Verifiable Business Policy
+
+#### Problem Solved
+Despite backend contract changes in v2.0.1, the LIVE Partner Web App in browsers continued to render "Store Status: OPEN FOR ORDERS" while showing `APPLICATION_SUBMITTED`. Deep AST and lexical audit revealed two critical root causes:
+1. **JavaScript Function Hoisting Overwrites in `public/partner.js`**: Legacy implementations of `onVendorStallChange` (line 820) and `toggleStallOpenStatus` (line 1148) had been declared lower down in the file. Due to JavaScript hoisting rules, these legacy declarations completely superseded the newly added async functions higher up in the file. The legacy `toggleStallOpenStatus` contained an unconditional assignment `label.innerText = 'OPEN FOR ORDERS'`.
+2. **Aggressive Browser Heuristic Caching**: Standard `express.static` headers without explicit cache disabling allowed browsers to serve cached JavaScript and HTML files from disk, ignoring newly deployed code.
+3. **Fictional "1.5 km" Hardcoded Copy**: Copy in `onboard-rider.html` and `index.html` advertised "Deliver within 1.5 km", conflicting with the authoritative backend rule of `deliveryRadiusKm: 2.5`.
+
+#### Key Features & Changes
+- **Root Cause Hoisting Elimination (`public/partner.js`)**:
+  - Removed duplicate declarations of `onVendorStallChange` and `toggleStallOpenStatus`.
+  - Added an ironclad failsafe invariant guard to `renderStoreStatus(stall)`: if `stall.status !== 'LIVE'` or `!stall.isOpen` or `!storeStatus.canAcceptOrders`, `labelText` can NEVER be assigned `'OPEN FOR ORDERS'`. It automatically and unconditionally falls back to the authoritative canonical label (`storeStatus.label` or `'APPLICATION PENDING'`).
+  - Added `renderStoreStatus(null)` inside `renderNoStallsState()` to clear badges when no stall is selected.
+  - Attached `getPartnerAuthHeaders('vendor')` to `loadVendorMenuItems()` so applicant vendors can query their menu items during the onboarding review phase.
+- **Aggressive HTTP Cache Busting & Prevention (`server/src/app.js`)**:
+  - Configured `express.static` with custom `setHeaders` emitting:
+    - `Cache-Control: no-cache, no-store, must-revalidate`
+    - `Pragma: no-cache`
+    - `Expires: 0`
+    for all HTML and JavaScript files.
+  - Injected `?v=2.0.2` cache-busting version query parameters into all `<script>` tags across `public/partner.html`, `public/index.html`, `public/onboard-rider.html`, `public/onboard-vendor.html`, and `public/admin.html`.
+- **Delivery Radius Backend Configuration Alignment**:
+  - Audited and purged all occurrences of fictional "1.5 km" claims from client HTML templates.
+  - Updated `public/onboard-rider.html` hero copy to "Deliver authentic hot street food in your local neighborhood. Flexible hours, EV friendly, instant UPI earnings."
+  - Updated `public/index.html` bill details to generic `"Delivery Fee"`.
+  - Exposed `serviceRules: { deliveryRadiusKm: 2.5, packagingFeeDefault: 10, deliveryFeeDefault: 0 }` via `GET /api/stalls/capacity` for verifiable client consumption.
+- **Deep Anti-Bypass Regression Tests (`scratch/test_store_status_contradiction.js`)**:
+  - Expanded test suite to **7 suites**:
+    - **Suite 6**: Deep Anti-Bypass Proof testing tampered stalls with forged `isOpen: true`, verifying `db.getStallStoreStatus()`, `db.formatStallForPublic()`, zero duplicate hoisted functions in `partner.js`, and zero unconditional assignments of `'OPEN FOR ORDERS'`.
+    - **Suite 7**: Delivery Radius Audit proving 0 matches of "1.5 km" in client HTML and verifying `deliveryRadiusKm: 2.5` on `/api/stalls/capacity`.
+
+---
+
 ## Complete Git Commit Log History
 
 | Commit Hash | Commit Date | Scope / Area | Commit Summary |
 | :--- | :--- | :--- | :--- |
+| `089ea3b` | 2026-09-20 | Partner App | `fix(partner): eliminate hoisted functions, enforce no-cache headers, audit delivery radius, and expand anti-bypass tests` |
 | `d67801c` | 2026-09-20 | Partner App | `fix(partner): resolve store status contradiction with server-authoritative state derivation and regression tests` |
 | `790a35b` | 2026-09-20 | Packaging | `chore: bump version to 2.0.0 and generate version-stamped zip archives` |
 | `865621e` | 2026-09-20 | Documentation | `docs: add comprehensive application version history and changelog from v1.0.0 to v2.0.0` |

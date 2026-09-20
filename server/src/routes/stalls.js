@@ -24,9 +24,15 @@ router.get('/categories', (req, res) => {
 
 // GET /api/stalls/capacity (Live Platform Delivery Capacity Telemetry)
 router.get('/capacity', (req, res) => {
+  const settings = db.getSettings();
   res.json({
     success: true,
-    capacity: db.getDeliveryCapacity()
+    capacity: db.getDeliveryCapacity(),
+    serviceRules: {
+      deliveryRadiusKm: settings.deliveryRadiusKm || 2.5,
+      packagingFeeDefault: settings.packagingFeeDefault ?? 10,
+      deliveryFeeDefault: settings.deliveryFeeDefault ?? 0
+    }
   });
 });
 
@@ -144,6 +150,7 @@ router.get('/:id/status', (req, res) => {
     return res.status(404).json({ error: 'Stall not found.' });
   }
   const storeStatus = db.getStallStoreStatus(stall);
+  const gateEvaluation = db.validateVendorLiveActivationGates(stall);
   res.json({
     success: true,
     stallId: stall.id,
@@ -151,7 +158,12 @@ router.get('/:id/status', (req, res) => {
     status: stall.status,
     isOpen: storeStatus.isOpen,
     canAcceptOrders: storeStatus.canAcceptOrders,
-    store_status: storeStatus
+    can_toggle_open: storeStatus.canToggleOpen,
+    store_status: storeStatus,
+    store_status_label: storeStatus.label,
+    gates: gateEvaluation.gates || [],
+    gatesPassed: gateEvaluation.eligible,
+    missingRequirements: gateEvaluation.reasons
   });
 });
 

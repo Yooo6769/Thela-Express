@@ -1193,9 +1193,8 @@ class Database {
 
     // Vendor token by stall: thela_tok_vendor_<stallId>
     if (cleanToken.startsWith('thela_tok_vendor_')) {
-      const parts = cleanToken.split('_');
-      const stallId = parts.slice(3).join('_').replace(/_\d+$/, '');
-      const stall = this.getStallById(stallId) || this.data.stalls.find(s => s.id === parts[3]);
+      const stallId = cleanToken.replace(/^thela_tok_vendor_/, '');
+      const stall = this.getStallById(stallId) || this.data.stalls.find(s => s.id === stallId);
       if (stall) {
         return {
           authenticated: true,
@@ -1209,15 +1208,14 @@ class Database {
 
     // Rider token: thela_tok_rider_<riderId>
     if (cleanToken.startsWith('thela_tok_rider_')) {
-      const parts = cleanToken.split('_');
-      const riderId = parts.slice(3).join('_').replace(/_\d+$/, '');
-      const rider = this.getRiderById(riderId) || this.data.riders.find(r => r.id === parts[3]);
+      const riderId = cleanToken.replace(/^thela_tok_rider_/, '');
+      const rider = this.getRiderById(riderId) || this.data.riders.find(r => r.id === riderId);
       if (rider) {
         return {
           authenticated: true,
           role: 'rider',
           actorId: rider.id,
-          rider
+          riderId: rider.id
         };
       }
     }
@@ -1410,9 +1408,55 @@ class Database {
       reasons.push(`Hygiene inspection score must be at least 80/100 (current score: ${stall.hygiene_score})`);
     }
 
+    const gates = [
+      {
+        id: 'approval',
+        name: 'Platform Operations Approved',
+        passed: stall.verification_status === 'APPROVED' || stall.status === 'LIVE',
+        detail: (stall.verification_status === 'APPROVED' || stall.status === 'LIVE') ? 'Formally authorized' : `Status: ${stall.verification_status || 'APPLICATION_SUBMITTED'}`
+      },
+      {
+        id: 'contact',
+        name: 'Contact & Identity Information',
+        passed: Boolean(stall.owner_name && cleanPhone.length === 10),
+        detail: stall.owner_phone ? `+91 ${cleanPhone}` : 'Owner phone missing'
+      },
+      {
+        id: 'location',
+        name: 'On-Site Location Verified',
+        passed: Boolean(stall.location_verified),
+        detail: stall.location_verified ? 'Verified by on-site auditor' : (stall.lat ? 'Untrusted applicant GPS evidence' : 'Location pending')
+      },
+      {
+        id: 'menu',
+        name: 'Active Menu Configured',
+        passed: validItems.length > 0,
+        detail: `${validItems.length} active dish(es) registered`
+      },
+      {
+        id: 'upi',
+        name: 'Direct Daily UPI Settled',
+        passed: Boolean(stall.upi_id && upiRegex.test(stall.upi_id.trim())),
+        detail: stall.upi_id || 'Missing UPI payout ID'
+      },
+      {
+        id: 'fssai',
+        name: 'FSSAI Regulatory Verified',
+        passed: stall.fssai_status === 'verified' && (!stall.fssai_expiry_date || new Date(stall.fssai_expiry_date).getTime() >= Date.now()),
+        detail: stall.fssai_number ? `No: ${stall.fssai_number} (${stall.fssai_status || 'submitted'})` : 'Awaiting FSSAI license'
+      },
+      {
+        id: 'hygiene',
+        name: 'Physical Hygiene Audit (Score ≥ 80)',
+        passed: stall.hygiene_status === 'verified' && (stall.hygiene_score || 0) >= 80,
+        detail: stall.hygiene_score ? `Score: ${stall.hygiene_score}/100` : 'On-ground hygiene audit pending'
+      }
+    ];
+
     return {
       eligible: reasons.length === 0,
-      reasons
+      reasons,
+      gates
     };
   }
 

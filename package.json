@@ -1,6 +1,6 @@
 {
   "name": "thela-express",
-  "version": "2.0.1",
+  "version": "2.0.2",
   "description": "Hyper-local Quick Commerce Platform for Indian Street Food Stalls",
   "main": "server/src/server.js",
   "scripts": {

@@ -151,7 +151,7 @@ const styledHtml = `<!DOCTYPE html>
   <div class="container">
     <div class="header-banner">
       <h1><i class="fa-solid fa-store" style="margin-right:10px;"></i>Thela Express</h1>
-      <p>App Version History & Architectural Changelog (v1.0.0 → v2.0.0)</p>
+      <p>App Version History & Architectural Changelog (v1.0.0 → v2.0.2)</p>
     </div>
     ${mdToHtml(content)}
   </div>

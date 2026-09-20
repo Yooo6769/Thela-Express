@@ -40,9 +40,17 @@ app.get('/api/health', (req, res) => {
   });
 });
 
-// Serve frontend static files
+// Serve frontend static files with explicit no-cache headers for scripts and HTML
 const publicDir = path.join(__dirname, '..', '..', 'public');
-app.use(express.static(publicDir));
+app.use(express.static(publicDir, {
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.html') || filePath.endsWith('.js')) {
+      res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+    }
+  }
+}));
 
 // Fallback to index.html for SPA routing
 app.get('*', (req, res) => {

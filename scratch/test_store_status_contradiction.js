@@ -332,8 +332,73 @@ async function runTests() {
     assert(suspTog.body.error.includes('Store open toggle blocked') || suspTog.body.error.includes('Illegal stall status transition'));
     console.log('  ✓ Toggle open strictly blocked while SUSPENDED');
 
+    // -------------------------------------------------------------
+    // SUITE 6: Deep Anti-Bypass Proof: APPLICATION_SUBMITTED Cannot Display OPEN FOR ORDERS
+    // -------------------------------------------------------------
+    console.log('\n--- SUITE 6: Deep Anti-Bypass Proof: APPLICATION_SUBMITTED Cannot Display OPEN FOR ORDERS ---');
+    
+    // Test 1: Tampered stall in database with isOpen: true forcefully set
+    const tamperedStall = {
+      id: 'stall_tampered_app_sub',
+      name: 'Tampered Chaat Cart',
+      status: 'APPLICATION_SUBMITTED',
+      verification_status: 'APPLICATION_SUBMITTED',
+      isOpen: true, // Maliciously forged or legacy true flag
+      is_active: true
+    };
+
+    const tamperedStatus = db.getStallStoreStatus(tamperedStall);
+    assert.notStrictEqual(tamperedStatus.label, 'OPEN FOR ORDERS', 'CRITICAL BUG: Tampered stall returned OPEN FOR ORDERS!');
+    assert.strictEqual(tamperedStatus.label, 'APPLICATION PENDING', 'Tampered stall must return APPLICATION PENDING');
+    assert.strictEqual(tamperedStatus.isOpen, false, 'Tampered stall must have isOpen=false');
+    assert.strictEqual(tamperedStatus.canAcceptOrders, false, 'Tampered stall cannot accept orders');
+    console.log('  ✓ Server-side db.getStallStoreStatus() overrides forged isOpen=true to false for APPLICATION_SUBMITTED');
+
+    const formattedTampered = db.formatStallForPublic(tamperedStall);
+    assert.strictEqual(formattedTampered.isOpen, false, 'formatStallForPublic must force isOpen=false');
+    assert.strictEqual(formattedTampered.store_status_label, 'APPLICATION PENDING');
+    assert.notStrictEqual(formattedTampered.store_status_label, 'OPEN FOR ORDERS');
+    console.log('  ✓ Server-side formatStallForPublic() strictly overrides isOpen to false');
+
+    // Test 2: Verify partner.js has zero duplicate function declarations
+    const partnerJs = fs.readFileSync(path.join(__dirname, '../public/partner.js'), 'utf8');
+    const funcMatches = partnerJs.match(/function\s+([a-zA-Z0-9_$]+)\s*\(/g) || [];
+    const funcNames = funcMatches.map(f => f.replace(/function\s+/, '').replace(/\s*\(/, '').trim());
+    const duplicates = funcNames.filter((name, index) => funcNames.indexOf(name) !== index);
+    assert.strictEqual(duplicates.length, 0, `CRITICAL: Duplicate functions found in partner.js: ${duplicates.join(', ')}`);
+    console.log('  ✓ Verified 0 duplicate function declarations in partner.js');
+
+    // Test 3: Verify partner.js cannot set label.innerText = 'OPEN FOR ORDERS' unconditionally
+    assert(!partnerJs.includes("label.innerText = 'OPEN FOR ORDERS';"),
+      'partner.js must not contain raw unverified assignments of OPEN FOR ORDERS');
+    console.log('  ✓ partner.js contains zero unconditional assignments of OPEN FOR ORDERS');
+
+    // -------------------------------------------------------------
+    // SUITE 7: Delivery Radius Audit & Business Rule Verification
+    // -------------------------------------------------------------
+    console.log('\n--- SUITE 7: Delivery Radius Audit & Backend Configuration ---');
+    
+    // Check onboard-rider.html
+    const riderHtml = fs.readFileSync(path.join(__dirname, '../public/onboard-rider.html'), 'utf8');
+    assert(!riderHtml.includes('within 1.5 km'), 'CRITICAL: onboard-rider.html still contains fixed "within 1.5 km" claim!');
+    console.log('  ✓ public/onboard-rider.html contains no fixed "1.5 km" delivery radius wording');
+
+    // Check index.html
+    const indexHtml = fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8');
+    assert(!indexHtml.includes('Within 1.5 km') && !indexHtml.includes('within 1.5 km'),
+      'CRITICAL: index.html still contains fixed "Within 1.5 km" claim!');
+    console.log('  ✓ public/index.html contains no fixed "1.5 km" delivery radius wording');
+
+    // Check backend capacity & serviceRules endpoint
+    const capRes = await request('GET', '/api/stalls/capacity');
+    assert.strictEqual(capRes.status, 200);
+    assert(capRes.body.serviceRules, 'GET /api/stalls/capacity must return serviceRules');
+    assert(typeof capRes.body.serviceRules.deliveryRadiusKm === 'number', 'serviceRules.deliveryRadiusKm must be a number');
+    assert.strictEqual(capRes.body.serviceRules.deliveryRadiusKm, 2.5, 'Backend deliveryRadiusKm must match configured 2.5 km');
+    console.log(`  ✓ GET /api/stalls/capacity exposes authoritative deliveryRadiusKm: ${capRes.body.serviceRules.deliveryRadiusKm} km`);
+
     console.log('\n================================================================');
-    console.log('🎉 ALL STORE STATUS CONTRADICTION TESTS PASSED FLAWLESSLY!');
+    console.log('🎉 ALL STORE STATUS CONTRADICTION & AUDIT TESTS PASSED FLAWLESSLY!');
     console.log('================================================================\n');
 
   } finally {

@@ -279,18 +279,47 @@ async function loadStalls() {
     // If a specific stallId is targeted (or stored), fetch authoritative application status
     if (PARTNER_STATE.vendorStallId) {
       try {
+        let serverStoreStatus = null;
+        let serverGates = [];
+        try {
+          const stStatusRes = await fetch(`/api/stalls/${PARTNER_STATE.vendorStallId}/status`);
+          if (stStatusRes.ok) {
+            const stStatusData = await stStatusRes.json();
+            if (stStatusData.success) {
+              serverStoreStatus = stStatusData.store_status;
+              serverGates = stStatusData.gates || [];
+            }
+          }
+        } catch (e) {
+          console.warn('Could not fetch public stall status:', e);
+        }
+
         const stRes = await fetch(`/api/onboard/vendor/status/${PARTNER_STATE.vendorStallId}`, {
           headers: getPartnerAuthHeaders('vendor')
         });
         const stData = await stRes.json();
         if (stData.success && stData.stall) {
           PARTNER_STATE.vendorStallData = stData.stall;
-          PARTNER_STATE.vendorGates = stData.gates || [];
+          if (serverStoreStatus) PARTNER_STATE.vendorStallData.store_status = serverStoreStatus;
+          PARTNER_STATE.vendorGates = stData.gates || serverGates || [];
           PARTNER_STATE.vendorCanAcceptOrders = Boolean(stData.can_accept_orders);
 
           // If this stall is not in public LIVE stalls, add it to options
           if (!PARTNER_STATE.stalls.some(s => s.id === stData.stall.id)) {
-            PARTNER_STATE.stalls.unshift(stData.stall);
+            PARTNER_STATE.stalls.unshift(PARTNER_STATE.vendorStallData);
+          }
+        } else if (serverStoreStatus) {
+          PARTNER_STATE.vendorStallData = {
+            id: PARTNER_STATE.vendorStallId,
+            name: 'My Street Stall',
+            status: serverStoreStatus.code,
+            isOpen: serverStoreStatus.isOpen,
+            store_status: serverStoreStatus
+          };
+          PARTNER_STATE.vendorGates = serverGates;
+          PARTNER_STATE.vendorCanAcceptOrders = Boolean(serverStoreStatus.canAcceptOrders);
+          if (!PARTNER_STATE.stalls.some(s => s.id === PARTNER_STATE.vendorStallId)) {
+            PARTNER_STATE.stalls.unshift(PARTNER_STATE.vendorStallData);
           }
         }
       } catch (err) {
@@ -304,6 +333,7 @@ async function loadStalls() {
       if (select) {
         select.innerHTML = '<option value="">No stalls registered</option>';
       }
+      renderStoreStatus(null);
       renderNoStallsState();
       return;
     }
@@ -520,16 +550,25 @@ function renderStoreStatus(stall) {
 
   if (!stall) {
     toggleBtn.disabled = true;
-    openLabel.innerText = 'NO STALL SELECTED';
+    openLabel.innerText = 'NO STALL REGISTERED';
     toggleBtn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-gray-100 text-gray-500 border border-gray-300 flex items-center space-x-1.5 cursor-not-allowed opacity-80';
     if (openDot) openDot.className = 'w-2 h-2 rounded-full bg-gray-400';
     return;
   }
 
   const storeStatus = stall.store_status || deriveStoreStatus(stall);
-  const labelText = (typeof t === 'function' && storeStatus.i18nKey)
+  const rawStatus = (stall.status || '').toUpperCase();
+  const isGenuinelyLiveAndOpen = rawStatus === 'LIVE' && Boolean(stall.isOpen) && Boolean(storeStatus.canAcceptOrders);
+
+  let labelText = (typeof t === 'function' && storeStatus.i18nKey)
     ? t(storeStatus.i18nKey, storeStatus.label)
     : storeStatus.label;
+
+  // Strict invariant: under NO condition can any unapproved or non-live stall display "OPEN FOR ORDERS"
+  if (!isGenuinelyLiveAndOpen && (labelText === 'OPEN FOR ORDERS' || storeStatus.code === 'OPEN_FOR_ORDERS')) {
+    console.warn('[Partner StoreStatus] Blocked premature OPEN FOR ORDERS label on non-live stall. Reverting to authoritative state.');
+    labelText = storeStatus.label !== 'OPEN FOR ORDERS' ? storeStatus.label : 'APPLICATION PENDING';
+  }
 
   openLabel.innerText = labelText;
   toggleBtn.disabled = !storeStatus.canToggleOpen;
@@ -553,23 +592,44 @@ async function onVendorStallChange() {
   if (openLabel) openLabel.innerText = 'CHECKING STATUS...';
 
   try {
+    // 1. Fetch public status which never fails on auth
+    let serverStoreStatus = null;
+    let serverGates = [];
+    try {
+      const stStatusRes = await fetch(`/api/stalls/${stallId}/status`);
+      if (stStatusRes.ok) {
+        const stStatusData = await stStatusRes.json();
+        if (stStatusData.success) {
+          serverStoreStatus = stStatusData.store_status;
+          serverGates = stStatusData.gates || [];
+        }
+      }
+    } catch (e) {
+      console.warn('Status query failed:', e);
+    }
+
+    // 2. Fetch full onboarding dossier
     const res = await fetch(`/api/onboard/vendor/status/${stallId}`, {
       headers: getPartnerAuthHeaders('vendor')
     });
     const data = await res.json();
     if (data.success && data.stall) {
       PARTNER_STATE.vendorStallData = data.stall;
-      PARTNER_STATE.vendorGates = data.gates || [];
+      if (serverStoreStatus) PARTNER_STATE.vendorStallData.store_status = serverStoreStatus;
+      PARTNER_STATE.vendorGates = data.gates || serverGates || [];
       PARTNER_STATE.vendorCanAcceptOrders = Boolean(data.can_accept_orders);
 
       const idx = PARTNER_STATE.stalls.findIndex(s => s.id === stallId);
       if (idx !== -1) {
-        PARTNER_STATE.stalls[idx] = data.stall;
+        PARTNER_STATE.stalls[idx] = PARTNER_STATE.vendorStallData;
       } else {
-        PARTNER_STATE.stalls.push(data.stall);
+        PARTNER_STATE.stalls.push(PARTNER_STATE.vendorStallData);
       }
     } else {
-      PARTNER_STATE.vendorStallData = PARTNER_STATE.stalls.find(s => s.id === stallId) || null;
+      const existing = PARTNER_STATE.stalls.find(s => s.id === stallId) || { id: stallId };
+      if (serverStoreStatus) existing.store_status = serverStoreStatus;
+      PARTNER_STATE.vendorStallData = existing;
+      PARTNER_STATE.vendorGates = serverGates;
     }
   } catch (err) {
     console.warn('Error fetching stall details:', err);
@@ -760,9 +820,9 @@ function renderVendorActivationStatus() {
       detail: stall.upi_id || 'Missing UPI payout ID'
     },
     {
-      name: 'Service Radius Operational Safety',
-      passed: typeof stall.lat === 'number' && typeof stall.lng === 'number' && stall.lat >= 12.0 && stall.lat <= 13.5 && stall.lng >= 77.0 && stall.lng <= 78.0,
-      detail: stall.lat ? `${stall.lat.toFixed(4)}° N, ${stall.lng.toFixed(4)}° E` : 'Coordinates pending'
+      name: 'Contact & Identity Information',
+      passed: Boolean(stall.owner_name && (stall.owner_phone || '').length >= 10),
+      detail: stall.owner_phone ? `+91 ${stall.owner_phone}` : 'Owner contact pending'
     },
     {
       name: 'Platform Operations Approved',
@@ -771,7 +831,11 @@ function renderVendorActivationStatus() {
     }
   ];
 
-  gatesList.innerHTML = gates.map(g => `
+  const finalGates = (Array.isArray(PARTNER_STATE.vendorGates) && PARTNER_STATE.vendorGates.length > 0)
+    ? PARTNER_STATE.vendorGates
+    : fallbackGates;
+
+  gatesList.innerHTML = finalGates.map(g => `
     <div class="p-2.5 rounded-xl border ${g.passed ? 'bg-emerald-50/50 border-emerald-200' : 'bg-gray-50 border-gray-200'} flex items-start space-x-2">
       <span class="mt-0.5 text-xs ${g.passed ? 'text-emerald-600' : 'text-gray-400'}">
         <i class="fa-solid ${g.passed ? 'fa-circle-check' : 'fa-circle-notch'}"></i>
@@ -817,17 +881,8 @@ function renderNoStallsState() {
   if (countBadge) countBadge.innerText = '0 Active';
 }
 
-function onVendorStallChange() {
-  const select = document.getElementById('vendorStallSelect');
-  PARTNER_STATE.vendorStallId = select.value;
-  subscribeToStall(PARTNER_STATE.vendorStallId);
-  updateVendorTrustCard();
-  loadVendorOrders();
-  loadVendorMenuItems();
-}
-
 function updateVendorTrustCard() {
-  const stall = PARTNER_STATE.stalls.find(s => s.id === PARTNER_STATE.vendorStallId);
+  const stall = PARTNER_STATE.vendorStallData || PARTNER_STATE.stalls.find(s => s.id === PARTNER_STATE.vendorStallId);
   const card = document.getElementById('vendorTrustHubCard');
   if (!card) return;
   if (!stall) {
@@ -1145,47 +1200,12 @@ async function declineVendorOrder(orderId, version) {
   }
 }
 
-async function toggleStallOpenStatus() {
-  const stall = PARTNER_STATE.vendorStallData || PARTNER_STATE.stalls.find(s => s.id === PARTNER_STATE.vendorStallId);
-  if (!stall) return;
-
-  if (stall.status !== 'LIVE') {
-    showToast(`Cannot open store: Stall is in ${stall.status || 'SUBMITTED'} stage. Marketplace activation requires all 7 verified gates.`);
-    return;
-  }
-
-  const newStatus = !stall.isOpen;
-  try {
-    const res = await fetch(`/api/stalls/${stall.id}/status`, {
-      method: 'PATCH',
-      headers: getPartnerAuthHeaders('vendor'),
-      body: JSON.stringify({ isOpen: newStatus })
-    });
-    const data = await res.json();
-    if (data.success) {
-      stall.isOpen = newStatus;
-      const btn = document.getElementById('vendorToggleOpenBtn');
-      const label = document.getElementById('vendorOpenLabel');
-      if (newStatus) {
-        btn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-green-100 text-green-700 flex items-center space-x-1.5 transition cursor-pointer';
-        label.innerText = 'OPEN FOR ORDERS';
-      } else {
-        btn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-red-100 text-red-700 flex items-center space-x-1.5 transition cursor-pointer';
-        label.innerText = 'STORE CLOSED';
-      }
-      showToast(`Stall is now ${newStatus ? 'OPEN' : 'CLOSED'}`);
-    } else {
-      showToast(data.error || 'Cannot change store status.');
-    }
-  } catch (e) {
-    console.error('Failed to toggle open status:', e);
-  }
-}
-
 async function loadVendorMenuItems() {
   if (!PARTNER_STATE.vendorStallId) return;
   try {
-    const res = await fetch(`/api/stalls/${PARTNER_STATE.vendorStallId}`);
+    const res = await fetch(`/api/stalls/${PARTNER_STATE.vendorStallId}`, {
+      headers: getPartnerAuthHeaders('vendor')
+    });
     const data = await res.json();
     PARTNER_STATE.vendorMenu = data.items || [];
 
