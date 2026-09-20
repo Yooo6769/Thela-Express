@@ -198,8 +198,8 @@ function switchPartnerRole(role) {
   if (role === 'vendor') {
     vendorView.classList.remove('hidden');
     riderView.classList.add('hidden');
-    tabVendor.className = 'px-3 py-1.5 rounded-lg transition-all bg-orange-600 text-white shadow-sm flex items-center space-x-1.5';
-    tabRider.className = 'px-3 py-1.5 rounded-lg transition-all text-gray-400 hover:text-white flex items-center space-x-1.5';
+    tabVendor.className = 'partner-role-tab active px-3 py-1.5 rounded-lg transition-all bg-orange-600 text-white shadow-sm flex items-center space-x-1.5';
+    tabRider.className = 'partner-role-tab px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5';
 
     const badge = document.getElementById('partnerVendorBadge');
     if (badge) {
@@ -216,8 +216,8 @@ function switchPartnerRole(role) {
   } else {
     vendorView.classList.add('hidden');
     riderView.classList.remove('hidden');
-    tabRider.className = 'px-3 py-1.5 rounded-lg transition-all bg-emerald-600 text-white shadow-sm flex items-center space-x-1.5';
-    tabVendor.className = 'px-3 py-1.5 rounded-lg transition-all text-gray-400 hover:text-white flex items-center space-x-1.5';
+    tabRider.className = 'partner-role-tab active px-3 py-1.5 rounded-lg transition-all bg-emerald-600 text-white shadow-sm flex items-center space-x-1.5';
+    tabVendor.className = 'partner-role-tab px-3 py-1.5 rounded-lg transition-all flex items-center space-x-1.5';
 
     loadRiderOrders();
   }

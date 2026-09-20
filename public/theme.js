@@ -191,25 +191,49 @@
     });
   }
 
+  // Helper to adjust dropdown alignment on screen
+  function adjustThemeMenuPosition(menu, container) {
+    if (!menu || !container) return;
+    const containerRect = container.getBoundingClientRect();
+    const menuWidth = menu.offsetWidth || 192;
+    if (containerRect.right - menuWidth < 8) {
+      menu.style.left = '0';
+      menu.style.right = 'auto';
+    } else {
+      menu.style.left = 'auto';
+      menu.style.right = '0';
+    }
+  }
+
   // Dropdown menu toggle
   function toggleThemeMenu(event) {
-    if (event) event.stopPropagation();
-    const btn = event.currentTarget || event.target.closest('button');
-    const menu = btn?.parentElement?.querySelector('.thela-theme-menu');
+    if (event) {
+      event.stopPropagation();
+      event.preventDefault();
+    }
+    // Close opposing language menus
+    document.querySelectorAll('.thela-lang-menu').forEach(m => m.classList.add('hidden'));
+
+    const btn = event ? (event.currentTarget || event.target.closest('button')) : null;
+    const container = btn ? btn.closest('.thela-theme-container') : document.querySelector('.thela-theme-container');
+    const menu = container ? container.querySelector('.thela-theme-menu') : document.querySelector('.thela-theme-menu');
     if (menu) {
       const isHidden = menu.classList.contains('hidden');
       document.querySelectorAll('.thela-theme-menu').forEach(m => m.classList.add('hidden'));
       if (isHidden) {
         menu.classList.remove('hidden');
+        adjustThemeMenuPosition(menu, container);
       }
     }
   }
 
-  // Close menus on click outside
-  document.addEventListener('click', (e) => {
-    if (!e.target.closest('.thela-theme-container')) {
-      document.querySelectorAll('.thela-theme-menu').forEach(m => m.classList.add('hidden'));
-    }
+  // Close menus on click or tap outside
+  ['click', 'touchstart'].forEach(evtType => {
+    document.addEventListener(evtType, (e) => {
+      if (!e.target.closest('.thela-theme-container')) {
+        document.querySelectorAll('.thela-theme-menu').forEach(m => m.classList.add('hidden'));
+      }
+    }, { passive: true });
   });
 
   // Listen for system theme changes (OS dark/light toggle)

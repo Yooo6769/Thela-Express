@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.0.4`  
+**Current Production Version**: `v2.0.5`  
 **Current Date**: September 20, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -30,6 +30,7 @@ flowchart LR
     v201 --> v202["v2.0.2<br/>Hoisting Fix & Cache Defense"]
     v202 --> v203["v2.0.3<br/>Universal Theme Engine"]
     v203 --> v204["v2.0.4<br/>Dark Contrast & Mobile Viewport Fix"]
+    v204 --> v205["v2.0.5<br/>Dropdown Unblock & Partner Redesign"]
 ```
 
 ---
@@ -319,10 +320,37 @@ flowchart LR
 
 ---
 
+### `v2.0.5` — Dropdown Menu Unblocking, Partner App Adaptive Overhaul & Customer UI Polish
+- **Release Date**: September 20, 2026
+- **Git Commit**: `v2.0.5` (pending push)
+- **Key Accomplishments**:
+  - **Language & Theme Dropdown Menu Unblocking**:
+    - Identified that `overflow-hidden` placed on `<header>` in `index.html`, `partner.html`, `admin.html`, `onboard-vendor.html`, and `onboard-rider.html` completely clipped absolute dropdown menus hanging below the header boundary (`top: 100%`), making them impossible to open or click.
+    - Converted all 5 application headers to `overflow-visible` and enforced `header, header.sticky, .partner-header { overflow: visible !important; }` in `public/theme.css`.
+    - Added dynamic left/right coordinate adjustment (`adjustThemeMenuPosition`, `adjustLanguageMenuPosition`) in `theme.js` and `i18n.js` to ensure menus never clip off-screen left or right on narrow mobile screens (<375px).
+    - Enforced `z-index: 999999 !important` on `.thela-theme-menu` and `.thela-lang-menu`.
+    - Implemented mutual exclusive menu closing (opening theme closes language, and vice-versa), `e.stopPropagation()`, and dual `click` + `touchstart` handlers for instantaneous mobile response.
+  - **Partner App Visual & Architectural Overhaul (`public/partner.html`, `public/partner.js`, `public/theme.css`)**:
+    - Replaced hardcoded `bg-gray-900` dark header with adaptive `.partner-header` class that renders translucent white (`rgba(255,255,255,0.96)`) in Light mode and deep midnight slate (`rgba(14,14,17,0.96)`) in Dark mode.
+    - Redesigned role switcher (`.partner-role-switcher`, `.partner-role-tab`) with sleek segmented pill design and updated `switchPartnerRole` in `partner.js` to preserve theme classes during role toggle.
+    - Wrapped all panels in `.partner-card` and mini-cards in `.partner-subcard` with high-contrast borders and elevated surfaces.
+    - Styled the quick info banner (`.partner-eco-banner`) with warm tones in light mode and subtle amber glow in dark mode.
+  - **Customer App Layout & Spacing Polish (`public/index.html`, `public/theme.css`)**:
+    - Enforced CSS-level responsive hiding of text labels on mobile screens (<768px), guaranteeing the header never blows out beyond mobile screen width.
+    - Optimized header flex items with compact margins, truncated delivery location text, and aligned controls.
+    - Upgraded category chips (`.cat-pill`) with gradient active state (`linear-gradient(135deg, #ea580c, #f59e0b)`), active tap scale transition, and soft hover states.
+  - **Automated Verification**:
+    - All 58/58 tests passing in `scratch/test_themes.js`.
+    - All 12 languages × 5 applications validated with 0 missing keys in `scratch/test_all_i18n.js`.
+    - All store status contradiction tests passing in `scratch/test_store_status_contradiction.js`.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
+| `b4a2f1c` | 2026-09-20 | UI & Themes | Dropdown menu unblocking, partner app adaptive overhaul, and customer UI polish (v2.0.5) |
 | `8be7e0c` | 2026-09-20 | UI & Themes | High-contrast dark theme readability, stone palette overrides, and mobile viewport overflow containment (v2.0.4) |
 | `3512ba5` | 2026-09-20 | Theme Engine | Add universal background color engine supporting White, Black, and System Default across all 5 apps |
 | `d7506cd` | 2026-09-20 | Partner App | Fix: eliminate hoisted functions, enforce no-cache headers, audit delivery radius, and bump v2.0.2 |

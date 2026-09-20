@@ -4191,13 +4191,19 @@ function setLanguage(langCode) {
     langCode = 'en';
   }
   CURRENT_LANG = langCode;
-  localStorage.setItem('thela_lang', langCode);
+  try {
+    if (typeof localStorage !== 'undefined') localStorage.setItem('thela_lang', langCode);
+  } catch (e) {}
 
-  document.documentElement.lang = langCode;
+  if (typeof document !== 'undefined' && document.documentElement) {
+    document.documentElement.lang = langCode;
+  }
   applyTranslations();
   updateLanguageDropdownUI();
 
-  window.dispatchEvent(new CustomEvent('thela_language_changed', { detail: { lang: langCode } }));
+  if (typeof window !== 'undefined' && typeof window.dispatchEvent === 'function' && typeof CustomEvent === 'function') {
+    window.dispatchEvent(new CustomEvent('thela_language_changed', { detail: { lang: langCode } }));
+  }
 }
 
 function applyTranslations() {
@@ -4244,18 +4250,47 @@ function updateLanguageDropdownUI() {
   });
 }
 
-function toggleLanguageMenu(event) {
-  if (event) event.stopPropagation();
-  const menus = document.querySelectorAll('.thela-lang-menu');
-  menus.forEach(menu => {
-    menu.classList.toggle('hidden');
-  });
+function adjustLanguageMenuPosition(menu, container) {
+  if (!menu || !container) return;
+  const containerRect = container.getBoundingClientRect();
+  const menuWidth = menu.offsetWidth || 210;
+  if (containerRect.right - menuWidth < 8) {
+    menu.style.left = '0';
+    menu.style.right = 'auto';
+  } else {
+    menu.style.left = 'auto';
+    menu.style.right = '0';
+  }
 }
 
-document.addEventListener('click', (e) => {
-  if (!e.target.closest('.thela-lang-container')) {
-    document.querySelectorAll('.thela-lang-menu').forEach(menu => menu.classList.add('hidden'));
+function toggleLanguageMenu(event) {
+  if (event) {
+    event.stopPropagation();
+    event.preventDefault();
   }
+  // Close opposing theme menus
+  document.querySelectorAll('.thela-theme-menu').forEach(m => m.classList.add('hidden'));
+
+  const btn = event ? (event.currentTarget || event.target.closest('button')) : null;
+  const container = btn ? btn.closest('.thela-lang-container') : document.querySelector('.thela-lang-container');
+  const menu = container ? container.querySelector('.thela-lang-menu') : document.querySelector('.thela-lang-menu');
+  if (menu) {
+    const isHidden = menu.classList.contains('hidden');
+    document.querySelectorAll('.thela-lang-menu').forEach(m => m.classList.add('hidden'));
+    if (isHidden) {
+      menu.classList.remove('hidden');
+      adjustLanguageMenuPosition(menu, container);
+    }
+  }
+}
+
+// Close menus on click or tap outside
+['click', 'touchstart'].forEach(evtType => {
+  document.addEventListener(evtType, (e) => {
+    if (!e.target.closest('.thela-lang-container')) {
+      document.querySelectorAll('.thela-lang-menu').forEach(menu => menu.classList.add('hidden'));
+    }
+  }, { passive: true });
 });
 
 function renderLanguageDropdownWidget() {
@@ -4271,7 +4306,7 @@ function renderLanguageDropdownWidget() {
         <i class="fa-solid fa-chevron-down text-[8px] text-gray-400"></i>
       </button>
 
-      <div class="thela-lang-menu hidden absolute right-0 mt-2 w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 z-50 max-h-72 overflow-y-auto">
+      <div class="thela-lang-menu hidden absolute right-0 mt-2 w-52 sm:w-56 bg-white rounded-2xl shadow-2xl border border-gray-100 p-2 z-50 max-h-72 overflow-y-auto">
         <div class="px-2 py-1 text-[10px] font-black text-gray-400 uppercase tracking-wider border-b border-gray-100 mb-1">
           Select Language / भाषा चुनें
         </div>
@@ -4292,9 +4327,19 @@ function renderLanguageDropdownWidget() {
   `;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.langSelectorMount').forEach(el => {
-    el.innerHTML = renderLanguageDropdownWidget();
-  });
-  setLanguage(CURRENT_LANG);
-});
+function initLanguageEngine() {
+  if (typeof document !== 'undefined' && typeof document.querySelectorAll === 'function') {
+    document.querySelectorAll('.langSelectorMount').forEach(el => {
+      el.innerHTML = renderLanguageDropdownWidget();
+    });
+    setLanguage(CURRENT_LANG);
+  }
+}
+
+if (typeof document !== 'undefined') {
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initLanguageEngine);
+  } else {
+    initLanguageEngine();
+  }
+}
