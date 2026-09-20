@@ -136,9 +136,28 @@ router.get('/:id/trust', (req, res) => {
   });
 });
 
-// PATCH /api/stalls/:id/toggle-open or /api/stalls/:id/toggle-live
+// GET /api/stalls/:id/status
+// Returns authoritative store status, open state, and verification details
+router.get('/:id/status', (req, res) => {
+  const stall = db.getStallById(req.params.id);
+  if (!stall) {
+    return res.status(404).json({ error: 'Stall not found.' });
+  }
+  const storeStatus = db.getStallStoreStatus(stall);
+  res.json({
+    success: true,
+    stallId: stall.id,
+    stallName: stall.name,
+    status: stall.status,
+    isOpen: storeStatus.isOpen,
+    canAcceptOrders: storeStatus.canAcceptOrders,
+    store_status: storeStatus
+  });
+});
+
+// PATCH /api/stalls/:id/status, /api/stalls/:id/toggle-open, or /api/stalls/:id/toggle-live
 // Server-authoritative: A stall can only be toggled LIVE if it is APPROVED and satisfies all 7 activation gates
-router.patch(['/:id/toggle-open', '/:id/toggle-live'], (req, res) => {
+router.patch(['/:id/status', '/:id/toggle-open', '/:id/toggle-live'], (req, res) => {
   const stall = db.getStallById(req.params.id);
   if (!stall) {
     return res.status(404).json({ error: 'Stall not found.' });
@@ -157,8 +176,51 @@ router.patch(['/:id/toggle-open', '/:id/toggle-live'], (req, res) => {
   }
 
   const willBeOpen = req.body.isOpen !== undefined ? Boolean(req.body.isOpen) : !stall.isOpen;
-  const targetStatus = willBeOpen ? 'LIVE' : 'INACTIVE';
+  const currentStoreStatus = db.getStallStoreStatus(stall);
 
+  // If opening is requested but stall is in non-eligible status, block immediately
+  if (willBeOpen && !['APPROVED', 'LIVE', 'INACTIVE'].includes(stall.status)) {
+    return res.status(400).json({
+      error: `Store open toggle blocked. Stall is currently in state "${currentStoreStatus.label}". It must be APPROVED and satisfy all 7 activation gates before opening for orders.`,
+      store_status: currentStoreStatus,
+      failedGates: currentStoreStatus.failedGates || []
+    });
+  }
+
+  // Case 1: Stall is already LIVE and owner toggles daily open/close
+  if (stall.status === 'LIVE') {
+    if (willBeOpen) {
+      const gateResult = db.validateVendorLiveActivationGates(stall);
+      if (!gateResult.eligible) {
+        stall.isOpen = false;
+        db.save();
+        const formatted = db.formatStallForPublic(stall);
+        return res.status(400).json({
+          error: `Cannot open stall for orders. Mandatory compliance gates failed: ${gateResult.reasons.join('; ')}`,
+          failedGates: gateResult.reasons,
+          store_status: formatted.store_status
+        });
+      }
+      stall.isOpen = true;
+      stall.updated_at = new Date().toISOString();
+      db.save();
+    } else {
+      stall.isOpen = false;
+      stall.updated_at = new Date().toISOString();
+      db.save();
+    }
+
+    const formatted = db.formatStallForPublic(stall);
+    wsManager.broadcastAll({
+      type: 'STALL_STATUS_CHANGED',
+      payload: { stallId: stall.id, isOpen: stall.isOpen, status: stall.status, store_status: formatted.store_status }
+    });
+
+    return res.json({ success: true, stall: formatted, store_status: formatted.store_status });
+  }
+
+  // Case 2: Transitioning from APPROVED or INACTIVE to LIVE (or closing to INACTIVE)
+  const targetStatus = willBeOpen ? 'LIVE' : 'INACTIVE';
   const result = db.transitionStallStatus(stall.id, targetStatus, {
     expectedVersion: req.body.expectedVersion,
     actorRole: req.auth.role,
@@ -169,16 +231,17 @@ router.patch(['/:id/toggle-open', '/:id/toggle-live'], (req, res) => {
   if (!result.success) {
     return res.status(result.code || 400).json({
       error: result.error,
-      failedGates: result.failedGates || []
+      failedGates: result.failedGates || [],
+      store_status: db.getStallStoreStatus(stall)
     });
   }
 
   wsManager.broadcastAll({
     type: 'STALL_STATUS_CHANGED',
-    payload: { stallId: stall.id, isOpen: willBeOpen, status: targetStatus }
+    payload: { stallId: stall.id, isOpen: willBeOpen, status: targetStatus, store_status: result.stall?.store_status }
   });
 
-  res.json({ success: true, stall: result.stall });
+  res.json({ success: true, stall: result.stall, store_status: result.stall?.store_status });
 });
 
 // PATCH /api/stalls/menu/:itemId/stock

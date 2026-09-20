@@ -384,8 +384,225 @@ class Database {
     };
   }
 
+  getStallStoreStatus(stall) {
+    if (!stall) {
+      return {
+        code: 'NOT_FOUND',
+        label: 'NOT FOUND',
+        i18nKey: 'store_status_not_found',
+        isOpen: false,
+        canAcceptOrders: false,
+        isLive: false,
+        canToggleOpen: false,
+        badgeClass: 'bg-gray-100 text-gray-600 border-gray-300',
+        dotClass: 'bg-gray-400',
+        failedGates: ['Stall not found']
+      };
+    }
+
+    const rawStatus = (stall.status || 'APPLICATION_SUBMITTED').toUpperCase();
+
+    // Canonical status labels according to platform invariant:
+    // APPLICATION_SUBMITTED -> "APPLICATION PENDING"
+    // DOCUMENT_VERIFICATION -> "VERIFICATION IN PROGRESS"
+    // PHYSICAL_INSPECTION  -> "VERIFICATION IN PROGRESS"
+    // CORRECTION_REQUIRED  -> "CORRECTION REQUIRED"
+    // REJECTED             -> "APPLICATION REJECTED"
+    // APPROVED-but-not-LIVE -> "APPROVED — NOT LIVE"
+    // INACTIVE             -> "INACTIVE"
+    // SUSPENDED            -> "SUSPENDED"
+    // LIVE + isOpen        -> "OPEN FOR ORDERS" (strictly when all 7 gates pass)
+    // LIVE + !isOpen       -> "STORE CLOSED" (strictly when all 7 gates pass)
+
+    if (rawStatus === 'APPLICATION_SUBMITTED') {
+      return {
+        code: 'APPLICATION_SUBMITTED',
+        label: 'APPLICATION PENDING',
+        i18nKey: 'store_status_application_pending',
+        isOpen: false,
+        canAcceptOrders: false,
+        isLive: false,
+        canToggleOpen: false,
+        badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
+        dotClass: 'bg-amber-500',
+        failedGates: ['Application submitted; awaiting initial document verification']
+      };
+    }
+
+    if (rawStatus === 'DOCUMENT_VERIFICATION') {
+      return {
+        code: 'DOCUMENT_VERIFICATION',
+        label: 'VERIFICATION IN PROGRESS',
+        i18nKey: 'store_status_verification_in_progress',
+        isOpen: false,
+        canAcceptOrders: false,
+        isLive: false,
+        canToggleOpen: false,
+        badgeClass: 'bg-purple-100 text-purple-800 border-purple-300',
+        dotClass: 'bg-purple-500',
+        failedGates: ['FSSAI & identity document compliance verification in progress']
+      };
+    }
+
+    if (rawStatus === 'PHYSICAL_INSPECTION') {
+      return {
+        code: 'PHYSICAL_INSPECTION',
+        label: 'VERIFICATION IN PROGRESS',
+        i18nKey: 'store_status_verification_in_progress',
+        isOpen: false,
+        canAcceptOrders: false,
+        isLive: false,
+        canToggleOpen: false,
+        badgeClass: 'bg-indigo-100 text-indigo-800 border-indigo-300',
+        dotClass: 'bg-indigo-500',
+        failedGates: ['On-site physical inspection and location audit in progress']
+      };
+    }
+
+    if (rawStatus === 'CORRECTION_REQUIRED') {
+      return {
+        code: 'CORRECTION_REQUIRED',
+        label: 'CORRECTION REQUIRED',
+        i18nKey: 'store_status_correction_required',
+        isOpen: false,
+        canAcceptOrders: false,
+        isLive: false,
+        canToggleOpen: false,
+        badgeClass: 'bg-orange-100 text-orange-800 border-orange-300',
+        dotClass: 'bg-orange-500',
+        failedGates: ['Documents or cart information require applicant correction']
+      };
+    }
+
+    if (rawStatus === 'REJECTED') {
+      return {
+        code: 'REJECTED',
+        label: 'APPLICATION REJECTED',
+        i18nKey: 'store_status_application_rejected',
+        isOpen: false,
+        canAcceptOrders: false,
+        isLive: false,
+        canToggleOpen: false,
+        badgeClass: 'bg-red-100 text-red-800 border-red-300',
+        dotClass: 'bg-red-500',
+        failedGates: ['Application rejected by platform compliance review']
+      };
+    }
+
+    if (rawStatus === 'SUSPENDED') {
+      return {
+        code: 'SUSPENDED',
+        label: 'SUSPENDED',
+        i18nKey: 'store_status_suspended',
+        isOpen: false,
+        canAcceptOrders: false,
+        isLive: false,
+        canToggleOpen: false,
+        badgeClass: 'bg-red-100 text-red-800 border-red-300',
+        dotClass: 'bg-red-500',
+        failedGates: [stall.suspension_reason || 'Operations suspended pending compliance audit']
+      };
+    }
+
+    if (rawStatus === 'INACTIVE') {
+      const gateCheck = this.validateVendorLiveActivationGates(stall);
+      return {
+        code: 'INACTIVE',
+        label: 'INACTIVE',
+        i18nKey: 'store_status_inactive',
+        isOpen: false,
+        canAcceptOrders: false,
+        isLive: false,
+        canToggleOpen: gateCheck.eligible,
+        badgeClass: 'bg-gray-200 text-gray-700 border-gray-400',
+        dotClass: 'bg-gray-500',
+        failedGates: gateCheck.reasons
+      };
+    }
+
+    if (rawStatus === 'APPROVED') {
+      const gateCheck = this.validateVendorLiveActivationGates(stall);
+      return {
+        code: 'APPROVED',
+        label: 'APPROVED — NOT LIVE',
+        i18nKey: 'store_status_approved_not_live',
+        isOpen: false,
+        canAcceptOrders: false,
+        isLive: false,
+        canToggleOpen: gateCheck.eligible,
+        badgeClass: 'bg-blue-100 text-blue-800 border-blue-300',
+        dotClass: 'bg-blue-500',
+        failedGates: gateCheck.reasons
+      };
+    }
+
+    if (rawStatus === 'LIVE') {
+      // Re-verify all 7 mandatory gates server-side.
+      // If any gate fails, stall CANNOT be LIVE or OPEN FOR ORDERS.
+      const gateCheck = this.validateVendorLiveActivationGates(stall);
+      if (!gateCheck.eligible) {
+        return {
+          code: 'GATES_PENDING',
+          label: 'APPROVED — NOT LIVE',
+          i18nKey: 'store_status_approved_not_live',
+          isOpen: false,
+          canAcceptOrders: false,
+          isLive: false,
+          canToggleOpen: false,
+          badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
+          dotClass: 'bg-amber-500',
+          failedGates: gateCheck.reasons
+        };
+      }
+
+      const isOpen = stall.isOpen === true || stall.isOpen === 1 || stall.isOpen === 'true';
+      if (isOpen) {
+        return {
+          code: 'OPEN_FOR_ORDERS',
+          label: 'OPEN FOR ORDERS',
+          i18nKey: 'store_open',
+          isOpen: true,
+          canAcceptOrders: true,
+          isLive: true,
+          canToggleOpen: true,
+          badgeClass: 'bg-green-100 text-green-700 border-green-300',
+          dotClass: 'bg-green-600',
+          failedGates: []
+        };
+      } else {
+        return {
+          code: 'STORE_CLOSED',
+          label: 'STORE CLOSED',
+          i18nKey: 'store_closed',
+          isOpen: false,
+          canAcceptOrders: false,
+          isLive: true,
+          canToggleOpen: true,
+          badgeClass: 'bg-red-100 text-red-700 border-red-300',
+          dotClass: 'bg-red-600',
+          failedGates: []
+        };
+      }
+    }
+
+    // Default fallback
+    return {
+      code: rawStatus,
+      label: 'APPLICATION PENDING',
+      i18nKey: 'store_status_application_pending',
+      isOpen: false,
+      canAcceptOrders: false,
+      isLive: false,
+      canToggleOpen: false,
+      badgeClass: 'bg-gray-100 text-gray-700 border-gray-300',
+      dotClass: 'bg-gray-500',
+      failedGates: [`Unrecognized stall state: ${rawStatus}`]
+    };
+  }
+
   formatStallForPublic(stall) {
     if (!stall) return null;
+    const storeStatus = this.getStallStoreStatus(stall);
     const badges = this.computeTrustBadges(stall);
     const primaryBadge = badges.find(b => b.type !== 'pending') || badges[0];
     
@@ -401,6 +618,11 @@ class Database {
 
     return {
       ...stall,
+      isOpen: storeStatus.isOpen, // Server-authoritative: NEVER true unless genuine LIVE + all 7 gates pass + isOpen
+      store_status: storeStatus,
+      effective_store_status: storeStatus.code,
+      store_status_label: storeStatus.label,
+      can_accept_orders: storeStatus.canAcceptOrders,
       trustBadges: badges,
       hygieneBadge: primaryBadge ? primaryBadge.label : 'Audits in Progress',
       ordersCount: ordersCount,
@@ -411,12 +633,11 @@ class Database {
     };
   }
 
-  // Stalls & Categories - Exposes ONLY stalls that are LIVE and satisfy all mandatory activation gates
+  // Stalls & Categories - Exposes ONLY stalls that are genuinely LIVE, open, and satisfy all mandatory activation gates
   getStalls(category, customerLat = null, customerLng = null) {
     let list = (this.data.stalls || []).filter(s => {
-      if (s.status !== 'LIVE' || !s.isOpen) return false;
-      const gates = this.validateVendorLiveActivationGates(s);
-      return gates.eligible;
+      const storeStatus = this.getStallStoreStatus(s);
+      return storeStatus.canAcceptOrders;
     });
 
     if (category && category !== 'all') {
@@ -1197,19 +1418,18 @@ class Database {
 
   checkStallCanAcceptOrders(stall) {
     if (!stall) return { canAccept: false, reason: 'Stall not found.' };
-    if (stall.status !== 'LIVE') {
-      return { canAccept: false, reason: `Stall is currently undergoing verification and is not LIVE (current status: ${stall.status}).` };
-    }
-    if (!stall.isOpen) {
-      return { canAccept: false, reason: 'Stall is currently marked closed by the vendor.' };
-    }
-    // Revalidate mandatory activation gates
-    const gateCheck = this.validateVendorLiveActivationGates(stall);
-    if (!gateCheck.eligible) {
-      // Automatically close stall if mandatory gates failed post-activation
+    const storeStatus = this.getStallStoreStatus(stall);
+    if (!storeStatus.canAcceptOrders) {
+      if (stall.status !== 'LIVE') {
+        return { canAccept: false, reason: `Stall is currently undergoing verification and is not LIVE (current status: ${stall.status}, store status: ${storeStatus.label}).` };
+      }
+      if (!stall.isOpen) {
+        return { canAccept: false, reason: 'Stall is currently marked closed by the vendor.' };
+      }
+      // Revalidate mandatory activation gates failed
       stall.isOpen = false;
       this.save();
-      return { canAccept: false, reason: `Stall failed mandatory compliance gates: ${gateCheck.reasons.join('; ')}` };
+      return { canAccept: false, reason: `Stall failed mandatory compliance gates: ${(storeStatus.failedGates || []).join('; ')}` };
     }
     return { canAccept: true };
   }

@@ -50,6 +50,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   window.addEventListener('thela_language_changed', () => {
+    const curStall = PARTNER_STATE.vendorStallData || PARTNER_STATE.stalls.find(s => s.id === PARTNER_STATE.vendorStallId);
+    if (curStall) {
+      renderStoreStatus(curStall);
+      renderVendorActivationStatus();
+    }
     if (PARTNER_STATE.stalls.length === 0) {
       renderNoStallsState();
     } else {
@@ -148,6 +153,18 @@ function handlePartnerWsMessage(data) {
       break;
 
     case 'STALL_STATUS_CHANGED':
+      if (data.payload && data.payload.stallId === PARTNER_STATE.vendorStallId) {
+        if (PARTNER_STATE.vendorStallData) {
+          if (data.payload.store_status) PARTNER_STATE.vendorStallData.store_status = data.payload.store_status;
+          if (data.payload.isOpen !== undefined) PARTNER_STATE.vendorStallData.isOpen = data.payload.isOpen;
+          if (data.payload.status) PARTNER_STATE.vendorStallData.status = data.payload.status;
+        }
+        renderStoreStatus(PARTNER_STATE.vendorStallData);
+        renderVendorActivationStatus();
+      }
+      loadVendorMenuItems();
+      break;
+
     case 'ITEM_STOCK_CHANGED':
       loadVendorMenuItems();
       break;
@@ -311,6 +328,7 @@ async function loadStalls() {
     }
 
     subscribeToStall(PARTNER_STATE.vendorStallId);
+    renderStoreStatus(PARTNER_STATE.vendorStallData || curStall);
     renderVendorActivationStatus();
     updateVendorTrustCard();
     loadVendorOrders();
@@ -320,10 +338,333 @@ async function loadStalls() {
   }
 }
 
+function deriveStoreStatus(stall) {
+  if (!stall) {
+    return {
+      code: 'NOT_FOUND',
+      label: 'NOT FOUND',
+      i18nKey: 'store_status_not_found',
+      isOpen: false,
+      canAcceptOrders: false,
+      isLive: false,
+      canToggleOpen: false,
+      badgeClass: 'bg-gray-100 text-gray-600 border-gray-300',
+      dotClass: 'bg-gray-400',
+      failedGates: ['Stall not found']
+    };
+  }
+  const raw = (stall.status || 'APPLICATION_SUBMITTED').toUpperCase();
+
+  if (raw === 'APPLICATION_SUBMITTED') {
+    return {
+      code: 'APPLICATION_SUBMITTED',
+      label: 'APPLICATION PENDING',
+      i18nKey: 'store_status_application_pending',
+      isOpen: false,
+      canAcceptOrders: false,
+      isLive: false,
+      canToggleOpen: false,
+      badgeClass: 'bg-amber-100 text-amber-800 border-amber-300',
+      dotClass: 'bg-amber-500',
+      failedGates: ['Application pending review']
+    };
+  }
+  if (raw === 'DOCUMENT_VERIFICATION') {
+    return {
+      code: 'DOCUMENT_VERIFICATION',
+      label: 'VERIFICATION IN PROGRESS',
+      i18nKey: 'store_status_verification_in_progress',
+      isOpen: false,
+      canAcceptOrders: false,
+      isLive: false,
+      canToggleOpen: false,
+      badgeClass: 'bg-purple-100 text-purple-800 border-purple-300',
+      dotClass: 'bg-purple-500',
+      failedGates: ['Document verification in progress']
+    };
+  }
+  if (raw === 'PHYSICAL_INSPECTION') {
+    return {
+      code: 'PHYSICAL_INSPECTION',
+      label: 'VERIFICATION IN PROGRESS',
+      i18nKey: 'store_status_verification_in_progress',
+      isOpen: false,
+      canAcceptOrders: false,
+      isLive: false,
+      canToggleOpen: false,
+      badgeClass: 'bg-indigo-100 text-indigo-800 border-indigo-300',
+      dotClass: 'bg-indigo-500',
+      failedGates: ['Physical inspection in progress']
+    };
+  }
+  if (raw === 'CORRECTION_REQUIRED') {
+    return {
+      code: 'CORRECTION_REQUIRED',
+      label: 'CORRECTION REQUIRED',
+      i18nKey: 'store_status_correction_required',
+      isOpen: false,
+      canAcceptOrders: false,
+      isLive: false,
+      canToggleOpen: false,
+      badgeClass: 'bg-orange-100 text-orange-800 border-orange-300',
+      dotClass: 'bg-orange-500',
+      failedGates: ['Corrections required']
+    };
+  }
+  if (raw === 'REJECTED') {
+    return {
+      code: 'REJECTED',
+      label: 'APPLICATION REJECTED',
+      i18nKey: 'store_status_application_rejected',
+      isOpen: false,
+      canAcceptOrders: false,
+      isLive: false,
+      canToggleOpen: false,
+      badgeClass: 'bg-red-100 text-red-800 border-red-300',
+      dotClass: 'bg-red-500',
+      failedGates: ['Application rejected']
+    };
+  }
+  if (raw === 'SUSPENDED') {
+    return {
+      code: 'SUSPENDED',
+      label: 'SUSPENDED',
+      i18nKey: 'store_status_suspended',
+      isOpen: false,
+      canAcceptOrders: false,
+      isLive: false,
+      canToggleOpen: false,
+      badgeClass: 'bg-red-100 text-red-800 border-red-300',
+      dotClass: 'bg-red-500',
+      failedGates: ['Operations suspended']
+    };
+  }
+  if (raw === 'INACTIVE') {
+    return {
+      code: 'INACTIVE',
+      label: 'INACTIVE',
+      i18nKey: 'store_status_inactive',
+      isOpen: false,
+      canAcceptOrders: false,
+      isLive: false,
+      canToggleOpen: true,
+      badgeClass: 'bg-gray-200 text-gray-700 border-gray-400',
+      dotClass: 'bg-gray-500',
+      failedGates: []
+    };
+  }
+  if (raw === 'APPROVED') {
+    return {
+      code: 'APPROVED',
+      label: 'APPROVED — NOT LIVE',
+      i18nKey: 'store_status_approved_not_live',
+      isOpen: false,
+      canAcceptOrders: false,
+      isLive: false,
+      canToggleOpen: true,
+      badgeClass: 'bg-blue-100 text-blue-800 border-blue-300',
+      dotClass: 'bg-blue-500',
+      failedGates: []
+    };
+  }
+  if (raw === 'LIVE') {
+    const isOpen = stall.isOpen === true || stall.isOpen === 1 || stall.isOpen === 'true';
+    if (isOpen) {
+      return {
+        code: 'OPEN_FOR_ORDERS',
+        label: 'OPEN FOR ORDERS',
+        i18nKey: 'store_open',
+        isOpen: true,
+        canAcceptOrders: true,
+        isLive: true,
+        canToggleOpen: true,
+        badgeClass: 'bg-green-100 text-green-700 border-green-300',
+        dotClass: 'bg-green-600',
+        failedGates: []
+      };
+    } else {
+      return {
+        code: 'STORE_CLOSED',
+        label: 'STORE CLOSED',
+        i18nKey: 'store_closed',
+        isOpen: false,
+        canAcceptOrders: false,
+        isLive: true,
+        canToggleOpen: true,
+        badgeClass: 'bg-red-100 text-red-700 border-red-300',
+        dotClass: 'bg-red-600',
+        failedGates: []
+      };
+    }
+  }
+
+  return {
+    code: raw,
+    label: 'APPLICATION PENDING',
+    i18nKey: 'store_status_application_pending',
+    isOpen: false,
+    canAcceptOrders: false,
+    isLive: false,
+    canToggleOpen: false,
+    badgeClass: 'bg-gray-100 text-gray-700 border-gray-300',
+    dotClass: 'bg-gray-500',
+    failedGates: []
+  };
+}
+
+function renderStoreStatus(stall) {
+  const toggleBtn = document.getElementById('vendorToggleOpenBtn');
+  const openLabel = document.getElementById('vendorOpenLabel');
+  const openDot = document.getElementById('vendorOpenDot');
+  if (!toggleBtn || !openLabel) return;
+
+  if (!stall) {
+    toggleBtn.disabled = true;
+    openLabel.innerText = 'NO STALL SELECTED';
+    toggleBtn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-gray-100 text-gray-500 border border-gray-300 flex items-center space-x-1.5 cursor-not-allowed opacity-80';
+    if (openDot) openDot.className = 'w-2 h-2 rounded-full bg-gray-400';
+    return;
+  }
+
+  const storeStatus = stall.store_status || deriveStoreStatus(stall);
+  const labelText = (typeof t === 'function' && storeStatus.i18nKey)
+    ? t(storeStatus.i18nKey, storeStatus.label)
+    : storeStatus.label;
+
+  openLabel.innerText = labelText;
+  toggleBtn.disabled = !storeStatus.canToggleOpen;
+  const canClick = Boolean(storeStatus.canToggleOpen);
+  toggleBtn.className = `px-3 py-1.5 rounded-full text-xs font-extrabold flex items-center space-x-1.5 transition border ${storeStatus.badgeClass || 'bg-gray-100 text-gray-700 border-gray-300'} ${canClick ? 'cursor-pointer hover:opacity-90 active:scale-95 shadow-sm' : 'cursor-not-allowed opacity-90'}`;
+
+  if (openDot) {
+    openDot.className = `w-2 h-2 rounded-full ${storeStatus.dotClass || 'bg-gray-400'}`;
+  }
+}
+
+async function onVendorStallChange() {
+  const select = document.getElementById('vendorStallSelect');
+  if (!select || !select.value) return;
+
+  const stallId = select.value;
+  PARTNER_STATE.vendorStallId = stallId;
+  localStorage.setItem('thela_vendor_stall_id', stallId);
+
+  const openLabel = document.getElementById('vendorOpenLabel');
+  if (openLabel) openLabel.innerText = 'CHECKING STATUS...';
+
+  try {
+    const res = await fetch(`/api/onboard/vendor/status/${stallId}`, {
+      headers: getPartnerAuthHeaders('vendor')
+    });
+    const data = await res.json();
+    if (data.success && data.stall) {
+      PARTNER_STATE.vendorStallData = data.stall;
+      PARTNER_STATE.vendorGates = data.gates || [];
+      PARTNER_STATE.vendorCanAcceptOrders = Boolean(data.can_accept_orders);
+
+      const idx = PARTNER_STATE.stalls.findIndex(s => s.id === stallId);
+      if (idx !== -1) {
+        PARTNER_STATE.stalls[idx] = data.stall;
+      } else {
+        PARTNER_STATE.stalls.push(data.stall);
+      }
+    } else {
+      PARTNER_STATE.vendorStallData = PARTNER_STATE.stalls.find(s => s.id === stallId) || null;
+    }
+  } catch (err) {
+    console.warn('Error fetching stall details:', err);
+    PARTNER_STATE.vendorStallData = PARTNER_STATE.stalls.find(s => s.id === stallId) || null;
+  }
+
+  const curStall = PARTNER_STATE.vendorStallData || PARTNER_STATE.stalls.find(s => s.id === stallId);
+  renderStoreStatus(curStall);
+  renderVendorActivationStatus();
+  updateVendorTrustCard();
+  subscribeToStall(stallId);
+  loadVendorOrders();
+  loadVendorMenuItems();
+}
+
+async function toggleStallOpenStatus() {
+  const curStall = PARTNER_STATE.vendorStallData || PARTNER_STATE.stalls.find(s => s.id === PARTNER_STATE.vendorStallId);
+  if (!curStall) {
+    showToast('⚠️ No active stall selected.', 'warning');
+    return;
+  }
+
+  const storeStatus = curStall.store_status || deriveStoreStatus(curStall);
+  if (!storeStatus.canToggleOpen) {
+    showToast(`⚠️ Store status is "${storeStatus.label}". Complete verification requirements before opening for orders.`, 'error');
+    return;
+  }
+
+  const newTargetOpen = !curStall.isOpen;
+  const toggleBtn = document.getElementById('vendorToggleOpenBtn');
+  if (toggleBtn) {
+    toggleBtn.disabled = true;
+    toggleBtn.style.opacity = '0.6';
+  }
+
+  try {
+    const res = await fetch(`/api/stalls/${curStall.id}/toggle-open`, {
+      method: 'PATCH',
+      headers: getPartnerAuthHeaders('vendor'),
+      body: JSON.stringify({
+        isOpen: newTargetOpen,
+        expectedVersion: curStall.version
+      })
+    });
+
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      const errMsg = data.error || 'Failed to update store status';
+      const failedGates = Array.isArray(data.failedGates) && data.failedGates.length > 0
+        ? `\nMissing: ${data.failedGates.join('; ')}`
+        : '';
+      showToast(`❌ ${errMsg}${failedGates}`, 'error');
+      if (data.store_status) {
+        curStall.store_status = data.store_status;
+        renderStoreStatus(curStall);
+      }
+      return;
+    }
+
+    if (data.stall) {
+      PARTNER_STATE.vendorStallData = data.stall;
+      const idx = PARTNER_STATE.stalls.findIndex(s => s.id === curStall.id);
+      if (idx !== -1) {
+        PARTNER_STATE.stalls[idx] = data.stall;
+      }
+    } else {
+      curStall.isOpen = newTargetOpen;
+      curStall.status = newTargetOpen ? 'LIVE' : (curStall.status === 'APPROVED' ? 'APPROVED' : 'INACTIVE');
+      if (data.store_status) curStall.store_status = data.store_status;
+    }
+
+    const updatedStall = PARTNER_STATE.vendorStallData || curStall;
+    renderStoreStatus(updatedStall);
+    renderVendorActivationStatus();
+    showToast(`✅ Store status: ${updatedStall.store_status?.label || (updatedStall.isOpen ? 'OPEN FOR ORDERS' : 'STORE CLOSED')}`);
+  } catch (err) {
+    console.error('Failed to toggle stall status:', err);
+    showToast('❌ Network error updating store status.', 'error');
+  } finally {
+    const updatedStall = PARTNER_STATE.vendorStallData || curStall;
+    renderStoreStatus(updatedStall);
+  }
+}
+
+// Expose globally for HTML event handlers
+window.onVendorStallChange = onVendorStallChange;
+window.toggleStallOpenStatus = toggleStallOpenStatus;
+
 function renderVendorActivationStatus() {
   const stall = PARTNER_STATE.vendorStallData || PARTNER_STATE.stalls.find(s => s.id === PARTNER_STATE.vendorStallId);
   const card = document.getElementById('vendorActivationStatusCard');
   if (!card || !stall) return;
+
+  // Authoritatively update top store status bar
+  renderStoreStatus(stall);
 
   card.classList.remove('hidden');
 
@@ -333,8 +674,6 @@ function renderVendorActivationStatus() {
   const posBadge = document.getElementById('vendorCanAcceptOrdersBadge');
   const gatesList = document.getElementById('vendorActivationGatesList');
   const iconWrap = document.getElementById('vendorStageIconWrap');
-  const toggleBtn = document.getElementById('vendorToggleOpenBtn');
-  const openLabel = document.getElementById('vendorOpenLabel');
 
   if (status === 'LIVE') {
     statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-100 text-emerald-800';
@@ -343,49 +682,54 @@ function renderVendorActivationStatus() {
     iconWrap.className = 'w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-600 flex items-center justify-center text-lg font-black';
     iconWrap.innerHTML = '<i class="fa-solid fa-circle-check"></i>';
     posBadge.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-700 inline-flex items-center space-x-1"><i class="fa-solid fa-signal"></i><span>Kitchen POS Active</span></span>';
-
-    toggleBtn.disabled = false;
-    openLabel.innerText = stall.isOpen ? 'OPEN FOR ORDERS' : 'STORE CLOSED';
-    toggleBtn.className = stall.isOpen
-      ? 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-green-100 text-green-700 flex items-center space-x-1.5 transition cursor-pointer'
-      : 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-red-100 text-red-700 flex items-center space-x-1.5 transition cursor-pointer';
+  } else if (status === 'SUSPENDED') {
+    statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-800';
+    statusBadge.innerText = 'SUSPENDED';
+    stageDesc.innerText = `Stall operations suspended: ${stall.suspension_reason || 'Compliance violation'}. Re-review required before reinstatement.`;
+    iconWrap.className = 'w-10 h-10 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-lg font-black';
+    iconWrap.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+    posBadge.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 inline-flex items-center space-x-1"><i class="fa-solid fa-lock"></i><span>POS Inactive — Suspended</span></span>';
+  } else if (status === 'APPROVED') {
+    statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800';
+    statusBadge.innerText = 'APPROVED (PENDING FINAL ACTIVATION)';
+    stageDesc.innerText = 'Application approved! All gates verified. Stall ready to go LIVE.';
+    iconWrap.className = 'w-10 h-10 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-black';
+    iconWrap.innerHTML = '<i class="fa-solid fa-stamp"></i>';
+    posBadge.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-blue-100 text-blue-800 inline-flex items-center space-x-1"><i class="fa-solid fa-stamp"></i><span>POS Inactive — Pending Launch</span></span>';
+  } else if (status === 'CORRECTION_REQUIRED') {
+    statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-orange-100 text-orange-800';
+    statusBadge.innerText = 'CORRECTION REQUIRED';
+    stageDesc.innerText = 'Action required: Review notes and resubmit corrected stall documents.';
+    iconWrap.className = 'w-10 h-10 rounded-2xl bg-orange-100 text-orange-600 flex items-center justify-center text-lg font-black';
+    iconWrap.innerHTML = '<i class="fa-solid fa-circle-exclamation"></i>';
+    posBadge.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-orange-100 text-orange-800 inline-flex items-center space-x-1"><i class="fa-solid fa-circle-exclamation"></i><span>POS Inactive — Corrections Required</span></span>';
+  } else if (status === 'REJECTED') {
+    statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-800';
+    statusBadge.innerText = 'APPLICATION REJECTED';
+    stageDesc.innerText = 'Application has been rejected by compliance review.';
+    iconWrap.className = 'w-10 h-10 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-lg font-black';
+    iconWrap.innerHTML = '<i class="fa-solid fa-ban"></i>';
+    posBadge.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-red-100 text-red-800 inline-flex items-center space-x-1"><i class="fa-solid fa-ban"></i><span>POS Inactive — Rejected</span></span>';
+  } else if (status === 'PHYSICAL_INSPECTION') {
+    statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800';
+    statusBadge.innerText = 'PHYSICAL INSPECTION';
+    stageDesc.innerText = 'On-site physical & hygiene audit scheduled. Field auditor will inspect cart and verify physical location.';
+    iconWrap.className = 'w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-black';
+    iconWrap.innerHTML = '<i class="fa-solid fa-clipboard-check"></i>';
+    posBadge.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 inline-flex items-center space-x-1"><i class="fa-solid fa-lock"></i><span>POS Inactive — Pending Approval</span></span>';
+  } else if (status === 'DOCUMENT_VERIFICATION') {
+    statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-800';
+    statusBadge.innerText = 'DOCUMENT VERIFICATION';
+    stageDesc.innerText = 'FSSAI license and vendor identity documents under compliance review.';
+    iconWrap.className = 'w-10 h-10 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-lg font-black';
+    iconWrap.innerHTML = '<i class="fa-solid fa-file-shield"></i>';
+    posBadge.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-purple-100 text-purple-800 inline-flex items-center space-x-1"><i class="fa-solid fa-lock"></i><span>POS Inactive — Pending Approval</span></span>';
   } else {
-    toggleBtn.disabled = true;
-    openLabel.innerText = `LOCKED (${status})`;
-    toggleBtn.className = 'px-3 py-1.5 rounded-full text-xs font-extrabold bg-gray-200 text-gray-500 flex items-center space-x-1.5 cursor-not-allowed opacity-80';
-
-    if (status === 'SUSPENDED') {
-      statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-red-100 text-red-800';
-      statusBadge.innerText = 'SUSPENDED';
-      stageDesc.innerText = `Stall operations suspended: ${stall.suspension_reason || 'Compliance violation'}. Re-review required before reinstatement.`;
-      iconWrap.className = 'w-10 h-10 rounded-2xl bg-red-100 text-red-600 flex items-center justify-center text-lg font-black';
-      iconWrap.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-    } else if (status === 'APPROVED') {
-      statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-blue-100 text-blue-800';
-      statusBadge.innerText = 'APPROVED (PENDING FINAL ACTIVATION)';
-      stageDesc.innerText = 'Application approved! Final launch checks in progress.';
-      iconWrap.className = 'w-10 h-10 rounded-2xl bg-blue-100 text-blue-600 flex items-center justify-center text-lg font-black';
-      iconWrap.innerHTML = '<i class="fa-solid fa-stamp"></i>';
-    } else if (status === 'PHYSICAL_INSPECTION') {
-      statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800';
-      statusBadge.innerText = 'PHYSICAL INSPECTION';
-      stageDesc.innerText = 'On-site physical & hygiene audit scheduled. Field auditor will inspect cart and verify physical location.';
-      iconWrap.className = 'w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-black';
-      iconWrap.innerHTML = '<i class="fa-solid fa-clipboard-check"></i>';
-    } else if (status === 'DOCUMENT_VERIFICATION') {
-      statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-purple-100 text-purple-800';
-      statusBadge.innerText = 'DOCUMENT VERIFICATION';
-      stageDesc.innerText = 'FSSAI license and vendor identity documents under compliance review.';
-      iconWrap.className = 'w-10 h-10 rounded-2xl bg-purple-100 text-purple-600 flex items-center justify-center text-lg font-black';
-      iconWrap.innerHTML = '<i class="fa-solid fa-file-shield"></i>';
-    } else {
-      statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800';
-      statusBadge.innerText = 'APPLICATION_SUBMITTED';
-      stageDesc.innerText = 'Application submitted. Stage 1 document verification pending.';
-      iconWrap.className = 'w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-black';
-      iconWrap.innerHTML = '<i class="fa-solid fa-hourglass-half"></i>';
-    }
-
+    statusBadge.className = 'px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-100 text-amber-800';
+    statusBadge.innerText = 'APPLICATION_SUBMITTED';
+    stageDesc.innerText = 'Application submitted. Stage 1 document verification pending.';
+    iconWrap.className = 'w-10 h-10 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center text-lg font-black';
+    iconWrap.innerHTML = '<i class="fa-solid fa-hourglass-half"></i>';
     posBadge.innerHTML = '<span class="px-3 py-1 rounded-full text-xs font-bold bg-amber-100 text-amber-800 inline-flex items-center space-x-1"><i class="fa-solid fa-lock"></i><span>POS Inactive — Pending Approval</span></span>';
   }
 

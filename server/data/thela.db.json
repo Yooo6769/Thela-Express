@@ -19,5 +19,6 @@
     "deliveryFeeDefault": 0,
     "taxRatePct": 0,
     "deliveryRadiusKm": 2.5
-  }
+  },
+  "discounts": []
 }

@@ -118,15 +118,21 @@ router.get('/vendor/status/:id', (req, res) => {
   }
 
   const gateEvaluation = db.validateVendorLiveActivationGates(stall);
+  const formatted = db.formatStallForPublic(stall);
+  const storeStatus = formatted.store_status || db.getStallStoreStatus(stall);
 
   res.json({
     success: true,
-    stall: db.formatStallForPublic(stall),
+    stall: formatted,
     stallId: stall.id,
     stallName: stall.name,
     status: stall.status,
     verification_status: stall.verification_status,
-    isOpen: stall.isOpen,
+    isOpen: storeStatus.isOpen,
+    store_status: storeStatus,
+    store_status_label: storeStatus.label,
+    effective_store_status: storeStatus.code,
+    can_accept_orders: storeStatus.canAcceptOrders,
     gatesPassed: gateEvaluation.eligible,
     missingRequirements: gateEvaluation.reasons,
     locationVerified: stall.location_verified,
