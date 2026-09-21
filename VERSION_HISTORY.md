@@ -2,8 +2,8 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.0.5`  
-**Current Date**: September 20, 2026  
+**Current Production Version**: `v2.0.6`  
+**Current Date**: September 21, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
 **Local Document Paths**:
@@ -31,6 +31,7 @@ flowchart LR
     v202 --> v203["v2.0.3<br/>Universal Theme Engine"]
     v203 --> v204["v2.0.4<br/>Dark Contrast & Mobile Viewport Fix"]
     v204 --> v205["v2.0.5<br/>Dropdown Unblock & Partner Redesign"]
+    v205 --> v206["v2.0.6<br/>Customer/Partner Separation & Accessible Nav"]
 ```
 
 ---
@@ -346,10 +347,35 @@ flowchart LR
 
 ---
 
+### `v2.0.6` — Customer & Partner App Strict Domain Separation & Accessible Onboarding Navigation
+- **Release Date**: September 21, 2026
+- **Git Commit**: `v2.0.6` (pending push)
+- **Key Accomplishments**:
+  - **Strict Domain Separation for Customer App (`public/index.html`, `public/app.js`)**:
+    - Completely removed all Partner App callouts, promotion banners ("Own a Street Cart or Want to Deliver?"), and links from `index.html`.
+    - Removed vendor registration CTAs ("Register Real Street Stall Now ➔") from `app.js`'s empty stall state. Customers looking for food are never asked to register stalls.
+    - Updated empty state copy in `app.js` to be 100% customer-centric: "No Street Stalls Live Right Now — Local street food stalls and carts in your neighborhood are currently prepping fresh ingredients or resting. Please check back shortly!"
+  - **Large, Finger-Friendly Accessible Back Buttons (`public/onboard-vendor.html`, `public/onboard-rider.html`)**:
+    - Replaced tiny, hard-to-tap back text links with a prominent 40px height touch button (`h-10 px-3.5 sm:px-4 rounded-xl`).
+    - Styled with high-contrast borders and active feedback in both Light (`bg-gray-100 text-gray-800 border-gray-200`) and Dark (`dark:bg-zinc-800 dark:text-gray-100 dark:border-zinc-700`) modes.
+    - Features a bold left arrow icon alongside localized "Back" text with intelligent `history.back()` and `/partner.html` fallback.
+    - Replaced all header logo links in onboarding portals to keep partners inside `/partner.html` instead of bouncing to customer app.
+    - Updated onboarding success modals to route partners back to `/partner.html`.
+  - **Prominent Partner Ecosystem Onboarding Entry Points (`public/partner.html`)**:
+    - Added direct "+ New Stall Register" action button in the vendor kitchen control header beside the active stall dropdown.
+    - Added direct "+ New Rider Sign-Up" action button in the rider delivery console header.
+  - **Universal Localization Coverage (`public/i18n.js`)**:
+    - Added `back_to_partner`, `customer_no_stalls_title`, and `customer_no_stalls_desc` across all 12 Indian languages with 100% test coverage.
+  - **Automated Verification**:
+    - Created `scratch/test_customer_partner_separation.js` validating zero cross-links in customer app, accessible touch targets, and partner hub entry points. All suites passing.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
+| `v2.0.6` | 2026-09-21 | Architecture & UX | Strict Customer/Partner domain separation, large accessible back buttons, and partner portal registration shortcuts (v2.0.6) |
 | `b4a2f1c` | 2026-09-20 | UI & Themes | Dropdown menu unblocking, partner app adaptive overhaul, and customer UI polish (v2.0.5) |
 | `8be7e0c` | 2026-09-20 | UI & Themes | High-contrast dark theme readability, stone palette overrides, and mobile viewport overflow containment (v2.0.4) |
 | `3512ba5` | 2026-09-20 | Theme Engine | Add universal background color engine supporting White, Black, and System Default across all 5 apps |
@@ -459,7 +485,8 @@ stateDiagram-v2
 | [`test_delivery_eta_integrity.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_delivery_eta_integrity.js) | Haversine distance accuracy, prep time integration, fleet load telemetry buffer, neutral fallback states | 6 tests | ✅ Passed |
 | [`test_food_cards.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_food_cards.js) | 3-tier visual food hierarchy, vector placeholder generation, dynamic zero-vendor hiding | 5 tests | ✅ Passed |
 | [`test_atmosphere.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_atmosphere.js) | Street-food visual atmosphere motifs, 4-level adaptive density engine, modal stack tracking | 5 tests | ✅ Passed |
-| [`test_themes.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_themes.js) | Universal 3-state theme engine (White, Black, System Default), high-contrast Stone typography, mobile viewport containment, 12 languages | 53 tests | ✅ Passed |
+| [`test_themes.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_themes.js) | Universal 3-state theme engine (White, Black, System Default), high-contrast Stone typography, mobile viewport containment, 12 languages | 58 tests | ✅ Passed |
+| [`test_customer_partner_separation.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_customer_partner_separation.js) | Zero partner links in customer app, accessible 40px onboarding back button, partner portal registration shortcuts | 3 suites | ✅ Passed |
 
 ---
 

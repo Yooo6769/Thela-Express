@@ -1076,21 +1076,15 @@ function renderStalls(stalls) {
       `;
     } else {
       container.innerHTML = `
-        <div class="col-span-full py-12 text-center bg-white rounded-3xl border-2 border-dashed border-amber-200 p-6 space-y-3">
-          <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-50 text-amber-700 flex items-center justify-center text-2xl shadow-xs">
-            <i class="fa-solid fa-store"></i>
+        <div class="col-span-full py-12 text-center bg-white dark:bg-zinc-900 rounded-3xl border-2 border-dashed border-stone-200 dark:border-zinc-800 p-6 space-y-3">
+          <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center text-2xl shadow-xs">
+            <i class="fa-solid fa-utensils"></i>
           </div>
           <div>
-            <h3 class="font-black text-base text-stone-900">${tr('no_stalls_title', 'No Street Stalls Live Yet')}</h3>
-            <p class="text-xs text-stone-500 mt-1 max-w-md mx-auto">
-              ${tr('no_stalls_desc', 'All demo food carts have been removed. Are you a local street vendor or food cart owner? Register your cart in 2 minutes and start receiving live customer orders!')}
+            <h3 class="font-black text-base text-stone-900 dark:text-stone-100">${tr('customer_no_stalls_title', 'No Street Stalls Live Right Now')}</h3>
+            <p class="text-xs text-stone-500 dark:text-stone-400 mt-1 max-w-md mx-auto">
+              ${tr('customer_no_stalls_desc', 'Local street food stalls and carts in your neighborhood are currently prepping fresh ingredients or resting. Please check back shortly!')}
             </p>
-          </div>
-          <div class="pt-2">
-            <a href="/onboard-vendor.html" class="inline-flex items-center space-x-2 px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white text-xs font-black shadow-md shadow-amber-600/20 transition">
-              <i class="fa-solid fa-plus-circle"></i>
-              <span>${tr('register_stall_btn', 'Register Real Street Stall Now ➔')}</span>
-            </a>
           </div>
         </div>
       `;

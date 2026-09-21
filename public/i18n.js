@@ -78,6 +78,9 @@ const I18N_LANGUAGES = [
 
 const I18N_DICTIONARY = {
   "en": {
+    "back_to_partner": "Back to Partner",
+    "customer_no_stalls_title": "No Street Stalls Live Right Now",
+    "customer_no_stalls_desc": "Local street food stalls and carts in your neighborhood are currently prepping fresh ingredients or resting. Please check back shortly!",
     "select_location": "Select Delivery Location",
     "pure_veg": "Pure Veg",
     "search_placeholder": "Search dishes or street food...",
@@ -419,6 +422,9 @@ const I18N_DICTIONARY = {
     "theme_system": "System Default"
   },
   "hi": {
+    "back_to_partner": "पार्टनर पोर्टल पर वापस",
+    "customer_no_stalls_title": "फिलहाल कोई स्ट्रीट स्टॉल लाइव नहीं है",
+    "customer_no_stalls_desc": "आपके क्षेत्र के स्थानीय ठेले और स्ट्रीट फूड वेंडर्स अभी ताजा सामग्री तैयार कर रहे हैं या बंद हैं। कृपया थोड़ी देर बाद देखें!",
     "select_location": "डिलीवरी स्थान चुनें",
     "pure_veg": "शुद्ध शाकाहारी",
     "search_placeholder": "व्यंजन या स्ट्रीट फूड खोजें...",
@@ -760,6 +766,9 @@ const I18N_DICTIONARY = {
     "theme_system": "सिस्टम डिफ़ॉल्ट"
   },
   "hinglish": {
+    "back_to_partner": "Partner Portal Par Wapas",
+    "customer_no_stalls_title": "Filhaal Koi Thela Live Nahi Hai",
+    "customer_no_stalls_desc": "Aapke area ke local thele abhi fresh ingredients prepare kar rahe hain ya rest kar rahe hain. Thodi der baad dobara check karein!",
     "select_location": "Delivery Location Chuno",
     "pure_veg": "Pure Veg",
     "search_placeholder": "Dishes ya street food search karo...",
@@ -1101,6 +1110,9 @@ const I18N_DICTIONARY = {
     "theme_system": "System Default"
   },
   "mr": {
+    "back_to_partner": "पार्टनर पोर्टलवर परत",
+    "customer_no_stalls_title": "सध्या एकही स्ट्रीट स्टॉल लाइव्ह नाही",
+    "customer_no_stalls_desc": "तुमच्या परिसरातील स्थानिक हातगाडी वेंडर्स सध्या ताजे साहित्य तयार करत आहेत किंवा बंद आहेत. कृपया थोड्या वेळाने तपासा!",
     "select_location": "डिलिव्हरी ठिकाण निवडा",
     "pure_veg": "शुद्ध शाकाहारी",
     "search_placeholder": "पदार्थ किंवा स्ट्रीट फूड शोधा...",
@@ -1442,6 +1454,9 @@ const I18N_DICTIONARY = {
     "theme_system": "सिस्टम डीफॉल्ट"
   },
   "gu": {
+    "back_to_partner": "પાર્ટનર પોર્ટલ પર પાછા",
+    "customer_no_stalls_title": "હાલમાં કોઈ સ્ટ્રીટ સ્ટોલ લાઇવ નથી",
+    "customer_no_stalls_desc": "તમારા વિસ્તારના સ્થાનિક લારી વિક્રેતાઓ હાલમાં તાજી સામગ્રી તૈયાર કરી રહ્યા છે અથવા બંધ છે. કૃપા કરીને થોડીવાર પછી તપાસો!",
     "select_location": "ડિલિવરી સ્થળ પસંદ કરો",
     "pure_veg": "શુદ્ધ શાકાહારી",
     "search_placeholder": "વાનગીઓ અથવા સ્ટ્રીટ ફૂડ શોધો...",
@@ -1783,6 +1798,9 @@ const I18N_DICTIONARY = {
     "theme_system": "સિસ્ટમ ડિફૉલ્ટ"
   },
   "ta": {
+    "back_to_partner": "பார்ட்னர் போர்ட்டலுக்குத் திரும்பு",
+    "customer_no_stalls_title": "தற்போது எந்த உணவுக் கடைகளும் நேரலையில் இல்லை",
+    "customer_no_stalls_desc": "உங்கள் பகுதியில் உள்ள தள்ளுவண்டி கடைகள் தற்போது புதிய உணவுப் பொருட்களை தயார் செய்கின்றன அல்லது ஓய்வில் உள்ளன. சிறிது நேரம் கழித்து பார்க்கவும்!",
     "select_location": "டெலிவரி இடத்தை தேர்வுசெய்க",
     "pure_veg": "சைவம் மட்டும்",
     "search_placeholder": "உணவுகள் அல்லது தெரு உணவுகளைத் தேடுங்கள்...",
@@ -2124,6 +2142,9 @@ const I18N_DICTIONARY = {
     "theme_system": "சிஸ்டம் இயல்புநிலை"
   },
   "te": {
+    "back_to_partner": "భాగస్వామి పోర్టల్‌కు తిరిగి వెళ్లండి",
+    "customer_no_stalls_title": "ప్రస్తుతం ఏ వీధి స్టాల్స్ లైవ్‌లో లేవు",
+    "customer_no_stalls_desc": "మీ ప్రాంతంలోని స్థానిక వీధి బండ్లు ప్రస్తుతం తాజా పదార్థాలను సిద్ధం చేస్తున్నాయి లేదా విశ್ರಾంతి తీసుకుంటున్నాయి. దయచేసి కాసేపటి తర్వాత చూడండి!",
     "select_location": "డెలివరీ స్థానాన్ని ఎంచుకోండి",
     "pure_veg": "పూర్తి శాఖాహారం",
     "search_placeholder": "వంటకాలు లేదా స్ట్రీట్ ఫుడ్ వెతకండి...",
@@ -2465,6 +2486,9 @@ const I18N_DICTIONARY = {
     "theme_system": "సిస్టమ్ డిఫాల్ట్"
   },
   "kn": {
+    "back_to_partner": "ಪಾಲುದಾರ ಪೋರ್ಟಲ್‌ಗೆ ಹಿಂತಿರುಗಿ",
+    "customer_no_stalls_title": "ಪ್ರಸ್ತುತ ಯಾವುದೇ ಸ್ಟ್ರೀಟ್ ಸ್ಟಾಲ್ ಲೈವ್ ಇಲ್ಲ",
+    "customer_no_stalls_desc": "ನಿಮ್ಮ ಪ್ರದೇಶದ ಸ್ಥಳೀಯ ತಳ್ಳುಗಾಡಿಗಳು ಪ್ರಸ್ತುತ ತಾಜಾ ಪದಾರ್ಥಗಳನ್ನು ಸಿದ್ಧಪಡಿಸುತ್ತಿವೆ ಅಥವಾ ವಿಶ್ರಾಂತಿ ಪಡೆಯುತ್ತಿವೆ. ದಯವಿಟ್ಟು ಸ್ವಲ್ಪ ಸಮಯದ ನಂತರ ಪರಿಶೀಲಿಸಿ!",
     "select_location": "ಡೆಲಿವರಿ ಸ್ಥಳವನ್ನು ಆಯ್ಕೆಮಾಡಿ",
     "pure_veg": "ಶುದ್ಧ ಸಸ್ಯಾಹಾರಿ",
     "search_placeholder": "ಖಾದ್ಯಗಳು ಅಥವಾ ಸ್ಟ್ರೀಟ್ ಫುಡ್ ಹುಡುಕಿ...",
@@ -2806,6 +2830,9 @@ const I18N_DICTIONARY = {
     "theme_system": "ಸಿಸ್ಟಮ್ ಡೀಫಾಲ್ಟ್"
   },
   "bn": {
+    "back_to_partner": "পার্টনার পোর্টালে ফিরুন",
+    "customer_no_stalls_title": "বর্তমানে কোনো স্ট্রিট স্টল লাইভ নেই",
+    "customer_no_stalls_desc": "আপনার এলাকার স্থানীয় ঠেলাগাড়ির বিক্রেতারা বর্তমানে তাজা উপাদান প্রস্তুত করছেন বা বন্ধ আছেন। কিছুক্ষণ পরে আবার দেখুন!",
     "select_location": "ডেলিভারি লোকেশন বেছে নিন",
     "pure_veg": "খাঁটি নিরামিষ",
     "search_placeholder": "খাবার বা স্ট্রিট ফুড খুঁজুন...",
@@ -3147,6 +3174,9 @@ const I18N_DICTIONARY = {
     "theme_system": "সিস্টেম ডিফল্ট"
   },
   "ml": {
+    "back_to_partner": "പാർട്ണർ പോർട്ടലിലേക്ക് മടങ്ങുക",
+    "customer_no_stalls_title": "നിലവിൽ സ്ട്രീറ്റ് സ്റ്റാളുകൾ ലൈവിലല്ല",
+    "customer_no_stalls_desc": "നിങ്ങളുടെ പ്രദേശത്തെ വഴിയോര തട്ടുകടകൾ നിലവിൽ പുതിയ ചേരുവകൾ തയ്യാറാക്കുകയാണ് അല്ലെങ്കിൽ വിശ്രമത്തിലാണ്. ദയവായി അല്പം കഴിഞ്ഞ് പരിശോധിക്കുക!",
     "select_location": "ഡെലിവറി ലൊക്കേഷൻ തിരഞ്ഞെടുക്കുക",
     "pure_veg": "പ്യുവർ വെജ്",
     "search_placeholder": "വിഭവങ്ങൾ അല്ലെങ്കിൽ സ്ട്രീറ്റ് ഫുഡ് തിരയുക...",
@@ -3488,6 +3518,9 @@ const I18N_DICTIONARY = {
     "theme_system": "സിസ്റ്റം ഡിഫോൾട്ട്"
   },
   "pa": {
+    "back_to_partner": "ਪਾਰਟਨਰ ਪੋਰਟਲ 'ਤੇ ਵਾਪਸ ਜਾਓ",
+    "customer_no_stalls_title": "ਇਸ ਵੇਲੇ ਕੋਈ ਸਟ੍ਰੀਟ ਸਟਾਲ ਲਾਈਵ ਨਹੀਂ ਹੈ",
+    "customer_no_stalls_desc": "ਤੁਹਾਡੇ ਖੇਤਰ ਦੇ ਸਥਾਨਕ ਰੇਹੜੀ ਵਾਲੇ ਇਸ ਵੇਲੇ ਤਾਜ਼ਾ ਸਮੱਗਰੀ ਤਿਆਰ ਕਰ ਰਹੇ ਹਨ ਜਾਂ ਆਰਾਮ ਕਰ ਰਹੇ ਹਨ। ਕਿਰਪਾ ਕਰਕੇ ਥੋੜ੍ਹੀ ਦੇਰ ਬਾਅਦ ਦੁਬਾਰਾ ਦੇਖੋ!",
     "select_location": "ਡਿਲੀਵਰੀ ਟਿਕਾਣਾ ਚੁਣੋ",
     "pure_veg": "ਸ਼ੁੱਧ ਸ਼ਾਕਾਹਾਰੀ",
     "search_placeholder": "ਪਕਵਾਨ ਜਾਂ ਸਟ੍ਰੀਟ ਫੂਡ ਖੋਜੋ...",
@@ -3829,6 +3862,9 @@ const I18N_DICTIONARY = {
     "theme_system": "ਸਿਸਟਮ ਡਿਫੌਲਟ"
   },
   "or": {
+    "back_to_partner": "ପାର୍ଟନର ପୋର୍ଟାଲକୁ ଫେରନ୍ତୁ",
+    "customer_no_stalls_title": "ବର୍ତ୍ତମାନ କୌଣସି ଷ୍ଟ୍ରିଟ୍ ଷ୍ଟଲ୍ ଲାଇଭ୍ ନାହିଁ",
+    "customer_no_stalls_desc": "ଆପଣଙ୍କ ଅଞ୍ଚଳର ସ୍ଥାନୀୟ ଠେଲା ବର୍ତ୍ତମାନ ତାଜା ଉପାଦାନ ପ୍ରସ୍ତୁତ କରୁଛନ୍ତି କିମ୍ବା ବନ୍ଦ ଅଛନ୍ତି। ଦୟାକରି କିଛି ସମୟ ପରେ ପୁଣି ଯାଞ୍ଚ କରନ୍ତୁ!",
     "select_location": "ଡେଲିଭରୀ ସ୍ଥାନ ବାଛନ୍ତୁ",
     "pure_veg": "ଶୁଦ୍ଧ ନିରାମିଷ",
     "search_placeholder": "ଖାଦ୍ୟ କିମ୍ବା ଷ୍ଟ୍ରିଟ୍ ଫୁଡ୍ ଖୋଜନ୍ତୁ...",

@@ -7,7 +7,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
-  <link rel="stylesheet" href="/theme.css?v=2.0.5">
+  <link rel="stylesheet" href="/theme.css?v=2.0.6">
 
   <script>
     (function() {
@@ -146,6 +146,10 @@
           <select id="vendorStallSelect" onchange="onVendorStallChange()" class="partner-subcard rounded-xl px-3 py-2 text-xs font-black focus:outline-none focus:ring-2 focus:ring-orange-500">
             <!-- Populated dynamically -->
           </select>
+          <a href="/onboard-vendor.html" class="px-3 py-2 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-sm transition shrink-0" title="Register New Street Stall">
+            <i class="fa-solid fa-plus text-[11px]"></i>
+            <span data-i18n="new_stall_reg">New Stall Register</span>
+          </a>
         </div>
       </div>
 
@@ -383,9 +387,15 @@
           </div>
         </div>
 
-        <div class="text-right">
-          <div class="text-xs text-gray-400" data-i18n="today_earnings">Today's Earnings</div>
-          <div class="text-lg font-black text-emerald-600" id="riderEarningsTotal">₹0.00</div>
+        <div class="flex items-center space-x-3 text-right">
+          <div>
+            <div class="text-xs text-gray-400" data-i18n="today_earnings">Today's Earnings</div>
+            <div class="text-lg font-black text-emerald-600" id="riderEarningsTotal">₹0.00</div>
+          </div>
+          <a href="/onboard-rider.html" class="px-3 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center space-x-1.5 shadow-sm transition shrink-0" title="Register New Delivery Partner">
+            <i class="fa-solid fa-user-plus text-[11px]"></i>
+            <span class="hidden sm:inline" data-i18n="new_rider_reg">New Rider Sign-Up</span>
+          </a>
         </div>
       </div>
     </div>
@@ -462,10 +472,10 @@
   </footer>
 
   <!-- Multi-Language Localization Engine -->
-  <script src="/i18n.js?v=2.0.5"></script>
+  <script src="/i18n.js?v=2.0.6"></script>
   <!-- Universal Theme Engine (White, Black, System Default) -->
-  <script src="/theme.js?v=2.0.5"></script>
+  <script src="/theme.js?v=2.0.6"></script>
   <!-- Script logic for Partner App -->
-  <script src="/partner.js?v=2.0.5"></script>
+  <script src="/partner.js?v=2.0.6"></script>
 </body>
 </html>
