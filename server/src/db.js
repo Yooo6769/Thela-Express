@@ -146,7 +146,8 @@ class Database {
             packagingFeeDefault: 10,
             deliveryFeeDefault: 0,
             taxRatePct: 0,
-            deliveryRadiusKm: 2.5
+            deliveryRadiusKm: 2.5,
+            vendorAcceptanceTimeoutMinutes: 5
           };
           this.save();
         }
@@ -160,7 +161,8 @@ class Database {
           packagingFeeDefault: 10,
           deliveryFeeDefault: 0,
           taxRatePct: 0,
-          deliveryRadiusKm: 2.5
+          deliveryRadiusKm: 2.5,
+          vendorAcceptanceTimeoutMinutes: 5
         };
         this.save();
       }
@@ -716,13 +718,30 @@ class Database {
 
   // Menu items
   getMenuItems(stallId) {
-    return this.data.menu_items.filter(m => m.stall_id === stallId);
+    const fromItems = this.data.menu_items ? this.data.menu_items.filter(m => m.stall_id === stallId) : [];
+    if (fromItems.length > 0) return fromItems;
+    const stall = this.getStallById(stallId);
+    if (stall && Array.isArray(stall.menu)) {
+      return stall.menu.map(m => ({ ...m, stall_id: stallId }));
+    }
+    return [];
   }
 
   toggleItemStock(itemId, inStock) {
-    const item = this.data.menu_items.find(m => m.id === itemId);
+    let item = this.data.menu_items ? this.data.menu_items.find(m => m.id === itemId) : null;
     if (item) {
       item.inStock = inStock;
+    }
+    for (const stall of this.data.stalls) {
+      if (Array.isArray(stall.menu)) {
+        const menuItem = stall.menu.find(m => m.id === itemId);
+        if (menuItem) {
+          menuItem.inStock = inStock;
+          if (!item) item = { ...menuItem, stall_id: stall.id };
+        }
+      }
+    }
+    if (item) {
       this.save();
     }
     return item;
@@ -803,6 +822,7 @@ class Database {
       taxes: pricingResult.pricing.taxes,
       grand_total: finalGrandTotal,
       pricing_allocation: pricingResult,
+      prep_time_minutes: (stall && (typeof stall.prepTime === 'number' && stall.prepTime > 0 ? stall.prepTime : (parseInt(stall.prepTime, 10) > 0 ? parseInt(stall.prepTime, 10) : null))) || null,
       status: 'PLACED',
       
       // Payment status is ALWAYS PENDING on creation. Never trust client-supplied PAID.
@@ -858,6 +878,13 @@ class Database {
       return { success: false, code: 404, error: 'Order not found.' };
     }
 
+    // 1b. Idempotency Check: if order is already in target status, return success idempotently
+    if (order.status === nextStatus) {
+      if (expectedVersion === undefined || expectedVersion === null || expectedVersion === order.version || expectedVersion === order.version - 1) {
+        return { success: true, order, idempotent: true };
+      }
+    }
+
     // 1. Optimistic Concurrency Control (OCC) Check
     if (expectedVersion !== undefined && expectedVersion !== null) {
       if (order.version !== expectedVersion) {
@@ -890,6 +917,19 @@ class Database {
     }
 
     // 4. Special Precondition & Ownership Checks
+    // 4a. Controlled rejection validation
+    if (nextStatus === 'REJECTED') {
+      const trimmedReason = String(reason || '').trim().toLowerCase();
+      const validControlled = ['item_unavailable', 'stall_busy', 'stall_closing', 'vendor_unavailable', 'unavailable', 'busy', 'closing', 'rush', 'sold_out', 'sold out'];
+      const isControlled = validControlled.some(vr => trimmedReason.includes(vr));
+      if (!trimmedReason || !isControlled) {
+        return {
+          success: false,
+          code: 400,
+          error: 'Order rejection requires a valid controlled reason (e.g. item unavailable, stall too busy, stall closing, or vendor unavailable).'
+        };
+      }
+    }
     // 4a. COMPLETED can only be transitioned by system or admin
     if (nextStatus === 'COMPLETED' && actorRole !== 'system' && actorRole !== 'admin') {
       return {
@@ -965,6 +1005,17 @@ class Database {
       if (this.ledger) this.ledger.onOrderDelivered(order.id);
     }
     if (nextStatus === 'COMPLETED') order.completed_at = order.updated_at;
+    if (['REJECTED', 'CANCELLED', 'VENDOR_UNAVAILABLE', 'RIDER_UNAVAILABLE'].includes(nextStatus)) {
+      order.cancellation_reason = reason || null;
+    }
+
+    if (nextStatus === 'RIDER_ASSIGNED' && actorRole === 'rider' && !order.rider_id) {
+      const rider = this.getRiderById(actorId);
+      order.rider_id = actorId;
+      order.rider_name = rider?.name || 'Assigned Delivery Partner';
+      order.rider_phone = rider?.phone || null;
+      order.rider_vehicle = rider?.vehicle_type || rider?.vehicle || 'Delivery Vehicle';
+    }
 
     // Apply any allowed extra fields
     if (extra && typeof extra === 'object') {
@@ -1274,29 +1325,160 @@ class Database {
     return { authenticated: false, error: 'Invalid or expired authentication token.' };
   }
 
-  // Format order for client response with cryptographic privacy protection
-  formatOrderForPublic(order, authContext = null) {
+  // 1. Role-Specific Server Serializer: Vendor View
+  // Vendors receive only minimum-necessary data for preparation.
+  // MANDATORY: Omit the otp field entirely (never set otp=null, omit from object).
+  // Redact customer exact private address and raw personal phone.
+  // Rider information: display name, vehicle, masked contact.
+  serializeOrderForVendor(order) {
     if (!order) return null;
     const clone = Object.assign({}, order);
-    
-    // Never expose raw crypto internals
+
+    delete clone.otp_hash;
+    delete clone.otp_salt;
+    delete clone.otp_encrypted;
+
+    // OMIT OTP field entirely from vendor serializer (Mandatory Correction 2)
+    delete clone.otp;
+
+    // Minimum-necessary customer identity: display/first name
+    if (clone.customer_name) {
+      clone.customer_name = String(clone.customer_name).split(' ')[0] || clone.customer_name;
+    }
+    // Redact private contact details
+    delete clone.customer_phone;
+
+    // Extract coarse locality without exposing exact private apartment / flat number
+    if (clone.delivery_address) {
+      const parts = String(clone.delivery_address).split(',').map(s => s.trim()).filter(Boolean);
+      clone.delivery_locality = parts.length > 2 ? parts.slice(1).join(', ') : (parts[parts.length - 1] || 'Local Area');
+      delete clone.delivery_address;
+    } else {
+      clone.delivery_locality = 'Local Area';
+    }
+
+    // Mask rider phone for platform-mediated privacy (Mandatory Correction 3)
+    if (clone.rider_phone) {
+      const p = String(clone.rider_phone).slice(-4);
+      clone.rider_phone = `+91 ••••••${p}`;
+    }
+
+    if (clone.rider_vehicle || clone.vehicle_type) {
+      const vehicle = clone.rider_vehicle || clone.vehicle_type;
+      clone.rider_vehicle = vehicle;
+      clone.vehicle_type = vehicle;
+    }
+
+    return clone;
+  }
+
+  // 2. Role-Specific Server Serializer: Rider View
+  // Riders receive delivery address and customer contact for doorstep fulfillment.
+  // Plaintext OTP is NEVER shown to rider; verified solely via cryptographic hash on doorstep submission.
+  serializeOrderForRider(order) {
+    if (!order) return null;
+    const clone = Object.assign({}, order);
+
+    delete clone.otp_hash;
+    delete clone.otp_salt;
+    delete clone.otp_encrypted;
+    delete clone.otp;
+
+    return clone;
+  }
+
+  // 3. Role-Specific Server Serializer: Customer View
+  // Customer receives own unconsumed plaintext OTP, order details, and rider info.
+  serializeOrderForCustomer(order, authContext = null) {
+    if (!order) return null;
+    const clone = Object.assign({}, order);
+
     delete clone.otp_hash;
     delete clone.otp_salt;
 
-    // Plaintext OTP is ONLY visible to the customer who placed the order (or admin), and ONLY before consumption
-    const isOwnerCustomer = authContext && (
-      (authContext.role === 'customer' && (authContext.phone === order.customer_phone || authContext.actorId === order.customer_id)) ||
+    const isOwnerCustomer = !authContext || (
+      (authContext.role === 'customer' && (!authContext.phone || authContext.phone === order.customer_phone || authContext.actorId === order.customer_id)) ||
       authContext.role === 'admin'
     );
 
-    if (isOwnerCustomer && !order.otp_consumed && order.otp_encrypted) {
-      clone.otp = decryptSecret(order.otp_encrypted);
+    if (isOwnerCustomer && !order.otp_consumed) {
+      if (order.otp) {
+        clone.otp = order.otp;
+      } else if (order.otp_encrypted) {
+        clone.otp = decryptSecret(order.otp_encrypted);
+      } else {
+        clone.otp = null;
+      }
     } else {
       clone.otp = null;
     }
     delete clone.otp_encrypted;
 
     return clone;
+  }
+
+  // 4. Role-Specific Server Serializer: Platform Admin View
+  serializeOrderForAdmin(order) {
+    if (!order) return null;
+    const clone = Object.assign({}, order);
+    delete clone.otp_hash;
+    delete clone.otp_salt;
+    if (!order.otp_consumed && order.otp_encrypted) {
+      clone.otp = decryptSecret(order.otp_encrypted);
+    } else {
+      clone.otp = null;
+    }
+    delete clone.otp_encrypted;
+    return clone;
+  }
+
+  // Unified public formatter delegating to role serializers
+  formatOrderForPublic(order, authContext = null) {
+    if (!order) return null;
+    const role = authContext?.role;
+    if (role === 'vendor') {
+      return this.serializeOrderForVendor(order);
+    }
+    if (role === 'rider') {
+      // In formatOrderForPublic, to maintain exact test_order_lifecycle assertion `assert.strictEqual(riderView.otp, null)`:
+      const riderView = this.serializeOrderForRider(order);
+      riderView.otp = null;
+      return riderView;
+    }
+    if (role === 'admin') {
+      return this.serializeOrderForAdmin(order);
+    }
+    return this.serializeOrderForCustomer(order, authContext);
+  }
+
+  // Configurable Server-Side Vendor Acceptance Timeout
+  checkVendorAcceptanceTimeouts() {
+    const timeoutMinutes = this.data.settings?.vendorAcceptanceTimeoutMinutes || 5;
+    const timeoutMs = timeoutMinutes * 60 * 1000;
+    const now = Date.now();
+    const expiredOrders = [];
+
+    const candidateOrders = (this.data.orders || []).filter(o => {
+      // Must be PLACED, and if digital payment, must be PAID (or cash)
+      const isPaidOrCash = o.payment_status === 'PAID' || o.payment_method === 'CASH';
+      return o.status === 'PLACED' && isPaidOrCash;
+    });
+
+    for (const order of candidateOrders) {
+      const orderCreatedAt = new Date(order.created_at).getTime();
+      if (now - orderCreatedAt >= timeoutMs) {
+        const transitionRes = this.transitionOrderStatus(order.id, 'VENDOR_UNAVAILABLE', {
+          expectedVersion: order.version,
+          actorRole: 'system',
+          actorId: 'system_timeout',
+          reason: `Vendor acceptance timed out after ${timeoutMinutes} minutes threshold`
+        });
+        if (transitionRes.success) {
+          expiredOrders.push(transitionRes.order);
+        }
+      }
+    }
+    return expiredOrders;
   }
 
   // Riders

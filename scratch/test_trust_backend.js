@@ -1,14 +1,16 @@
 const http = require('http');
 
-
-function request(method, path, body = null) {
+function request(method, path, body = null, token = null) {
   return new Promise((resolve, reject) => {
     const options = {
       hostname: 'localhost',
       port: 5000,
       path,
       method,
-      headers: { 'Content-Type': 'application/json' }
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {})
+      }
     };
     const req = http.request(options, (res) => {
       let data = '';
@@ -40,25 +42,28 @@ async function runTests() {
 
   console.log('Onboard status:', onboardRes.status);
   const stall = onboardRes.data.stall;
+  const token = onboardRes.data.token || `thela_tok_vendor_${stall.id}`;
+  const adminToken = 'thela_tok_admin';
+
   console.log('identity_status:', stall.identity_status);
   console.log('fssai_status:', stall.fssai_status);
   console.log('hygiene_status:', stall.hygiene_status);
 
   console.log('\n--- Step 2: Customer get stall ---');
-  const custRes = await request('GET', '/api/stalls/' + stall.id);
+  const custRes = await request('GET', '/api/stalls/' + stall.id, null, token);
   console.log('Trust Badges:', custRes.data.stall.trustBadges.map(b => b.label));
 
   console.log('\n--- Step 3: Trust dossier ---');
-  const trustRes = await request('GET', '/api/stalls/' + stall.id + '/trust');
+  const trustRes = await request('GET', '/api/stalls/' + stall.id + '/trust', null, token);
   console.log('Masked FSSAI:', trustRes.data.fssai.maskedNumber);
   console.log('Hygiene Status:', trustRes.data.hygiene.status);
 
   console.log('\n--- Step 4: Admin verifies FSSAI ---');
-  const fssaiVerifyRes = await request('PATCH', '/api/admin/stalls/' + stall.id + '/fssai', { status: 'verified', expiryDate: '2028-12-31', notes: 'FoSCoS verified' });
+  const fssaiVerifyRes = await request('PATCH', '/api/admin/stalls/' + stall.id + '/fssai', { status: 'verified', expiryDate: '2028-12-31', notes: 'FoSCoS verified' }, adminToken);
   console.log('Trust Badges after FSSAI verify:', fssaiVerifyRes.data.stall.trustBadges.map(b => b.label));
 
   console.log('\n--- Step 5: Admin conducts Hygiene Inspection ---');
-  const hygieneRes = await request('POST', '/api/admin/stalls/' + stall.id + '/hygiene-inspection', { status: 'verified', score: 96, inspectedBy: 'Senior Auditor Verma', notes: 'RO water & cart clean' });
+  const hygieneRes = await request('POST', '/api/admin/stalls/' + stall.id + '/hygiene-inspection', { status: 'verified', score: 96, inspectedBy: 'Senior Auditor Verma', notes: 'RO water & cart clean' }, adminToken);
   console.log('Trust Badges after Hygiene verify:', hygieneRes.data.stall.trustBadges.map(b => b.label));
 
   // Clean up test stall

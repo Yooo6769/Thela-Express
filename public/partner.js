@@ -1060,92 +1060,344 @@ function renderVendorSettlements(data) {
   }).join('');
 }
 
+// ==========================================================
+// 4b. VENDOR KITCHEN DISPLAY SYSTEM (KDS) TAB & QUEUE ENGINE
+// ==========================================================
+PARTNER_STATE.kdsActiveTab = 'NEW'; // 'NEW', 'PREPARING', 'READY', 'HISTORY'
+PARTNER_STATE.declineTargetOrderId = null;
+PARTNER_STATE.declineTargetVersion = null;
+
+function setKdsQueueTab(tabName) {
+  PARTNER_STATE.kdsActiveTab = tabName;
+  const tabs = ['NEW', 'PREPARING', 'READY', 'HISTORY'];
+  const tabIds = {
+    NEW: 'kdsTabNew',
+    PREPARING: 'kdsTabPrep',
+    READY: 'kdsTabReady',
+    HISTORY: 'kdsTabHistory'
+  };
+
+  tabs.forEach(t => {
+    const el = document.getElementById(tabIds[t]);
+    if (!el) return;
+    if (t === tabName) {
+      el.className = 'px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5 bg-orange-600 text-white shadow-xs shrink-0';
+    } else {
+      el.className = 'px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5 text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-zinc-700/60 shrink-0';
+    }
+  });
+
+  const filterBar = document.getElementById('kdsHistoryFilterBar');
+  if (filterBar) {
+    if (tabName === 'HISTORY') {
+      filterBar.classList.remove('hidden');
+    } else {
+      filterBar.classList.add('hidden');
+    }
+  }
+
+  renderVendorOrders(PARTNER_STATE.vendorOrders);
+}
+window.setKdsQueueTab = setKdsQueueTab;
+
 function renderVendorOrders(orders) {
   const container = document.getElementById('vendorOrdersList');
-  const countBadge = document.getElementById('vendorActiveCount');
   if (!container) return;
 
-  const active = orders.filter(o => o.status !== 'DELIVERED' && o.status !== 'CANCELLED');
-  if (countBadge) countBadge.innerText = `${active.length} Active`;
+  const allOrders = Array.isArray(orders) ? orders : [];
 
-  if (active.length === 0) {
+  // Categorize orders into server-authoritative KDS stages
+  const newOrders = allOrders.filter(o => o.status === 'PLACED');
+  const prepOrders = allOrders.filter(o => o.status === 'ACCEPTED' || o.status === 'PREPARING');
+  const readyOrders = allOrders.filter(o => o.status === 'READY_FOR_PICKUP' || o.status === 'RIDER_ASSIGNED' || o.status === 'RIDER_ARRIVING');
+  const historyOrders = allOrders.filter(o => ['PICKED_UP', 'OUT_FOR_DELIVERY', 'DELIVERED', 'COMPLETED', 'CANCELLED', 'REJECTED'].includes(o.status));
+
+  // Update Badge Counts
+  const newBadge = document.getElementById('kdsNewCount');
+  const prepBadge = document.getElementById('kdsPrepCount');
+  const readyBadge = document.getElementById('kdsReadyCount');
+  const historyBadge = document.getElementById('kdsHistoryCount');
+  const activeCountBadge = document.getElementById('vendorActiveCount');
+
+  if (newBadge) {
+    newBadge.innerText = newOrders.length;
+    if (newOrders.length > 0) {
+      newBadge.className = 'ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-white text-red-600 animate-pulse';
+    } else {
+      newBadge.className = 'ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-gray-300 dark:bg-zinc-600 text-gray-800 dark:text-gray-200';
+    }
+  }
+  if (prepBadge) prepBadge.innerText = prepOrders.length;
+  if (readyBadge) readyBadge.innerText = readyOrders.length;
+  if (historyBadge) historyBadge.innerText = historyOrders.length;
+
+  const activeTotal = newOrders.length + prepOrders.length + readyOrders.length;
+  if (activeCountBadge) activeCountBadge.innerText = `${activeTotal} Active`;
+
+  // Select which queue to render based on active tab
+  let targetQueue = [];
+  let queueTitle = '';
+  let emptyIcon = 'fa-fire-burner';
+  let emptyTitle = 'Kitchen Tawa is Clean!';
+  let emptyDesc = 'New incoming orders will appear here automatically with bell notification.';
+
+  if (PARTNER_STATE.kdsActiveTab === 'NEW') {
+    targetQueue = newOrders;
+    queueTitle = 'New Incoming Orders';
+    emptyIcon = 'fa-bell-slash';
+    emptyTitle = 'No New Orders Pending';
+    emptyDesc = 'Waiting for customers to order fresh street bites from your stall.';
+  } else if (PARTNER_STATE.kdsActiveTab === 'PREPARING') {
+    targetQueue = prepOrders;
+    queueTitle = 'Orders Cooking on Tawa';
+    emptyIcon = 'fa-fire-burner';
+    emptyTitle = 'No Orders Cooking';
+    emptyDesc = 'Accept orders in the NEW queue to start preparation and timing.';
+  } else if (PARTNER_STATE.kdsActiveTab === 'READY') {
+    targetQueue = readyOrders;
+    queueTitle = 'Packed & Ready for Rider Pickup';
+    emptyIcon = 'fa-box-archive';
+    emptyTitle = 'No Orders Waiting for Pickup';
+    emptyDesc = 'Mark cooked dishes as Ready for Pickup to alert the delivery fleet.';
+  } else {
+    // HISTORY with optional filters
+    const statusFilter = document.getElementById('kdsHistoryStatusFilter')?.value || 'ALL';
+    const dateFilter = document.getElementById('kdsHistoryDateFilter')?.value || 'ALL';
+
+    targetQueue = historyOrders.filter(o => {
+      // Status filter
+      if (statusFilter === 'DELIVERED_COMPLETED') {
+        if (o.status !== 'DELIVERED' && o.status !== 'COMPLETED') return false;
+      } else if (statusFilter === 'IN_TRANSIT') {
+        if (o.status !== 'PICKED_UP' && o.status !== 'OUT_FOR_DELIVERY') return false;
+      } else if (statusFilter === 'CANCELLED_DECLINED') {
+        if (o.status !== 'CANCELLED' && o.status !== 'REJECTED') return false;
+      }
+
+      // Date filter
+      if (dateFilter === 'TODAY') {
+        const orderDate = new Date(o.created_at).toDateString();
+        const today = new Date().toDateString();
+        if (orderDate !== today) return false;
+      } else if (dateFilter === 'PAST_7_DAYS') {
+        const diffMs = Date.now() - new Date(o.created_at).getTime();
+        if (diffMs > 7 * 24 * 60 * 60 * 1000) return false;
+      }
+
+      return true;
+    });
+
+    queueTitle = 'Order Operations History';
+    emptyIcon = 'fa-clock-rotate-left';
+    emptyTitle = 'No History Matching Filters';
+    emptyDesc = 'Completed, delivered, and cancelled orders for this stall will be listed here.';
+  }
+
+  // Zero-state check (Strict Zero-Demo: Never populate fake or sample orders)
+  if (targetQueue.length === 0) {
     container.innerHTML = `
-      <div class="py-12 text-center text-gray-400 bg-white rounded-3xl border border-gray-200">
-        <i class="fa-solid fa-fire-burner text-3xl text-gray-300 mb-2"></i>
-        <p class="font-black text-sm text-gray-700">${t('kitchen_tawa_clean', 'Kitchen Tawa is Clean!')}</p>
-        <p class="text-xs text-gray-400 mt-1">${t('waiting_orders', 'New incoming orders will appear here automatically with bell notification.')}</p>
+      <div class="py-12 px-4 text-center text-gray-400 bg-white dark:bg-zinc-900 rounded-3xl border border-gray-200 dark:border-zinc-800 space-y-2">
+        <i class="fa-solid ${emptyIcon} text-3xl text-gray-300 dark:text-zinc-600 mb-1"></i>
+        <p class="font-black text-sm text-gray-700 dark:text-gray-300">${emptyTitle}</p>
+        <p class="text-xs text-gray-400 dark:text-gray-500 max-w-sm mx-auto">${emptyDesc}</p>
       </div>
     `;
     return;
   }
 
-  container.innerHTML = active.map(order => {
-    const itemsText = order.items.map(i => `
+  // Render KDS Cards
+  container.innerHTML = targetQueue.map(order => {
+    // Relative time placed
+    const placedDate = new Date(order.created_at);
+    const timeStr = !isNaN(placedDate.getTime()) ? placedDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '';
+    const minutesAgo = !isNaN(placedDate.getTime()) ? Math.max(0, Math.floor((Date.now() - placedDate.getTime()) / 60000)) : 0;
+
+    // Preparation Timer logic (Server-authoritative, zero arbitrary fallback)
+    let prepTimerHtml = '';
+    if (order.prep_time_minutes !== undefined && order.prep_time_minutes !== null && order.prep_time_minutes > 0) {
+      if (order.status === 'PREPARING' && order.cooking_started_at) {
+        const cookingStart = new Date(order.cooking_started_at).getTime();
+        const elapsedMins = !isNaN(cookingStart) ? Math.max(0, Math.floor((Date.now() - cookingStart) / 60000)) : 0;
+        const isOverdue = elapsedMins > order.prep_time_minutes;
+        prepTimerHtml = `
+          <div class="flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-black ${isOverdue ? 'bg-red-100 text-red-800 dark:bg-red-950/60 dark:text-red-300 animate-pulse' : 'bg-amber-100 text-amber-800 dark:bg-amber-950/60 dark:text-amber-300'}">
+            <i class="fa-solid fa-stopwatch"></i>
+            <span>Cooking: ${elapsedMins}m / ${order.prep_time_minutes}m target</span>
+          </div>
+        `;
+      } else {
+        prepTimerHtml = `
+          <div class="flex items-center space-x-1 px-2.5 py-1 rounded-xl text-[11px] font-bold bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-gray-300">
+            <i class="fa-solid fa-clock"></i>
+            <span>Est. Prep: ${order.prep_time_minutes} mins</span>
+          </div>
+        `;
+      }
+    } else {
+      // Neutral state when prep time is not specified (NO prepTime || 12 invented fallback!)
+      prepTimerHtml = `
+        <div class="flex items-center space-x-1 px-2 py-0.5 rounded-lg text-[10px] font-medium bg-gray-100 text-gray-500 dark:bg-zinc-800 dark:text-gray-400">
+          <i class="fa-solid fa-utensils"></i>
+          <span>Standard Prep</span>
+        </div>
+      `;
+    }
+
+    // Payment Status Badge (From existing payment engine, read-only)
+    let paymentBadgeClass = 'bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300';
+    let paymentLabel = order.payment_status || 'PENDING';
+    if (order.payment_status === 'PAID') {
+      paymentBadgeClass = 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300';
+      paymentLabel = 'PAID ✓';
+    } else if (order.payment_status === 'REFUND_PENDING') {
+      paymentBadgeClass = 'bg-purple-100 text-purple-800 dark:bg-purple-950/50 dark:text-purple-300';
+      paymentLabel = 'REFUND QUEUED';
+    } else if (order.payment_status === 'FAILED') {
+      paymentBadgeClass = 'bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300';
+      paymentLabel = 'PAYMENT FAILED';
+    }
+
+    // Items list with quantities, customizations
+    const itemsText = (order.items || []).map(i => `
       <div class="flex items-center justify-between py-1 text-xs">
         <div>
-          <span class="font-black text-gray-900">${i.qty}x</span>
-          <span class="font-bold text-gray-800 ml-1">${i.name}</span>
-          ${Object.keys(i.customs || {}).length > 0 ? `
-            <div class="text-[10px] text-orange-600 font-semibold pl-4">
+          <span class="font-black text-gray-900 dark:text-gray-100">${i.qty}x</span>
+          <span class="font-bold text-gray-800 dark:text-gray-200 ml-1">${i.name}</span>
+          ${i.customs && Object.keys(i.customs).length > 0 ? `
+            <div class="text-[10px] text-orange-600 dark:text-orange-400 font-semibold pl-4">
               ${Object.values(i.customs).join(', ')}
             </div>
           ` : ''}
         </div>
-        <span class="font-black text-gray-700">₹${i.price * i.qty}</span>
+        <span class="font-black text-gray-700 dark:text-gray-300">₹${(i.price || 0) * (i.qty || 1)}</span>
       </div>
     `).join('');
 
-    return `
-      <div class="bg-white rounded-3xl border-2 border-orange-200 p-5 shadow-sm space-y-3 animate-in fade-in duration-200">
-        <div class="flex items-start justify-between border-b border-gray-100 pb-3">
-          <div>
-            <div class="flex items-center space-x-2">
-              <span class="font-black text-base text-gray-900">Order #${order.id}</span>
-              <span class="text-xs font-mono font-bold bg-gray-100 px-2 py-0.5 rounded">OTP: ${order.otp}</span>
-              ${order.eco_packaging ? '<span class="bg-green-100 text-green-700 text-[10px] font-black px-1.5 py-0.5 rounded">🍃 ECO DONA</span>' : ''}
-            </div>
-            <p class="text-xs text-gray-500 mt-0.5">
-              Customer: <span class="font-bold text-gray-800">${order.customer_name}</span> (+91 ${order.customer_phone})
-            </p>
+    // Rider-Arriving Context (Explicitly when backend has rider assigned / arriving)
+    let riderContextHtml = '';
+    if (order.status === 'RIDER_ARRIVING' || order.status === 'RIDER_ASSIGNED') {
+      const isArriving = order.status === 'RIDER_ARRIVING';
+      riderContextHtml = `
+        <div class="p-3 rounded-2xl border ${isArriving ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-200 dark:border-purple-800/60 animate-pulse' : 'bg-blue-50 dark:bg-blue-950/40 border-blue-200 dark:border-blue-800/60'} text-xs space-y-1">
+          <div class="flex items-center justify-between font-black ${isArriving ? 'text-purple-900 dark:text-purple-200' : 'text-blue-900 dark:text-blue-200'}">
+            <span class="flex items-center space-x-1.5">
+              <i class="fa-solid fa-motorcycle"></i>
+              <span>${isArriving ? '🛵 Rider Arriving at Thela!' : 'Delivery Partner Assigned'}</span>
+            </span>
+            <span class="text-[10px] uppercase tracking-wider font-extrabold px-2 py-0.5 rounded-full ${isArriving ? 'bg-purple-200 text-purple-900' : 'bg-blue-200 text-blue-900'}">
+              ${isArriving ? 'Approaching Cart' : 'En Route'}
+            </span>
           </div>
-          <span class="px-2.5 py-1 rounded-full text-xs font-black ${getStatusBadgeClass(order.status)}">
-            ${formatStatus(order.status)}
-          </span>
+          <div class="text-[11px] text-gray-700 dark:text-gray-300 flex items-center justify-between">
+            <span>Rider: <strong>${order.rider_name || 'Delivery Partner'}</strong> (${order.rider_vehicle || 'EV Scooter'})</span>
+            <span class="font-mono text-[10px] text-gray-500">${order.rider_phone || 'Fleet Contact'}</span>
+          </div>
+        </div>
+      `;
+    }
+
+    // Border highlights: Pulsing red border for NEW orders requiring urgent vendor action
+    const cardBorderClass = order.status === 'PLACED'
+      ? 'border-2 border-red-400 dark:border-red-600 ring-2 ring-red-200 dark:ring-red-950/50 shadow-md'
+      : (order.status === 'PREPARING'
+          ? 'border-2 border-amber-300 dark:border-amber-700 shadow-sm'
+          : (order.status === 'READY_FOR_PICKUP' || order.status === 'RIDER_ARRIVING'
+              ? 'border-2 border-emerald-300 dark:border-emerald-700 shadow-sm'
+              : 'border border-gray-200 dark:border-zinc-800 shadow-xs'));
+
+    return `
+      <div class="bg-white dark:bg-zinc-900 rounded-3xl ${cardBorderClass} p-4 sm:p-5 space-y-3 transition-all duration-200">
+        <!-- Top Bar: Order ID, Timers, Status Badge -->
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-gray-100 dark:border-zinc-800 pb-3">
+          <div class="flex items-center space-x-2 flex-wrap gap-y-1">
+            <span class="font-black text-base text-gray-900 dark:text-gray-100">#${order.id}</span>
+            <span class="text-xs text-gray-400 font-bold">${timeStr} (${minutesAgo}m ago)</span>
+            <span class="px-2 py-0.5 rounded-md text-[10px] font-black ${paymentBadgeClass}">
+              ${paymentLabel}
+            </span>
+            ${order.payment_method ? `<span class="text-[10px] font-extrabold uppercase px-1.5 py-0.5 rounded bg-gray-100 dark:bg-zinc-800 text-gray-600 dark:text-gray-400">${order.payment_method}</span>` : ''}
+          </div>
+
+          <div class="flex items-center space-x-2">
+            ${prepTimerHtml}
+            <span class="px-2.5 py-1 rounded-full text-xs font-black ${getStatusBadgeClass(order.status)}">
+              ${formatStatus(order.status)}
+            </span>
+          </div>
         </div>
 
-        <div class="bg-gray-50 rounded-2xl p-3 divide-y divide-gray-200/60">
+        <!-- Privacy-Protected Customer Information: Display name only, NO private phone/address, ZERO OTP -->
+        <div class="flex items-center justify-between text-xs text-gray-500 dark:text-gray-400">
+          <div>
+            Customer: <strong class="text-gray-800 dark:text-gray-200">${order.customer_name || 'Customer'}</strong>
+          </div>
+          ${order.delivery_instruction ? `
+            <div class="text-[11px] truncate max-w-[200px]">
+              <i class="fa-solid fa-clipboard-check text-orange-500 mr-1"></i>${order.delivery_instruction}
+            </div>
+          ` : ''}
+        </div>
+
+        <!-- Rider Context Banner (if arriving / assigned) -->
+        ${riderContextHtml}
+
+        <!-- Items Box -->
+        <div class="bg-gray-50 dark:bg-zinc-800/60 rounded-2xl p-3 divide-y divide-gray-200/60 dark:divide-zinc-700/60">
           ${itemsText}
         </div>
 
-        <div class="flex items-center justify-between text-xs text-gray-600">
-          <div>Instruction: <strong class="text-gray-900">${order.delivery_instruction || 'Standard'}</strong></div>
-          <div class="text-base font-black text-gray-900">Total: ₹${order.grand_total}</div>
+        <!-- Financial Summary -->
+        <div class="flex items-center justify-between text-xs text-gray-600 dark:text-gray-300">
+          <div class="font-semibold text-[11px] text-gray-400">Version: v${order.version || 1}</div>
+          <div class="text-base font-black text-gray-900 dark:text-gray-100">
+            Total: ₹${order.grand_total || order.subtotal}
+          </div>
         </div>
 
-        <div class="pt-2 border-t border-gray-100 flex items-center justify-end space-x-2">
+        <!-- Vendor Operational Action Bar -->
+        <div class="pt-2 border-t border-gray-100 dark:border-zinc-800 flex items-center justify-end space-x-2">
           ${order.status === 'PLACED' ? `
-            <button onclick="advanceCookingStage('${order.id}', 'ACCEPTED', ${order.version || 1})" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition">
-              ${t('accept_btn', 'Accept Order')}
+            <button onclick="advanceCookingStage('${order.id}', 'ACCEPTED', ${order.version || 1})" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 active:scale-95">
+              <i class="fa-solid fa-check"></i>
+              <span data-i18n="accept_btn">Accept Order</span>
             </button>
-            <button onclick="declineVendorOrder('${order.id}', ${order.version || 1})" class="px-3 py-2 bg-red-100 hover:bg-red-200 text-red-700 font-bold text-xs rounded-xl transition">
-              ${t('decline_btn', 'Decline')}
+            <button onclick="openKdsDeclineModal('${order.id}', ${order.version || 1})" class="px-3.5 py-2 bg-red-50 hover:bg-red-100 dark:bg-red-950/50 dark:hover:bg-red-900/50 text-red-700 dark:text-red-300 border border-red-200 dark:border-red-800 font-bold text-xs rounded-xl transition flex items-center space-x-1 active:scale-95">
+              <i class="fa-solid fa-xmark"></i>
+              <span data-i18n="decline_btn">Decline</span>
             </button>
           ` : ''}
+
           ${order.status === 'ACCEPTED' ? `
-            <button onclick="advanceCookingStage('${order.id}', 'PREPARING', ${order.version || 1})" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5">
+            <button onclick="advanceCookingStage('${order.id}', 'PREPARING', ${order.version || 1})" class="px-4 py-2 bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 active:scale-95">
               <i class="fa-solid fa-fire"></i>
-              <span>${t('start_cooking_btn', 'Start Cooking')}</span>
+              <span data-i18n="start_cooking_btn">Start Cooking (Tawa)</span>
             </button>
           ` : ''}
+
           ${order.status === 'PREPARING' ? `
-            <button onclick="advanceCookingStage('${order.id}', 'READY_FOR_PICKUP', ${order.version || 1})" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5">
-              <i class="fa-solid fa-box"></i>
-              <span>${t('packed_ready_btn', 'Packed & Ready')}</span>
+            <button onclick="advanceCookingStage('${order.id}', 'READY_FOR_PICKUP', ${order.version || 1})" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm transition flex items-center space-x-1.5 active:scale-95">
+              <i class="fa-solid fa-box-check"></i>
+              <span data-i18n="packed_ready_btn">Mark Packed & Ready</span>
             </button>
           ` : ''}
+
           ${order.status === 'READY_FOR_PICKUP' ? `
-            <span class="text-xs text-purple-700 font-bold bg-purple-50 px-3 py-1.5 rounded-xl border border-purple-200">
-              ${t('waiting_rider', '🛵 Waiting for Rider Pickup')}
+            <span class="text-xs text-purple-700 dark:text-purple-300 font-bold bg-purple-50 dark:bg-purple-950/50 px-3 py-1.5 rounded-xl border border-purple-200 dark:border-purple-800 flex items-center space-x-1.5">
+              <i class="fa-solid fa-hourglass-half animate-spin"></i>
+              <span data-i18n="waiting_rider">Waiting for Delivery Partner Gig Claim</span>
+            </span>
+          ` : ''}
+
+          ${order.status === 'RIDER_ARRIVING' ? `
+            <span class="text-xs text-purple-800 dark:text-purple-200 font-black bg-purple-100 dark:bg-purple-900/60 px-3 py-1.5 rounded-xl border border-purple-300 dark:border-purple-700 flex items-center space-x-1.5">
+              <i class="fa-solid fa-hand-holding-box"></i>
+              <span>Handover Food to Arriving Partner</span>
+            </span>
+          ` : ''}
+
+          ${order.status === 'REJECTED' ? `
+            <span class="text-xs text-red-700 dark:text-red-400 font-semibold italic">
+              Declined: ${order.timeline?.find(t => t.to_status === 'REJECTED')?.reason || 'Vendor rejected'}
             </span>
           ` : ''}
         </div>
@@ -1154,6 +1406,7 @@ function renderVendorOrders(orders) {
   }).join('');
 }
 
+// Stage Transition Engine with Optimistic Concurrency Control
 async function advanceCookingStage(orderId, nextStatus, version) {
   try {
     const res = await fetch(`/api/orders/${orderId}/status`, {
@@ -1165,41 +1418,89 @@ async function advanceCookingStage(orderId, nextStatus, version) {
       })
     });
     const data = await res.json();
+    if (res.status === 409) {
+      showToast('⚠️ State conflict: Order was updated on another device. Refreshing KDS...');
+      loadVendorOrders();
+      return;
+    }
     if (data.success) {
-      showToast(`Order #${orderId} moved to ${formatStatus(nextStatus)}`);
+      showToast(`✅ Order #${orderId} moved to ${formatStatus(nextStatus)}`);
       loadVendorOrders();
     } else {
-      showToast(data.error || 'Failed to update order stage.');
+      showToast(`❌ ${data.error || 'Failed to update order stage.'}`);
     }
   } catch (e) {
     console.error('Failed to advance stage:', e);
+    showToast('❌ Network error updating order stage.');
   }
 }
+window.advanceCookingStage = advanceCookingStage;
 
-async function declineVendorOrder(orderId, version) {
-  const reason = prompt('Please enter reason for declining order (e.g., Sold out, kitchen rush):') || 'Vendor unable to fulfill order at this time';
+// Controlled Rejection Modal Functions
+function openKdsDeclineModal(orderId, version) {
+  PARTNER_STATE.declineTargetOrderId = orderId;
+  PARTNER_STATE.declineTargetVersion = version;
+  const modal = document.getElementById('kdsDeclineModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    const notesInput = document.getElementById('kdsDeclineNotes');
+    if (notesInput) notesInput.value = '';
+  }
+}
+window.openKdsDeclineModal = openKdsDeclineModal;
+
+function closeKdsDeclineModal() {
+  PARTNER_STATE.declineTargetOrderId = null;
+  PARTNER_STATE.declineTargetVersion = null;
+  const modal = document.getElementById('kdsDeclineModal');
+  if (modal) modal.classList.add('hidden');
+}
+window.closeKdsDeclineModal = closeKdsDeclineModal;
+
+async function confirmKdsDeclineOrder() {
+  const orderId = PARTNER_STATE.declineTargetOrderId;
+  const version = PARTNER_STATE.declineTargetVersion;
+  if (!orderId) return;
+
+  const reasonSelect = document.getElementById('kdsDeclineReasonSelect');
+  const notesInput = document.getElementById('kdsDeclineNotes');
+  const selectedCode = reasonSelect ? reasonSelect.value : 'vendor_unavailable';
+  const customNotes = notesInput ? notesInput.value.trim() : '';
+
+  const fullReason = customNotes ? `${selectedCode}: ${customNotes}` : selectedCode;
+
   try {
     const res = await fetch(`/api/orders/${orderId}/status`, {
       method: 'PATCH',
       headers: getPartnerAuthHeaders('vendor'),
       body: JSON.stringify({
         status: 'REJECTED',
-        reason: reason,
+        reason: fullReason,
         expectedVersion: version
       })
     });
     const data = await res.json();
+    if (res.status === 409) {
+      showToast('⚠️ State conflict: Order was updated elsewhere. Refreshing...');
+      closeKdsDeclineModal();
+      loadVendorOrders();
+      return;
+    }
     if (data.success) {
       showToast(`Order #${orderId} declined.`);
+      closeKdsDeclineModal();
       loadVendorOrders();
     } else {
-      showToast(data.error || 'Failed to decline order.');
+      showToast(`❌ ${data.error || 'Failed to decline order.'}`);
     }
   } catch (e) {
     console.error('Failed to decline order:', e);
+    showToast('❌ Network error declining order.');
   }
 }
+window.confirmKdsDeclineOrder = confirmKdsDeclineOrder;
 
+// Menu Availability Management (Dynamically calculated availability ratio)
 async function loadVendorMenuItems() {
   if (!PARTNER_STATE.vendorStallId) return;
   try {
@@ -1209,20 +1510,45 @@ async function loadVendorMenuItems() {
     const data = await res.json();
     PARTNER_STATE.vendorMenu = data.items || [];
 
+    // Dynamically compute Menu Availability ratio (available_items / total_items)
+    const totalCount = PARTNER_STATE.vendorMenu.length;
+    const availableCount = PARTNER_STATE.vendorMenu.filter(i => i.inStock !== false).length;
+
+    const ratioBadge = document.getElementById('vendorStockRatioBadge');
+    if (ratioBadge) {
+      ratioBadge.innerText = `${availableCount}/${totalCount} Available`;
+      if (availableCount === totalCount && totalCount > 0) {
+        ratioBadge.className = 'px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 shrink-0';
+      } else if (availableCount === 0 && totalCount > 0) {
+        ratioBadge.className = 'px-3 py-1 rounded-full text-xs font-black bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300 shrink-0';
+      } else {
+        ratioBadge.className = 'px-3 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 shrink-0';
+      }
+    }
+
     const container = document.getElementById('vendorMenuItemsList');
     if (!container) return;
+
+    if (totalCount === 0) {
+      container.innerHTML = `
+        <div class="py-6 text-center text-gray-400 text-xs">
+          No menu items registered yet for this stall.
+        </div>
+      `;
+      return;
+    }
 
     container.innerHTML = PARTNER_STATE.vendorMenu.map(item => `
       <div class="py-3 flex items-center justify-between">
         <div>
-          <div class="font-bold text-xs text-gray-900">${item.name}</div>
-          <div class="text-[11px] text-gray-500">₹${item.price} • ${item.isVeg ? 'Veg' : 'Non-Veg'}</div>
+          <div class="font-bold text-xs text-gray-900 dark:text-gray-100">${item.name}</div>
+          <div class="text-[11px] text-gray-500 dark:text-gray-400">₹${item.price} • ${item.isVeg ? 'Veg' : 'Non-Veg'}</div>
         </div>
         <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" ${item.inStock ? 'checked' : ''} onchange="toggleItemStock('${item.id}', this.checked)" class="sr-only peer">
-          <div class="w-9 h-5 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-green-600"></div>
-          <span class="ml-2 text-xs font-bold ${item.inStock ? 'text-green-700' : 'text-red-500'}">
-            ${item.inStock ? 'In Stock' : '86 / Sold Out'}
+          <input type="checkbox" ${item.inStock !== false ? 'checked' : ''} onchange="toggleItemStock('${item.id}', this.checked)" class="sr-only peer">
+          <div class="w-9 h-5 bg-gray-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
+          <span class="ml-2.5 text-xs font-bold ${item.inStock !== false ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}">
+            ${item.inStock !== false ? 'In Stock' : 'Sold Out'}
           </span>
         </label>
       </div>
@@ -1234,19 +1560,25 @@ async function loadVendorMenuItems() {
 
 async function toggleItemStock(itemId, inStock) {
   try {
-    const res = await fetch(`/api/stalls/items/${itemId}/stock`, {
+    const res = await fetch(`/api/stalls/menu/${itemId}/stock`, {
       method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
+      headers: getPartnerAuthHeaders('vendor'),
       body: JSON.stringify({ inStock: inStock })
     });
     const data = await res.json();
     if (data.success) {
-      showToast(inStock ? 'Item marked in stock' : 'Item marked 86/Sold Out');
+      showToast(inStock ? '✅ Item marked In Stock' : '⚠️ Item marked Sold Out');
+      loadVendorMenuItems();
+    } else {
+      showToast(`❌ ${data.error || 'Failed to update stock status'}`);
+      loadVendorMenuItems();
     }
   } catch (e) {
     console.error('Failed to toggle stock:', e);
+    showToast('❌ Network error updating item stock');
   }
 }
+window.toggleItemStock = toggleItemStock;
 
 // ==========================================================
 // 5. RIDER FLEET LOGIC

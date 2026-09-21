@@ -102,6 +102,26 @@ router.get('/:id/trust', (req, res) => {
     ? `${rawFssai.slice(0, 4)}••••${rawFssai.slice(-4)}`
     : (rawFssai || 'Not Submitted');
 
+  const fssaiPayload = {
+    numberMasked: maskedFssai,
+    maskedNumber: maskedFssai,
+    status: stall.fssai_status || 'not_submitted',
+    verifiedAt: stall.fssai_verified_at,
+    expiryDate: stall.fssai_expiry_date
+  };
+
+  const hygienePayload = {
+    status: stall.hygiene_status || 'not_inspected',
+    verifiedAt: stall.hygiene_verified_at,
+    score: stall.hygiene_score,
+    inspectedBy: stall.hygiene_inspected_by,
+    notes: stall.hygiene_notes || ''
+  };
+
+  const completedChecksPayload = Array.isArray(stall.hygiene_checklist_verified) 
+    ? stall.hygiene_checklist_verified 
+    : (stall.hygiene_checklist_verified ? Object.keys(stall.hygiene_checklist_verified).filter(k => stall.hygiene_checklist_verified[k]) : []);
+
   res.json({
     success: true,
     stall: {
@@ -114,31 +134,24 @@ router.get('/:id/trust', (req, res) => {
       trustBadges: formatted.trustBadges,
       hygieneScore: stall.hygiene_score || null,
       ordersCount: formatted.ordersCount,
-      fssai: {
-        numberMasked: maskedFssai,
-        status: stall.fssai_status || 'not_submitted',
-        verifiedAt: stall.fssai_verified_at,
-        expiryDate: stall.fssai_expiry_date
-      },
-      hygiene: {
-        status: stall.hygiene_status || 'not_inspected',
-        verifiedAt: stall.hygiene_verified_at,
-        score: stall.hygiene_score,
-        inspectedBy: stall.hygiene_inspected_by,
-        notes: stall.hygiene_notes || ''
-      },
-      completedChecks: Array.isArray(stall.hygiene_checklist_verified) ? stall.hygiene_checklist_verified : (stall.hygiene_checklist_verified ? Object.keys(stall.hygiene_checklist_verified).filter(k => stall.hygiene_checklist_verified[k]) : []),
+      fssai: fssaiPayload,
+      hygiene: hygienePayload,
+      completedChecks: completedChecksPayload,
       identity: {
         status: stall.identity_status || 'pending',
         verifiedAt: stall.identity_verified_at,
         isVerified: Boolean(stall.is_verified)
       },
+      auditHistory: stall.audit_history || [],
       auditStandard: {
         frequency: 'Every 90 days',
         standards: ['RO Mineral Water', 'Covered Glass Food Cart', '100% Food-Grade Dona & Paper', 'Fresh Oil Standard'],
         reportingContact: 'grievance@thelaexpress.in'
       }
-    }
+    },
+    fssai: fssaiPayload,
+    hygiene: hygienePayload,
+    completedChecks: completedChecksPayload
   });
 });
 
@@ -256,20 +269,60 @@ router.patch(['/:id/status', '/:id/toggle-open', '/:id/toggle-live'], (req, res)
   res.json({ success: true, stall: result.stall, store_status: result.stall?.store_status });
 });
 
-// PATCH /api/stalls/menu/:itemId/stock
-router.patch('/menu/:itemId/stock', (req, res) => {
-  const { inStock } = req.body;
-  const updatedItem = db.toggleItemStock(req.params.itemId, inStock);
-  if (!updatedItem) {
-    return res.status(404).json({ error: 'Item not found.' });
+// PATCH /api/stalls/menu/:itemId/stock or /api/stalls/items/:itemId/stock
+// Server-authoritative: A vendor may mark an item unavailable only if authenticated as the owner of the relevant stall
+router.patch(['/menu/:itemId/stock', '/items/:itemId/stock'], (req, res) => {
+  if (!req.auth || !req.auth.authenticated) {
+    return res.status(401).json({ error: 'Authentication required. Please log in.' });
   }
 
-  wsManager.broadcastToStall(updatedItem.stall_id, {
+  let item = db.data.menu_items ? db.data.menu_items.find(m => m.id === req.params.itemId) : null;
+  let stallId = item?.stall_id;
+
+  if (!item) {
+    for (const s of db.data.stalls) {
+      if (Array.isArray(s.menu)) {
+        const found = s.menu.find(m => m.id === req.params.itemId);
+        if (found) {
+          item = found;
+          stallId = s.id;
+          break;
+        }
+      }
+    }
+  }
+
+  if (!item || !stallId) {
+    return res.status(404).json({ error: 'Menu item not found.' });
+  }
+
+  const stall = db.getStallById(stallId);
+  if (!stall) {
+    return res.status(404).json({ error: 'Associated stall not found.' });
+  }
+
+  const isOwner = req.auth.role === 'vendor' &&
+    (req.auth.stallId === stall.id || req.auth.ownedStallIds?.includes(stall.id));
+  const isAdmin = req.auth.role === 'admin';
+
+  if (!isOwner && !isAdmin) {
+    return res.status(403).json({ error: 'Forbidden: You do not own the food stall for this item.' });
+  }
+
+  const { inStock } = req.body;
+  const updatedItem = db.toggleItemStock(item.id, Boolean(inStock));
+
+  wsManager.broadcastToStall(stallId, {
     type: 'ITEM_STOCK_CHANGED',
-    payload: { itemId: updatedItem.id, inStock: updatedItem.inStock }
+    payload: { itemId: item.id, inStock: Boolean(inStock) }
   });
 
-  res.json({ success: true, item: updatedItem });
+  res.json({
+    success: true,
+    itemId: item.id,
+    inStock: Boolean(inStock),
+    item: updatedItem
+  });
 });
 
 module.exports = router;

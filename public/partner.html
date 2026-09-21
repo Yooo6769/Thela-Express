@@ -277,28 +277,90 @@
     </div>
 
     <!-- Incoming Orders Queue -->
-    <div>
-      <div class="flex items-center justify-between mb-3">
+    <!-- Vendor Kitchen Display System (KDS) Section -->
+    <div class="space-y-4">
+      <!-- KDS Header & Live Controls -->
+      <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div class="flex items-center space-x-2">
-          <h2 class="text-base font-extrabold" data-i18n="active_orders_queue">Active Orders Queue</h2>
+          <h2 class="text-base font-extrabold" data-i18n="active_orders_queue">Kitchen Display System (KDS)</h2>
           <span id="vendorActiveCount" class="bg-orange-100 text-orange-700 font-bold px-2 py-0.5 rounded-full text-xs">0 Active</span>
         </div>
-        <button onclick="loadVendorOrders()" class="text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center space-x-1">
-          <i class="fa-solid fa-rotate"></i>
-          <span data-i18n="refresh_btn">Refresh</span>
+        <div class="flex items-center space-x-2">
+          <!-- Live Telemetry Status -->
+          <div class="text-[11px] font-bold text-gray-500 hidden sm:flex items-center space-x-1.5">
+            <span class="w-2 h-2 rounded-full bg-emerald-500 animate-ping"></span>
+            <span data-i18n="kds_live_synced">Backend Synced</span>
+          </div>
+          <button onclick="loadVendorOrders()" class="text-xs font-bold text-orange-600 hover:text-orange-700 flex items-center space-x-1 bg-white dark:bg-zinc-800 px-3 py-1.5 rounded-xl border border-gray-200 dark:border-zinc-700 shadow-xs">
+            <i class="fa-solid fa-rotate"></i>
+            <span data-i18n="refresh_btn">Refresh</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- KDS Stage Tabs Navigation -->
+      <div class="flex items-center space-x-1.5 p-1 bg-gray-200/80 dark:bg-zinc-800/80 rounded-2xl overflow-x-auto hide-scrollbar text-xs font-bold">
+        <button id="kdsTabNew" onclick="setKdsQueueTab('NEW')" class="px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5 bg-orange-600 text-white shadow-xs shrink-0">
+          <i class="fa-solid fa-bell"></i>
+          <span data-i18n="kds_tab_new">NEW</span>
+          <span id="kdsNewCount" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-white text-orange-600">0</span>
+        </button>
+        <button id="kdsTabPrep" onclick="setKdsQueueTab('PREPARING')" class="px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5 text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-zinc-700/60 shrink-0">
+          <i class="fa-solid fa-fire"></i>
+          <span data-i18n="kds_tab_prep">PREPARING</span>
+          <span id="kdsPrepCount" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-gray-300 dark:bg-zinc-600 text-gray-800 dark:text-gray-200">0</span>
+        </button>
+        <button id="kdsTabReady" onclick="setKdsQueueTab('READY')" class="px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5 text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-zinc-700/60 shrink-0">
+          <i class="fa-solid fa-box-open"></i>
+          <span data-i18n="kds_tab_ready">READY FOR PICKUP</span>
+          <span id="kdsReadyCount" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-gray-300 dark:bg-zinc-600 text-gray-800 dark:text-gray-200">0</span>
+        </button>
+        <button id="kdsTabHistory" onclick="setKdsQueueTab('HISTORY')" class="px-3.5 py-2 rounded-xl transition flex items-center space-x-1.5 text-gray-700 dark:text-gray-300 hover:bg-white/60 dark:hover:bg-zinc-700/60 shrink-0">
+          <i class="fa-solid fa-clock-rotate-left"></i>
+          <span data-i18n="kds_tab_history">ORDER HISTORY</span>
+          <span id="kdsHistoryCount" class="ml-1 px-1.5 py-0.2 rounded-full text-[10px] font-black bg-gray-300 dark:bg-zinc-600 text-gray-800 dark:text-gray-200">0</span>
         </button>
       </div>
 
+      <!-- History Filter Bar (only visible when in HISTORY tab) -->
+      <div id="kdsHistoryFilterBar" class="hidden flex flex-wrap items-center justify-between gap-2 p-3 bg-white dark:bg-zinc-800 rounded-2xl border border-gray-200 dark:border-zinc-700 text-xs">
+        <div class="flex items-center space-x-2">
+          <label class="font-bold text-gray-500" data-i18n="filter_status">Status:</label>
+          <select id="kdsHistoryStatusFilter" onchange="renderVendorOrders(PARTNER_STATE.vendorOrders)" class="partner-subcard rounded-lg px-2.5 py-1 text-xs font-bold">
+            <option value="ALL" data-i18n="filter_all">All History</option>
+            <option value="DELIVERED_COMPLETED" data-i18n="filter_completed">Completed / Delivered</option>
+            <option value="IN_TRANSIT" data-i18n="filter_in_transit">In Transit (With Rider)</option>
+            <option value="CANCELLED_DECLINED" data-i18n="filter_cancelled">Declined / Cancelled</option>
+          </select>
+        </div>
+        <div class="flex items-center space-x-2">
+          <label class="font-bold text-gray-500" data-i18n="filter_date">Date:</label>
+          <select id="kdsHistoryDateFilter" onchange="renderVendorOrders(PARTNER_STATE.vendorOrders)" class="partner-subcard rounded-lg px-2.5 py-1 text-xs font-bold">
+            <option value="ALL" data-i18n="filter_all_time">All Time</option>
+            <option value="TODAY" data-i18n="filter_today">Today</option>
+            <option value="PAST_7_DAYS" data-i18n="filter_7_days">Past 7 Days</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Orders List Container -->
       <div id="vendorOrdersList" class="space-y-3">
         <!-- Rendered dynamically -->
       </div>
     </div>
 
-    <!-- Stall Menu Item Stock Management -->
+    <!-- Stall Menu Item Stock Management (Menu Availability) -->
     <div class="partner-card rounded-3xl p-5 shadow-sm space-y-3">
-      <h2 class="text-base font-extrabold" data-i18n="stock_avail_title">Item Stock Availability (86/85 List)</h2>
-      <p class="text-xs text-gray-500" data-i18n="stock_avail_desc">Ran out of fresh ingredients? Toggle any dish out-of-stock instantly to stop customer orders.</p>
-      <div id="vendorMenuItemsList" class="divide-y divide-gray-100">
+      <div class="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-3">
+        <div>
+          <h2 class="text-base font-extrabold" data-i18n="stock_avail_title">Menu Stock & Item Availability</h2>
+          <p class="text-xs text-gray-500" data-i18n="stock_avail_desc">Toggle any dish in or out of stock instantly to prevent customer orders when ingredients run out.</p>
+        </div>
+        <span id="vendorStockRatioBadge" class="px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 shrink-0">
+          0/0 Available
+        </span>
+      </div>
+      <div id="vendorMenuItemsList" class="divide-y divide-gray-100 dark:divide-zinc-800">
         <!-- Populated dynamically -->
       </div>
     </div>
@@ -455,6 +517,51 @@
     </div>
 
   </main>
+
+  <!-- Controlled Order Rejection Modal -->
+  <div id="kdsDeclineModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-zinc-900 rounded-3xl p-5 sm:p-6 max-w-md w-full shadow-2xl border border-gray-200 dark:border-zinc-800 space-y-4 animate-in fade-in zoom-in-95 duration-150">
+      <div class="flex items-center justify-between border-b border-gray-100 dark:border-zinc-800 pb-3">
+        <div class="flex items-center space-x-2 text-red-600">
+          <i class="fa-solid fa-triangle-exclamation text-lg"></i>
+          <h3 class="font-black text-base text-gray-900 dark:text-gray-100" data-i18n="decline_order_title">Decline Order</h3>
+        </div>
+        <button onclick="closeKdsDeclineModal()" class="w-8 h-8 rounded-full bg-gray-100 dark:bg-zinc-800 text-gray-500 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-zinc-700 transition">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <p class="text-xs text-gray-500 dark:text-gray-400">
+        Please select an authorized reason for declining this order. This will be recorded in the order timeline and trigger an automatic customer refund if pre-paid.
+      </p>
+
+      <div class="space-y-3 text-xs">
+        <div>
+          <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="decline_reason_label">Controlled Reason:</label>
+          <select id="kdsDeclineReasonSelect" class="w-full partner-subcard rounded-xl px-3 py-2.5 text-xs font-bold border border-gray-200 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-red-500">
+            <option value="item_unavailable">Item Unavailable / Sold Out</option>
+            <option value="stall_busy">Kitchen Rush / Stall Too Busy</option>
+            <option value="stall_closing">Stall Closing Soon</option>
+            <option value="vendor_unavailable">Vendor Unavailable</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-bold text-gray-700 dark:text-gray-300 mb-1" data-i18n="decline_notes_label">Additional Notes (Optional):</label>
+          <textarea id="kdsDeclineNotes" rows="2" placeholder="e.g. Ran out of fresh ingredients" class="w-full partner-subcard rounded-xl p-2.5 text-xs border border-gray-200 dark:border-zinc-700 focus:outline-none focus:ring-2 focus:ring-red-500"></textarea>
+        </div>
+      </div>
+
+      <div class="flex items-center justify-end space-x-2 pt-2 border-t border-gray-100 dark:border-zinc-800">
+        <button onclick="closeKdsDeclineModal()" class="px-4 py-2 rounded-xl text-xs font-bold text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-zinc-800 transition">
+          Cancel
+        </button>
+        <button id="kdsDeclineConfirmBtn" onclick="confirmKdsDeclineOrder()" class="px-4 py-2 rounded-xl text-xs font-black bg-red-600 hover:bg-red-700 text-white shadow-sm transition">
+          Confirm Decline
+        </button>
+      </div>
+    </div>
+  </div>
 
   <!-- Partner Footer -->
   <footer class="partner-card py-6 text-center text-xs text-gray-500 border-t space-y-1 mt-auto">

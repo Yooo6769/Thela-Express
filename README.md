@@ -11,7 +11,7 @@ The ecosystem is structured with zero build step (vanilla modern JavaScript + Ta
 | Portal | URL Path | Source File | Description |
 | :--- | :--- | :--- | :--- |
 | 🛍️ **Customer App** | `/` or `/index.html` | `public/index.html` | Night-market visual atmosphere, craving discovery, verified vendor pages, 12-language support, customizer, and live order tracker. |
-| 👨‍🍳 **Vendor Kitchen POS** | `/partner.html?role=vendor` | `public/partner.html` | Real-time incoming kitchen order stream, Web Audio chimes, 1-tap accept/prep/ready progression, item 86/85 stock management. |
+| 👨‍🍳 **Vendor Kitchen POS** | `/partner.html?role=vendor` | `public/partner.html` | Real-time incoming kitchen order stream, Web Audio chimes, 1-tap accept/prep/ready progression, dynamic menu stock availability management. |
 | 🛵 **Rider Console** | `/partner.html?role=rider` | `public/partner.html` | Order broadcast dispatcher, live GPS radar transmitter, thermal box confirmation, doorstep delivery OTP completion. |
 | 📝 **Vendor Onboarding** | `/onboard-vendor.html` | `public/onboard-vendor.html` | FSSAI registration number capture, hygiene self-audit checklist, signature dishes, cart photography, and geo-location pinning. |
 | 🪪 **Rider Onboarding** | `/onboard-rider.html` | `public/onboard-rider.html` | Driving license, vehicle type (EV / petrol scooter / bicycle), thermal delivery bag verification, document upload. |

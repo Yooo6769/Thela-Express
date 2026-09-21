@@ -4,6 +4,7 @@
 const express = require('express');
 const router = express.Router();
 const db = require('../db');
+const wsManager = require('../websocket');
 const paymentProvider = require('../payments/payment_provider');
 
 // Middleware: Authenticate and derive role strictly server-side
@@ -111,7 +112,9 @@ router.post('/create-intent', async (req, res) => {
 // Cryptographic verification: never accepts client declaration of PAID without provider confirmation.
 router.post('/verify', async (req, res) => {
   try {
-    const { orderId, txnId, signature, idempotencyKey, testSimulationOutcome } = req.body;
+    const orderId = req.body.orderId || req.body.order_id;
+    const txnId = req.body.txnId || req.body.transaction_id || req.body.providerTransactionId || `txn_${Date.now()}`;
+    const { signature, idempotencyKey, testSimulationOutcome } = req.body;
     if (!orderId) {
       return res.status(400).json({ error: 'orderId is required.' });
     }
@@ -251,6 +254,27 @@ router.post('/verify', async (req, res) => {
     }));
 
     db.save();
+
+    // Broadcast confirmed authorized paid order to Vendor KDS
+    wsManager.broadcastToStall(order.stall_id, {
+      type: 'NEW_ORDER_RECEIVED',
+      payload: {
+        order: db.serializeOrderForVendor(order),
+        sound: 'bell_chime',
+        message: `New Order #${order.id} received! ₹${order.grand_total}`
+      }
+    });
+
+    // Also update customer order tracking screen
+    wsManager.broadcastToOrder(order.id, {
+      type: 'ORDER_STATUS_CHANGED',
+      payload: {
+        orderId: order.id,
+        status: order.status,
+        payment_status: 'PAID',
+        version: order.version
+      }
+    });
 
     res.json({
       success: true,

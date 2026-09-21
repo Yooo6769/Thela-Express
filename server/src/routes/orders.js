@@ -95,25 +95,19 @@ router.post('/', (req, res) => {
 
   console.log(`[ORDER] Order created #${order.id} for stall ${stall_name} [Status: ${order.status}, Payment: ${order.payment_status}]`);
 
-  // WebSocket notifications (downstream alerts only)
-  wsManager.broadcastToStall(stall_id, {
-    type: 'NEW_ORDER_RECEIVED',
-    payload: {
-      order: db.formatOrderForPublic(order),
-      sound: 'bell_chime',
-      message: `New Order #${order.id} received! ₹${order.grand_total}`
-    }
-  });
-
-  wsManager.broadcastAll({
-    type: 'NEW_PICKUP_AVAILABLE',
-    payload: {
-      orderId: order.id,
-      stallName: order.stall_name,
-      address: order.delivery_address,
-      payout: 40
-    }
-  });
+  // Vendor KDS Notification:
+  // Vendors receive NEW_ORDER_RECEIVED only for payment-authorized orders.
+  // Cash orders are authorized upon placement; digital payments (UPI) emit NEW_ORDER_RECEIVED upon payment verification in /api/payments/verify.
+  if (order.payment_method === 'CASH') {
+    wsManager.broadcastToStall(stall_id, {
+      type: 'NEW_ORDER_RECEIVED',
+      payload: {
+        order: db.serializeOrderForVendor(order),
+        sound: 'bell_chime',
+        message: `New Order #${order.id} received! ₹${order.grand_total}`
+      }
+    });
+  }
 
   // Return formatted order to customer with OTP decrypted for customer view
   const publicOrder = db.formatOrderForPublic(order, {
@@ -139,8 +133,21 @@ router.get('/user/:phone', (req, res) => {
 });
 
 // GET /api/orders/stall/:stallId
+// Returns vendor-serialized orders. Filters out unauthorized unverified payment intents.
 router.get('/stall/:stallId', (req, res) => {
-  const orders = db.getOrdersByStall(req.params.stallId).map(o => db.formatOrderForPublic(o, req.auth));
+  // Check vendor acceptance timeouts to keep queue synchronized
+  db.checkVendorAcceptanceTimeouts();
+
+  if (req.auth?.authenticated && req.auth.role === 'vendor') {
+    const isOwner = req.auth.stallId === req.params.stallId || req.auth.ownedStallIds?.includes(req.params.stallId);
+    if (!isOwner) {
+      return res.status(403).json({ error: 'Forbidden: You do not own the food stall for this order.' });
+    }
+  }
+
+  const orders = db.getOrdersByStall(req.params.stallId)
+    .filter(o => o.payment_status === 'PAID' || o.payment_method === 'CASH' || o.status !== 'PLACED')
+    .map(o => db.serializeOrderForVendor(o));
   res.json({ orders });
 });
 
@@ -154,7 +161,8 @@ router.get('/:id', (req, res) => {
 // PATCH /api/orders/:id/status (Transition Status)
 // Never trusts client-supplied role or riderId from body or query!
 router.patch('/:id/status', requireAuth, (req, res) => {
-  const { status, etaMinutes, reason, expectedVersion } = req.body;
+  const { status, etaMinutes, expectedVersion } = req.body;
+  const reason = req.body.reason || req.body.cancellation_reason || '';
   const order = db.getOrderById(req.params.id);
 
   if (!order) {
@@ -170,6 +178,10 @@ router.patch('/:id/status', requireAuth, (req, res) => {
     const isOwner = req.auth.ownedStallIds?.includes(order.stall_id);
     if (!isOwner) {
       return res.status(403).json({ error: 'Forbidden: You do not own the food stall for this order.' });
+    }
+    const allowedVendorTransitions = ['ACCEPTED', 'PREPARING', 'READY_FOR_PICKUP', 'REJECTED', 'CANCELLED'];
+    if (!allowedVendorTransitions.includes(status)) {
+      return res.status(403).json({ error: `Forbidden: Vendors cannot transition order to '${status}'.` });
     }
   } else if (actorRole === 'rider') {
     // Rider cannot transition an order assigned to another rider
@@ -188,13 +200,20 @@ router.patch('/:id/status', requireAuth, (req, res) => {
   }
 
   // 2. Call State Machine
+  const assignedRider = actorRole === 'rider' ? db.getRiderById(actorId) : null;
   const transitionResult = db.transitionOrderStatus(order.id, status, {
     expectedVersion: expectedVersion !== undefined ? Number(expectedVersion) : undefined,
     actorRole,
     actorId,
     reason: reason || '',
     extra: {
-      etaMinutes: etaMinutes !== undefined ? Number(etaMinutes) : undefined
+      etaMinutes: etaMinutes !== undefined ? Number(etaMinutes) : undefined,
+      ...(actorRole === 'rider' && status === 'RIDER_ASSIGNED' ? {
+        rider_id: actorId,
+        rider_name: assignedRider?.name || 'Assigned Delivery Partner',
+        rider_phone: assignedRider?.phone || null,
+        rider_vehicle: assignedRider?.vehicle_type || assignedRider?.vehicle || 'Delivery Vehicle'
+      } : {})
     }
   });
 
@@ -225,6 +244,20 @@ router.patch('/:id/status', requireAuth, (req, res) => {
       version: updated.version
     }
   });
+
+  // When food is packaged and ready, broadcast gig eligibility to delivery fleet
+  if (updated.status === 'READY_FOR_PICKUP') {
+    wsManager.broadcastAll({
+      type: 'NEW_PICKUP_AVAILABLE',
+      payload: {
+        orderId: updated.id,
+        stallName: updated.stall_name,
+        stallId: updated.stall_id,
+        address: updated.delivery_address,
+        payout: (db.data.settings?.riderPayoutFlat || 40) + (updated.tip || 0)
+      }
+    });
+  }
 
   res.json({ success: true, order: db.formatOrderForPublic(updated, req.auth) });
 });

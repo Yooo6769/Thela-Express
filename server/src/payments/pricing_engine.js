@@ -15,7 +15,7 @@ function calculateOrderPricing({
 
   // 1. Authoritative Menu Item Price Resolution
   const validatedItems = items.map((rawItem, idx) => {
-    const qty = Math.max(1, Math.floor(Number(rawItem.qty) || 1));
+    const qty = Math.max(1, Math.floor(Number(rawItem.qty || rawItem.quantity) || 1));
     
     // Look up item in stall's authoritative menu catalog
     const catalogItem = stallMenuItems.find(
@@ -26,6 +26,9 @@ function calculateOrderPricing({
     let authoritativeName = rawItem.name || `Item #${idx + 1}`;
 
     if (catalogItem) {
+      if (catalogItem.inStock === false) {
+        throw new Error(`Item '${catalogItem.name}' is currently unavailable / sold out.`);
+      }
       authoritativePrice = Math.max(0, Number(catalogItem.price) || 0);
       authoritativeName = catalogItem.name || authoritativeName;
     } else if (rawItem.price !== undefined && rawItem.price !== null && !isNaN(Number(rawItem.price))) {

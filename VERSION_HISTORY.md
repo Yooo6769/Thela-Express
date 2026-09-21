@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.0.7`  
+**Current Production Version**: `v2.1.0`  
 **Current Date**: September 21, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -33,6 +33,7 @@ flowchart LR
     v204 --> v205["v2.0.5<br/>Dropdown Unblock & Partner Redesign"]
     v205 --> v206["v2.0.6<br/>Customer/Partner Separation & Accessible Nav"]
     v206 --> v207["v2.0.7<br/>FSSAI Contrast & Balanced Hero Badges"]
+    v207 --> v210["v2.1.0<br/>Server-Authoritative Vendor KDS & Real-Time Ops"]
 ```
 
 ---
@@ -390,11 +391,52 @@ flowchart LR
 
 ---
 
+### `v2.1.0` — Server-Authoritative Vendor Kitchen Display System (KDS) & Real-Time Operations
+- **Release Date**: September 21, 2026
+- **Git Commit**: `HEAD` (`feat: server-authoritative Vendor KDS, dynamic menu availability, and real-time order operations (v2.1.0)`)
+- **Key Architectural Accomplishments**:
+  - **Server-Authoritative Vendor Kitchen Display System (KDS)**:
+    - Replaced the legacy flat order list with a 4-queue operational system in the Partner App (`public/partner.html`, `public/partner.js`):
+      1. **New Orders (`NEW`)**: Displays incoming orders with acceptance countdown timers and action triggers (Accept vs Decline).
+      2. **In Kitchen (`PREPARING`)**: Active cooking orders derived strictly from stall prep time (`stall.prepTime`) with "Mark Food Ready" action triggers.
+      3. **Ready for Pickup (`READY`)**: Packed orders waiting for rider collection with real-time operational rider context (`Rider Arriving`, vehicle details, and platform-masked phone).
+      4. **Past Orders (`HISTORY`)**: Auditable order log with multi-criteria status filtering (All, Completed, In-Transit, Cancelled/Declined) and date range filtering (All Time, Today, Last 7 Days).
+    - Frontend is strictly decoupled from state transitions: all mutations flow through `PATCH /api/orders/:id/status` validated by centralized server state machine and optimistic concurrency control (`expectedVersion`).
+  - **Eradication of "86/85" Terminology & Dynamic Menu Availability**:
+    - Completely purged restaurant slang "86/85" from the entire codebase, UI labels, documentation, and localization bundles.
+    - Implemented dynamic menu availability ratio badge: `${available}/${total} Available` computed live from database catalog states (`inStock`).
+    - Added dedicated toggle endpoint `PATCH /api/stalls/menu/:itemId/stock` with mandatory vendor JWT authentication and stall ownership validation.
+    - Integrated availability enforcement into the pricing engine (`server/src/payments/pricing_engine.js`): checkout attempts for out-of-stock items immediately return HTTP 400 (`ITEM_OUT_OF_STOCK`).
+  - **Strict Role-Specific Serializers & Privacy Boundaries**:
+    - Implemented 4 cryptographic and role-aware order serializers in `server/src/db.js`:
+      - `serializeOrderForVendor`: Omission of the `otp` property entirely (`'otp' in res === false`), masking customer phone and exact private delivery address while providing coarse `delivery_locality`, and masking rider raw phone (`+91 ••••••${last4}`) with operational vehicle info.
+      - `serializeOrderForRider`: Omits OTP until doorstep delivery submission, sanitizes sensitive customer info, and provides transit guidance.
+      - `serializeOrderForCustomer`: Preserves plaintext single-use delivery OTP upon customer authentication for delivery confirmation.
+      - `serializeOrderForAdmin`: Full immutable audit trail with ledger and transaction hashes.
+  - **Digital Payment Authorization Gate**:
+    - Vendors are strictly protected from premature digital order preparation: `POST /api/orders` gates `NEW_ORDER_RECEIVED` stall broadcasts for digital payments until payment is cryptographically verified as `PAID` via `POST /api/payments/verify`.
+    - Cash on Delivery (COD) orders remain immediately authorized upon placement.
+  - **Server-Side Vendor Acceptance Timeout**:
+    - Introduced configurable `db.data.settings.vendorAcceptanceTimeoutMinutes` (default 5 minutes).
+    - `checkVendorAcceptanceTimeouts()` automatically evaluates pending `PLACED` orders upon order queries and background intervals, transitioning timed-out orders to `VENDOR_UNAVAILABLE` with automatic refund ledger decoupling.
+  - **Controlled Order Decline Flow**:
+    - Built interactive `kdsDeclineModal` in the Partner App requiring vendors to select from authorized operational reasons (`item_unavailable`, `stall_busy`, `stall_closing`, `vendor_unavailable`) with optional vendor notes.
+    - Server verifies cancellation reasons and immutably records `cancellation_reason` in the database order record.
+  - **Universal 12-Language Localization (i18n)**:
+    - Added 17 new KDS localization keys across English, Hindi, Bengali, Telugu, Marathi, Tamil, Urdu, Gujarati, Kannada, Odia, Malayalam, and Punjabi.
+    - Total localization coverage remains at 100% (0 missing keys across all 5 applications).
+  - **Comprehensive Automated Verification**:
+    - Created `scratch/test_vendor_kds.js` validating all 24 core specifications and 8 mandatory corrections across 30 comprehensive integration tests (30/30 passing).
+    - Full platform regression suite passed cleanly (13 test suites, 0 failures).
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `v2.0.7` | 2026-09-21 | UI & Accessibility | Crystal-clear FSSAI dark theme contrast and balanced single-line hero badges across onboarding portals (v2.0.7) |
+| `v2.1.0` | 2026-09-21 | Core Platform | Server-authoritative Vendor KDS, dynamic menu availability, role serializers & real-time order operations (v2.1.0) |
+| `60ba291` | 2026-09-21 | UI & Accessibility | Crystal-clear FSSAI dark theme contrast and balanced single-line hero badges across onboarding portals (v2.0.7) |
 | `669dc29` | 2026-09-21 | Architecture & UX | Strict Customer/Partner domain separation, large accessible back buttons, and partner portal registration shortcuts (v2.0.6) |
 | `b4a2f1c` | 2026-09-20 | UI & Themes | Dropdown menu unblocking, partner app adaptive overhaul, and customer UI polish (v2.0.5) |
 | `8be7e0c` | 2026-09-20 | UI & Themes | High-contrast dark theme readability, stone palette overrides, and mobile viewport overflow containment (v2.0.4) |
@@ -507,6 +549,9 @@ stateDiagram-v2
 | [`test_atmosphere.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_atmosphere.js) | Street-food visual atmosphere motifs, 4-level adaptive density engine, modal stack tracking | 5 tests | ✅ Passed |
 | [`test_themes.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_themes.js) | Universal 3-state theme engine (White, Black, System Default), high-contrast Stone typography, mobile viewport containment, 12 languages | 58 tests | ✅ Passed |
 | [`test_customer_partner_separation.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_customer_partner_separation.js) | Zero partner links in customer app, accessible 40px onboarding back button, partner portal registration shortcuts | 3 suites | ✅ Passed |
+| [`test_vendor_kds.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_vendor_kds.js) | Server-authoritative Vendor KDS, dynamic menu availability, 86/85 eradication, role serializers, payment gating, timeout refunds, OCC, and privacy masking | 30 tests | ✅ Passed |
+| [`test_trust.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_trust.js) | Trust system badges, FSSAI verification display, and hygiene audits | 4 tests | ✅ Passed |
+| [`test_trust_backend.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_trust_backend.js) | Two-tier trust backend endpoints, trust metadata schema verification | 4 tests | ✅ Passed |
 
 ---
 
