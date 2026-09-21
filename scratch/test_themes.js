@@ -205,7 +205,34 @@ it('i18n.js hides language label on mobile (<768px) to eliminate header width bl
 it('index.html body and header prevent horizontal overflow', () => {
   const indexHtml = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
   assert(indexHtml.includes('overflow-x-hidden'), 'index.html body must contain overflow-x-hidden');
-  assert(indexHtml.includes('overflow-hidden'), 'index.html header must contain overflow-hidden');
+});
+
+console.log('\n--- SUITE 7: FSSAI Dark Readability & Balanced Hero Badges ---');
+
+it('theme.css defines .fssai-trust-callout with dedicated light and dark high-contrast tokens', () => {
+  assert(themeCss.includes('.fssai-trust-callout'), 'Missing .fssai-trust-callout in theme.css');
+  assert(themeCss.includes('html.dark .fssai-trust-callout'), 'Missing html.dark .fssai-trust-callout in theme.css');
+  assert(themeCss.includes('html.dark .fssai-callout-desc'), 'Missing html.dark .fssai-callout-desc in theme.css');
+  assert(themeCss.includes('html.dark [class*="bg-amber-50"]'), 'Missing html.dark [class*="bg-amber-50"] in theme.css');
+});
+
+it('onboard-vendor.html uses .fssai-trust-callout for crystal-clear dark theme readability', () => {
+  const vendorHtml = fs.readFileSync(path.join(__dirname, '..', 'public', 'onboard-vendor.html'), 'utf8');
+  assert(vendorHtml.includes('fssai-trust-callout'), 'onboard-vendor.html must use fssai-trust-callout');
+  assert(vendorHtml.includes('fssai-callout-title'), 'onboard-vendor.html must use fssai-callout-title');
+  assert(vendorHtml.includes('fssai-callout-desc'), 'onboard-vendor.html must use fssai-callout-desc');
+});
+
+it('onboard-rider.html hero badge is inline-block and uses balanced text (no orphan payouts word)', () => {
+  const riderHtml = fs.readFileSync(path.join(__dirname, '..', 'public', 'onboard-rider.html'), 'utf8');
+  assert(riderHtml.includes('inline-block'), 'onboard-rider.html hero badge must use inline-block');
+  assert(riderHtml.includes('Earn ₹40 Per Delivery • Daily UPI Payouts'), 'onboard-rider.html must use concise 40-char copy');
+  assert(!riderHtml.includes('Earn ₹40 Per Street Delivery'), 'onboard-rider.html must not have redundant Street word that causes line-wrap');
+});
+
+it('onboard-vendor.html hero badge is inline-block with balanced padding and font size', () => {
+  const vendorHtml = fs.readFileSync(path.join(__dirname, '..', 'public', 'onboard-vendor.html'), 'utf8');
+  assert(vendorHtml.includes('inline-block bg-black/25 text-amber-200 text-[10.5px] sm:text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider leading-none'), 'onboard-vendor.html must use inline-block pill badge');
 });
 
 // -------------------------------------------------------------

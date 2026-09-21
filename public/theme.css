@@ -286,21 +286,26 @@ html.dark .bg-orange-50 {
   color: #fdba74 !important;
 }
 
+html.dark [class*="bg-amber-50"],
 html.dark .bg-amber-50,
 html.dark .bg-amber-50\/40,
-html.dark .bg-amber-50\/70 {
-  background-color: rgba(245, 158, 11, 0.15) !important;
-  color: #fcd34d !important;
+html.dark .bg-amber-50\/70,
+html.dark .bg-amber-50\/80,
+html.dark .bg-amber-50\/90 {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+  color: #fef08a !important;
 }
 
 html.dark .bg-amber-100 {
   background-color: rgba(245, 158, 11, 0.22) !important;
-  color: #fcd34d !important;
+  color: #fef08a !important;
 }
 
+html.dark [class*="border-amber-200"],
+html.dark [class*="border-amber-300"],
 html.dark .border-amber-200,
 html.dark .border-amber-200\/80 {
-  border-color: rgba(245, 158, 11, 0.3) !important;
+  border-color: rgba(245, 158, 11, 0.35) !important;
 }
 
 html.dark .border-dashed.border-amber-200 {
@@ -309,9 +314,35 @@ html.dark .border-dashed.border-amber-200 {
 }
 
 html.dark .text-amber-900,
-html.dark .text-amber-800,
+html.dark .text-amber-800 {
+  color: #fef08a !important;
+}
+
 html.dark .text-amber-700 {
-  color: #fde68a !important;
+  color: #fde047 !important;
+}
+
+/* FSSAI & Hygiene Trust Callout - Light & Dark High-Contrast Styling */
+.fssai-trust-callout {
+  background-color: #fffbeb !important;
+  border: 1px solid #fde68a !important;
+}
+.fssai-callout-title {
+  color: #78350f !important;
+}
+.fssai-callout-desc {
+  color: #92400e !important;
+}
+
+html.dark .fssai-trust-callout {
+  background-color: #1a1610 !important;
+  border: 1px solid rgba(245, 158, 11, 0.35) !important;
+}
+html.dark .fssai-callout-title {
+  color: #fde047 !important;
+}
+html.dark .fssai-callout-desc {
+  color: #fef3c7 !important;
 }
 
 html.dark .text-orange-900,

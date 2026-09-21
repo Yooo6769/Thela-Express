@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.0.6`  
+**Current Production Version**: `v2.0.7`  
 **Current Date**: September 21, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -32,6 +32,7 @@ flowchart LR
     v203 --> v204["v2.0.4<br/>Dark Contrast & Mobile Viewport Fix"]
     v204 --> v205["v2.0.5<br/>Dropdown Unblock & Partner Redesign"]
     v205 --> v206["v2.0.6<br/>Customer/Partner Separation & Accessible Nav"]
+    v206 --> v207["v2.0.7<br/>FSSAI Contrast & Balanced Hero Badges"]
 ```
 
 ---
@@ -371,11 +372,30 @@ flowchart LR
 
 ---
 
+### `v2.0.7` — FSSAI Dark Theme High Contrast & Balanced Hero Badges
+- **Release Date**: September 21, 2026
+- **Git Commit**: `v2.0.7` (pending push)
+- **Key Accomplishments**:
+  - **FSSAI & Hygiene Callout Dark Theme Contrast (`public/onboard-vendor.html`, `public/theme.css`)**:
+    - Resolved low-contrast pale yellow text rendering over un-inverted cream background in dark mode.
+    - Added wildcard matching in `theme.css` for `html.dark [class*="bg-amber-50"]` to guarantee all opacity variants render in dark amber slate (`rgba(245, 158, 11, 0.14)`).
+    - Established dedicated high-contrast CSS tokens: `.fssai-trust-callout` (`#1a1610` dark surface), `.fssai-callout-title` (`#fde047` gold heading), and `.fssai-callout-desc` (`#fef3c7` bright cream text, 14:1 contrast ratio).
+  - **Hero Badge Line-Wrap Elimination (`public/onboard-rider.html`, `public/i18n.js`)**:
+    - Fixed unsightly stair-step line wrap where "PAYOUTS" dropped to an orphaned second line on mobile viewports.
+    - Streamlined copy to `Earn ₹40 Per Delivery • Daily UPI Payouts` (40 chars, matching vendor badge's 39 chars) across all 12 Indian languages.
+    - Applied `inline-block bg-black/25 text-[10.5px] sm:text-xs font-black px-3 py-1 rounded-full uppercase tracking-wider leading-none` across both vendor and rider onboarding banners.
+    - Guaranteed single-line display and balanced visual proportions on mobile viewports.
+  - **Automated Verification**:
+    - Added Suite 7 to `scratch/test_themes.js`; all 62/62 theme and contrast assertions passing.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `v2.0.6` | 2026-09-21 | Architecture & UX | Strict Customer/Partner domain separation, large accessible back buttons, and partner portal registration shortcuts (v2.0.6) |
+| `v2.0.7` | 2026-09-21 | UI & Accessibility | Crystal-clear FSSAI dark theme contrast and balanced single-line hero badges across onboarding portals (v2.0.7) |
+| `669dc29` | 2026-09-21 | Architecture & UX | Strict Customer/Partner domain separation, large accessible back buttons, and partner portal registration shortcuts (v2.0.6) |
 | `b4a2f1c` | 2026-09-20 | UI & Themes | Dropdown menu unblocking, partner app adaptive overhaul, and customer UI polish (v2.0.5) |
 | `8be7e0c` | 2026-09-20 | UI & Themes | High-contrast dark theme readability, stone palette overrides, and mobile viewport overflow containment (v2.0.4) |
 | `3512ba5` | 2026-09-20 | Theme Engine | Add universal background color engine supporting White, Black, and System Default across all 5 apps |
