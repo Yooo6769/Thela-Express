@@ -468,7 +468,7 @@ flowchart LR
 
 ### `v2.1.2` — Administrative Application Deletion & Test Pruning Engine
 - **Release Date**: September 21, 2026
-- **Git Commit**: `TBD` (`feat: administrative stall and rider deletion engine with UI controls (v2.1.2)`)
+- **Git Commit**: `27c6a60` (`feat: administrative stall and rider deletion engine with UI controls (v2.1.2)`)
 - **Key Architectural Accomplishments**:
   - **Server-Authoritative Deletion Primitives**:
     - Added `deleteStall(id)` in `server/src/db.js` providing atomic stall removal and cascading cleanup of all associated menu catalog items.
