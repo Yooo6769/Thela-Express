@@ -393,7 +393,7 @@ flowchart LR
 
 ### `v2.1.0` — Server-Authoritative Vendor Kitchen Display System (KDS) & Real-Time Operations
 - **Release Date**: September 21, 2026
-- **Git Commit**: `HEAD` (`feat: server-authoritative Vendor KDS, dynamic menu availability, and real-time order operations (v2.1.0)`)
+- **Git Commit**: `92c7b8b` (`feat: server-authoritative Vendor KDS, dynamic menu availability, and real-time order operations (v2.1.0)`)
 - **Key Architectural Accomplishments**:
   - **Server-Authoritative Vendor Kitchen Display System (KDS)**:
     - Replaced the legacy flat order list with a 4-queue operational system in the Partner App (`public/partner.html`, `public/partner.js`):
