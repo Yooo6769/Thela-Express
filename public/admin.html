@@ -830,6 +830,9 @@
               <a href="/partner.html?role=vendor&stallId=${s.id}" target="_blank" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-[10px] font-bold inline-block">
                 POS ➔
               </a>
+              <button type="button" onclick="deleteStall('${s.id}', '${escapeHtml(s.name)}')" class="px-2 py-1 bg-red-800/60 hover:bg-red-700 text-red-200 border border-red-700/50 rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1" title="Delete Stall Application">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
             </td>
           </tr>
         `;
@@ -1059,6 +1062,9 @@
               <a href="/partner.html?role=rider&riderId=${r.id}" target="_blank" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold inline-block">
                 ${t('open_rider_console_btn', 'Console ➔')}
               </a>
+              <button type="button" onclick="deleteRider('${r.id}', '${escapeHtml(r.name)}')" class="px-2 py-1 bg-red-800/60 hover:bg-red-700 text-red-200 border border-red-700/50 rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1" title="Delete Delivery Partner">
+                <i class="fa-solid fa-trash-can"></i>
+              </button>
             </td>
           </tr>
         `;
@@ -1490,6 +1496,60 @@
       } catch (err) {
         console.error(err);
         alert('Failed to save settings.');
+      }
+    }
+
+    function escapeHtml(str) {
+      if (!str) return '';
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;');
+    }
+
+    async function deleteStall(stallId, stallName) {
+      if (!confirm(`Are you sure you want to permanently delete stall "${stallName}"?\n\nThis will remove the stall application and all its menu items.`)) {
+        return;
+      }
+      try {
+        const res = await fetch(`/api/admin/stalls/${stallId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': ADMIN_AUTH_TOKEN }
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message || 'Stall deleted successfully.');
+          loadAdminData();
+        } else {
+          alert(data.error || 'Failed to delete stall.');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Error connecting to server to delete stall.');
+      }
+    }
+
+    async function deleteRider(riderId, riderName) {
+      if (!confirm(`Are you sure you want to permanently delete delivery partner "${riderName}"?`)) {
+        return;
+      }
+      try {
+        const res = await fetch(`/api/admin/riders/${riderId}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': ADMIN_AUTH_TOKEN }
+        });
+        const data = await res.json();
+        if (data.success) {
+          alert(data.message || 'Rider deleted successfully.');
+          loadAdminData();
+        } else {
+          alert(data.error || 'Failed to delete rider.');
+        }
+      } catch (e) {
+        console.error(e);
+        alert('Error connecting to server to delete rider.');
       }
     }
   </script>

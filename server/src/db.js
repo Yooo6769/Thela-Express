@@ -716,6 +716,18 @@ class Database {
     return stall;
   }
 
+  deleteStall(id) {
+    if (!this.data.stalls) return null;
+    const index = this.data.stalls.findIndex(s => s.id === id);
+    if (index === -1) return null;
+    const [deleted] = this.data.stalls.splice(index, 1);
+    if (Array.isArray(this.data.menu_items)) {
+      this.data.menu_items = this.data.menu_items.filter(m => m.stall_id !== id);
+    }
+    this.save();
+    return deleted;
+  }
+
   // Menu items
   getMenuItems(stallId) {
     const fromItems = this.data.menu_items ? this.data.menu_items.filter(m => m.stall_id === stallId) : [];
@@ -1498,6 +1510,15 @@ class Database {
       this.save();
     }
     return rider;
+  }
+
+  deleteRider(id) {
+    if (!this.data.riders) return null;
+    const index = this.data.riders.findIndex(r => r.id === id);
+    if (index === -1) return null;
+    const [deleted] = this.data.riders.splice(index, 1);
+    this.save();
+    return deleted;
   }
 
   // OTP Management

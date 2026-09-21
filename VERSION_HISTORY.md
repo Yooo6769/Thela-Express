@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.1.1`  
+**Current Production Version**: `v2.1.2`  
 **Current Date**: September 21, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -35,6 +35,7 @@ flowchart LR
     v206 --> v207["v2.0.7<br/>FSSAI Contrast & Balanced Hero Badges"]
     v207 --> v210["v2.1.0<br/>Server-Authoritative Vendor KDS & Real-Time Ops"]
     v210 --> v211["v2.1.1<br/>Zero 86/85 & Dynamic Menu Availability"]
+    v211 --> v212["v2.1.2<br/>Admin Application Deletion & Pruning Engine"]
 ```
 
 ---
@@ -465,10 +466,29 @@ flowchart LR
 
 ---
 
+### `v2.1.2` — Administrative Application Deletion & Test Pruning Engine
+- **Release Date**: September 21, 2026
+- **Git Commit**: `TBD` (`feat: administrative stall and rider deletion engine with UI controls (v2.1.2)`)
+- **Key Architectural Accomplishments**:
+  - **Server-Authoritative Deletion Primitives**:
+    - Added `deleteStall(id)` in `server/src/db.js` providing atomic stall removal and cascading cleanup of all associated menu catalog items.
+    - Added `deleteRider(id)` in `server/src/db.js` providing atomic delivery partner application removal.
+  - **Administrative REST Endpoints**:
+    - Implemented `DELETE /api/admin/stalls/:id` and `DELETE /api/admin/riders/:id` in `server/src/routes/admin.js`.
+    - Protected by `requireAdmin` middleware enforcing authorized `admin`, `reviewer`, or `auditor` role tokens.
+    - Emits real-time WebSocket events (`STALL_DELETED`, `RIDER_DELETED`) to keep all connected backoffice interfaces synchronized.
+  - **Admin Backoffice UI Controls**:
+    - Added high-visibility red trash can buttons (`fa-trash-can`) to each row in the Food Stalls and Delivery Partners management tables in `public/admin.html`.
+    - Integrated native JavaScript confirmation prompts preventing accidental clicks.
+    - Added automatic background reload on successful deletion.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
+| `v2.1.2` | 2026-09-21 | Admin Operations | Administrative stall and rider deletion engine with UI controls (v2.1.2) |
 | `9c778dd` | 2026-09-21 | Data Integrity | Eliminate 86/85 placeholder and enforce dynamic Menu Availability (v2.1.1) |
 | `92c7b8b` | 2026-09-21 | Core Platform | Server-authoritative Vendor KDS, dynamic menu availability, role serializers & real-time order operations (v2.1.0) |
 | `60ba291` | 2026-09-21 | UI & Accessibility | Crystal-clear FSSAI dark theme contrast and balanced single-line hero badges across onboarding portals (v2.0.7) |

@@ -274,6 +274,42 @@ router.patch('/riders/:id/verify', requireAdmin, (req, res) => {
   res.json({ success: true, rider });
 });
 
+// DELETE /api/admin/stalls/:id (Permanent removal of test/spam stall applications)
+router.delete('/stalls/:id', requireAdmin, (req, res) => {
+  const stall = db.deleteStall(req.params.id);
+  if (!stall) {
+    return res.status(404).json({ error: 'Stall not found.' });
+  }
+
+  wsManager.broadcastAll({
+    type: 'STALL_DELETED',
+    payload: { stallId: req.params.id, name: stall.name }
+  });
+
+  res.json({
+    success: true,
+    message: `Stall "${stall.name}" (${req.params.id}) deleted successfully.`
+  });
+});
+
+// DELETE /api/admin/riders/:id (Permanent removal of test/spam rider applications)
+router.delete('/riders/:id', requireAdmin, (req, res) => {
+  const rider = db.deleteRider(req.params.id);
+  if (!rider) {
+    return res.status(404).json({ error: 'Rider not found.' });
+  }
+
+  wsManager.broadcastAll({
+    type: 'RIDER_DELETED',
+    payload: { riderId: req.params.id, name: rider.name }
+  });
+
+  res.json({
+    success: true,
+    message: `Rider "${rider.name}" (${req.params.id}) deleted successfully.`
+  });
+});
+
 // GET /api/admin/payouts (Settlement Ledger for Vendors & Riders backed by real records)
 router.get('/payouts', requireAdmin, (req, res) => {
   const vendorSettlements = db.data.vendor_settlements || [];
