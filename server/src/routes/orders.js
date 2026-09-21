@@ -70,7 +70,11 @@ router.post('/', (req, res) => {
       platformSettings: db.data.settings || {}
     });
   } catch (err) {
-    return res.status(400).json({ error: err.message });
+    const isOutOfStock = err.message && (err.message.includes('unavailable') || err.message.includes('sold out'));
+    return res.status(400).json({
+      error: err.message,
+      code: isOutOfStock ? 'ITEM_OUT_OF_STOCK' : 'INVALID_ORDER_PRICING'
+    });
   }
 
   // Derive customer details from authenticated session if available

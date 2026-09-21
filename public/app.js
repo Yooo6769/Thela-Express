@@ -3029,7 +3029,7 @@ async function loadVendorMenuItems() {
               ? 'bg-green-100 text-green-700 hover:bg-green-200' 
               : 'bg-red-100 text-red-700 hover:bg-red-200'
           }">
-          ${item.inStock ? 'In Stock (Active)' : 'Out of Stock (86ed)'}
+          ${item.inStock ? 'In Stock (Active)' : 'Out of Stock'}
         </button>
       </div>
     `).join('');

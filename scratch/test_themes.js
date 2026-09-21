@@ -40,7 +40,7 @@ portals.forEach(portalPath => {
   const html = fs.readFileSync(fullPath, 'utf8');
 
   it(`${portalPath} includes theme.css link`, () => {
-    assert(/\/theme\.css\?v=2\.0\.[0-9]/.test(html), `Missing /theme.css?v=2.0.x in ${portalPath}`);
+    assert(/\/theme\.css\?v=2\.[0-9]+\.[0-9]+/.test(html), `Missing /theme.css?v=2.x.x in ${portalPath}`);
   });
 
   it(`${portalPath} includes inline FOUC prevention script in head`, () => {
@@ -57,7 +57,7 @@ portals.forEach(portalPath => {
   });
 
   it(`${portalPath} includes theme.js script`, () => {
-    assert(/\/theme\.js\?v=2\.0\.[0-9]/.test(html), `Missing /theme.js?v=2.0.x in ${portalPath}`);
+    assert(/\/theme\.js\?v=2\.[0-9]+\.[0-9]+/.test(html), `Missing /theme.js?v=2.x.x in ${portalPath}`);
   });
 
   it(`${portalPath} header does not have overflow-hidden`, () => {

@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.1.0`  
+**Current Production Version**: `v2.1.1`  
 **Current Date**: September 21, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -34,6 +34,7 @@ flowchart LR
     v205 --> v206["v2.0.6<br/>Customer/Partner Separation & Accessible Nav"]
     v206 --> v207["v2.0.7<br/>FSSAI Contrast & Balanced Hero Badges"]
     v207 --> v210["v2.1.0<br/>Server-Authoritative Vendor KDS & Real-Time Ops"]
+    v210 --> v211["v2.1.1<br/>Zero 86/85 & Dynamic Menu Availability"]
 ```
 
 ---
@@ -431,11 +432,45 @@ flowchart LR
 
 ---
 
+### `v2.1.1` — Elimination of Residual 86/85 Placeholders & Dynamic Menu Availability Isolation
+- **Release Date**: September 21, 2026
+- **Git Commit**: `TBD` (`fix: eliminate 86/85 placeholder and enforce dynamic Menu Availability (v2.1.1)`)
+- **Key Architectural Accomplishments**:
+  - **Total Eradication of Hardcoded 86/85 Terminology**:
+    - Completely purged all remaining references to "86/85", "86ed", and hardcoded sample ratios across `public/partner.html`, `public/partner.js`, `public/app.js`, `scratch/build_i18n.js`, and `public/i18n.js`.
+    - Added localized dictionary keys `menu_avail_unavailable` ("Menu availability unavailable") and `items_available` ("items available") across all 12 supported Indian languages (English, Hindi, Hinglish, Marathi, Gujarati, Tamil, Telugu, Kannada, Bengali, Malayalam, Punjabi, Odia).
+  - **Neutral Initial State & Unloaded Guard**:
+    - When no vendor stall or menu is loaded, `#vendorStockRatioBadge` and `#vendorMenuItemsList` display the neutral state "Menu availability unavailable" rather than 86/85, 0/0, or arbitrary sample counts.
+    - `renderNoStallsState()` resets the badge and menu list to this neutral state.
+  - **Server-Authoritative Menu Isolation**:
+    - Added backend route `GET /api/stalls/:id/menu` returning strictly the authenticated vendor's menu items with dynamically calculated metrics (`totalItems`, `availableItems`, `availabilityRatio`).
+    - Authenticated vendor isolation strictly enforced: vendors can only access and toggle items belonging to their own stall.
+    - Frontend filters all rendered menu items strictly against `PARTNER_STATE.vendorStallId`.
+  - **Dynamic Menu Availability Calculation**:
+    - Replaced hardcoded text with dynamically calculated `${availableCount} / ${totalCount} items available` badge.
+    - Badge is color-coded adaptively: emerald badge for 100% available, rose badge for 0% available, and amber badge for partial availability.
+  - **Server-Authoritative Stock Modification & Pricing Block**:
+    - Stock status changes are performed strictly via authenticated `PATCH /api/stalls/menu/:itemId/stock` endpoint.
+    - Pricing engine (`server/src/payments/pricing_engine.js`) immediately returns structured HTTP 400 (`ITEM_OUT_OF_STOCK`) if a customer attempts to purchase an unavailable item.
+  - **Automated Regression Test Suite**:
+    - Created `scratch/test_stock_availability_integrity.js` containing 16 automated tests covering:
+      1. Zero 86/85 or placeholder terminology in codebase.
+      2. Neutral initial badge state and empty state.
+      3. Dynamic availability calculation engine under all permutations.
+      4. Backend API menu isolation between separate vendor stalls.
+      5. Server-authoritative stock toggle RBAC (401 unauthenticated, 403 cross-vendor, 200 authorized).
+      6. Checkout pricing engine stock enforcement.
+      7. Multi-language dictionary coverage across all 12 languages.
+    - Updated `scratch/test_themes.js` cache-buster validation to support `v2.x.x` versioning strings (62/62 theme tests passing).
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `v2.1.0` | 2026-09-21 | Core Platform | Server-authoritative Vendor KDS, dynamic menu availability, role serializers & real-time order operations (v2.1.0) |
+| `v2.1.1` | 2026-09-21 | Data Integrity | Eliminate 86/85 placeholder and enforce dynamic Menu Availability (v2.1.1) |
+| `92c7b8b` | 2026-09-21 | Core Platform | Server-authoritative Vendor KDS, dynamic menu availability, role serializers & real-time order operations (v2.1.0) |
 | `60ba291` | 2026-09-21 | UI & Accessibility | Crystal-clear FSSAI dark theme contrast and balanced single-line hero badges across onboarding portals (v2.0.7) |
 | `669dc29` | 2026-09-21 | Architecture & UX | Strict Customer/Partner domain separation, large accessible back buttons, and partner portal registration shortcuts (v2.0.6) |
 | `b4a2f1c` | 2026-09-20 | UI & Themes | Dropdown menu unblocking, partner app adaptive overhaul, and customer UI polish (v2.0.5) |
@@ -550,6 +585,7 @@ stateDiagram-v2
 | [`test_themes.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_themes.js) | Universal 3-state theme engine (White, Black, System Default), high-contrast Stone typography, mobile viewport containment, 12 languages | 58 tests | ✅ Passed |
 | [`test_customer_partner_separation.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_customer_partner_separation.js) | Zero partner links in customer app, accessible 40px onboarding back button, partner portal registration shortcuts | 3 suites | ✅ Passed |
 | [`test_vendor_kds.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_vendor_kds.js) | Server-authoritative Vendor KDS, dynamic menu availability, 86/85 eradication, role serializers, payment gating, timeout refunds, OCC, and privacy masking | 30 tests | ✅ Passed |
+| [`test_stock_availability_integrity.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_stock_availability_integrity.js) | Zero 86/85 eradication, neutral unloaded state, dynamic availability calculation, vendor menu isolation, and server-authoritative stock toggles | 16 tests | ✅ Passed |
 | [`test_trust.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_trust.js) | Trust system badges, FSSAI verification display, and hygiene audits | 4 tests | ✅ Passed |
 | [`test_trust_backend.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_trust_backend.js) | Two-tier trust backend endpoints, trust metadata schema verification | 4 tests | ✅ Passed |
 

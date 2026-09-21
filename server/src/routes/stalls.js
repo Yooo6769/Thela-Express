@@ -78,6 +78,41 @@ router.get('/:id', (req, res) => {
   res.json({ stall: db.formatStallForPublic(stall), items });
 });
 
+// GET /api/stalls/:id/menu
+// Server-authoritative: Returns the menu catalog items strictly belonging to the specified stall.
+// Requires authentication if stall is non-LIVE. Confirms stall ownership for vendor.
+router.get('/:id/menu', (req, res) => {
+  const stall = db.getStallById(req.params.id);
+  if (!stall) {
+    return res.status(404).json({ error: 'Stall not found.' });
+  }
+
+  // If stall is not LIVE or not open, only authorized owner or admin can view
+  if (stall.status !== 'LIVE' || !stall.isOpen) {
+    const isOwner = req.auth?.authenticated && req.auth.role === 'vendor' &&
+      (req.auth.stallId === stall.id || req.auth.ownedStallIds?.includes(stall.id));
+    const isAdmin = req.auth?.authenticated && req.auth.role === 'admin';
+
+    if (!isOwner && !isAdmin) {
+      return res.status(404).json({ error: 'Stall not available or undergoing verification.' });
+    }
+  }
+
+  const items = db.getMenuItems(stall.id);
+  const totalItems = items.length;
+  const availableItems = items.filter(i => i.inStock !== false).length;
+
+  res.json({
+    success: true,
+    stallId: stall.id,
+    stallName: stall.name,
+    items,
+    totalItems,
+    availableItems,
+    availabilityRatio: `${availableItems}/${totalItems}`
+  });
+});
+
 // GET /api/stalls/:id/trust (Full Trust & Verification Transparency Dossier)
 router.get('/:id/trust', (req, res) => {
   const stall = db.getStallById(req.params.id);

@@ -151,7 +151,7 @@ const I18N_DICTIONARY = {
     "stock_avail_title": "Menu Stock & Item Availability",
     "stock_avail_desc": "Toggle any dish in or out of stock instantly to prevent customer orders when ingredients run out.",
     "in_stock": "In Stock",
-    "sold_out": "86 / Sold Out",
+    "sold_out": "Out of Stock",
     "accept_btn": "Accept Order",
     "start_cooking_btn": "Start Cooking",
     "packed_ready_btn": "Packed & Ready",
@@ -436,7 +436,9 @@ const I18N_DICTIONARY = {
     "filter_7_days": "Past 7 Days",
     "decline_order_title": "Decline Order",
     "decline_reason_label": "Controlled Reason:",
-    "decline_notes_label": "Additional Notes (Optional):"
+    "decline_notes_label": "Additional Notes (Optional):",
+    "menu_avail_unavailable": "Menu availability unavailable",
+    "items_available": "items available"
   },
   "hi": {
     "back_to_partner": "पार्टनर पोर्टल पर वापस",
@@ -512,7 +514,7 @@ const I18N_DICTIONARY = {
     "stock_avail_title": "मेनू स्टॉक और आइटम उपलब्धता",
     "stock_avail_desc": "सामग्री खत्म होने पर ग्राहकों के ऑर्डर रोकने के लिए किसी भी व्यंजन को तुरंत स्टॉक में या बाहर टॉगल करें।",
     "in_stock": "स्टॉक में है",
-    "sold_out": "खत्म / सोल्ड आउट",
+    "sold_out": "स्टॉक समाप्त",
     "accept_btn": "ऑर्डर स्वीकार करें",
     "start_cooking_btn": "बनाना शुरू करें",
     "packed_ready_btn": "पैक और तैयार",
@@ -797,7 +799,9 @@ const I18N_DICTIONARY = {
     "filter_7_days": "पिछले 7 दिन",
     "decline_order_title": "ऑर्डर अस्वीकार करें",
     "decline_reason_label": "अस्वीकृति का कारण:",
-    "decline_notes_label": "अतिरिक्त विवरण (वैकल्पिक):"
+    "decline_notes_label": "अतिरिक्त विवरण (वैकल्पिक):",
+    "menu_avail_unavailable": "मेनू उपलब्धता अनुपलब्ध",
+    "items_available": "आइटम उपलब्ध"
   },
   "hinglish": {
     "back_to_partner": "Partner Portal Par Wapas",
@@ -873,7 +877,7 @@ const I18N_DICTIONARY = {
     "stock_avail_title": "Menu Stock & Item Availability",
     "stock_avail_desc": "Items khatam ho gaye? Customers ko order rokne ke liye turant in-stock ya out-of-stock toggle karein.",
     "in_stock": "In Stock",
-    "sold_out": "Sold Out",
+    "sold_out": "Out of Stock",
     "accept_btn": "Accept Order",
     "start_cooking_btn": "Start Cooking",
     "packed_ready_btn": "Pack ho gaya (Ready)",
@@ -1158,7 +1162,9 @@ const I18N_DICTIONARY = {
     "filter_7_days": "Pichle 7 Din",
     "decline_order_title": "Order Decline Karein",
     "decline_reason_label": "Controlled Reason:",
-    "decline_notes_label": "Extra Notes (Optional):"
+    "decline_notes_label": "Extra Notes (Optional):",
+    "menu_avail_unavailable": "Menu availability unavailable",
+    "items_available": "items available"
   },
   "mr": {
     "back_to_partner": "पार्टनर पोर्टलवर परत",
@@ -1234,7 +1240,7 @@ const I18N_DICTIONARY = {
     "stock_avail_title": "मेनू स्टॉक आणि आयटम उपलब्धता",
     "stock_avail_desc": "साहित्य संपल्यास ग्राहकांच्या ऑर्डर्स रोखण्यासाठी कोणताही पदार्थ त्वरित स्टॉक किंवा आउट-ऑफ-स्टॉक करा.",
     "in_stock": "उपलब्ध आहे",
-    "sold_out": "संपले",
+    "sold_out": "स्टॉक संपला",
     "accept_btn": "ऑर्डर स्वीकारा",
     "start_cooking_btn": "तयार करायला घ्या",
     "packed_ready_btn": "पॅक व तयार",
@@ -1519,7 +1525,9 @@ const I18N_DICTIONARY = {
     "filter_7_days": "मागील ७ दिवस",
     "decline_order_title": "ऑर्डर नाकारा",
     "decline_reason_label": "अधिकृत कारण:",
-    "decline_notes_label": "अतिरिक्त टीप (पर्यायी):"
+    "decline_notes_label": "अतिरिक्त टीप (पर्यायी):",
+    "menu_avail_unavailable": "मेनू उपलब्धता अनुपलब्ध",
+    "items_available": "पदार्थ उपलब्ध"
   },
   "gu": {
     "back_to_partner": "પાર્ટનર પોર્ટલ પર પાછા",
@@ -1595,7 +1603,7 @@ const I18N_DICTIONARY = {
     "stock_avail_title": "મેનૂ સ્ટોક અને વસ્તુની ઉપલબ્ધતા",
     "stock_avail_desc": "સામગ્રી પૂર્ણ થઈ ગઈ હોય તો ગ્રાહકોના ઓર્ડર રોકવા માટે કોઈપણ વાનગીને તરત જ સ્ટોક અથવા આઉટ-ઓફ-સ્ટોક કરો.",
     "in_stock": "स्टॉक में है",
-    "sold_out": "खत्म / सोल्ड आउट",
+    "sold_out": "સ્ટોક ખાલી",
     "accept_btn": "ઓર્ડર સ્વીકારો",
     "start_cooking_btn": "બનાવવાનું શરૂ કરો",
     "packed_ready_btn": "પેક અને તૈયાર",
@@ -1880,7 +1888,9 @@ const I18N_DICTIONARY = {
     "filter_7_days": "છેલ્લા ૭ દિવસ",
     "decline_order_title": "ઓર્ડર નકારો",
     "decline_reason_label": "માન્ય કારણ:",
-    "decline_notes_label": "વધારાની નોંધ (વૈકલ્પિક):"
+    "decline_notes_label": "વધારાની નોંધ (વૈકલ્પિક):",
+    "menu_avail_unavailable": "મેનૂ ઉપલબ્ધતા અનુપલબ્ધ",
+    "items_available": "વસ્તુઓ ઉપલબ્ધ"
   },
   "ta": {
     "back_to_partner": "பார்ட்னர் போர்ட்டலுக்குத் திரும்பு",
@@ -1956,7 +1966,7 @@ const I18N_DICTIONARY = {
     "stock_avail_title": "மெனு இருப்பு & உருப்படி கிடைக்கும் நிலை",
     "stock_avail_desc": "மூலப்பொருட்கள் தீர்ந்துவிட்டால் வாடிக்கையாளர் ஆர்டர்களைத் தடுக்க உணவை உடனடியாக இருப்பு/இல்லை என மாற்றவும்.",
     "in_stock": "In Stock",
-    "sold_out": "86 / Sold Out",
+    "sold_out": "இருப்பு இல்லை",
     "accept_btn": "ஆர்டரை ஏற்றுக்கொள்",
     "start_cooking_btn": "சமைக்கத் தொடங்கு",
     "packed_ready_btn": "பேக் செய்யப்பட்டு தயார்",
@@ -2241,7 +2251,9 @@ const I18N_DICTIONARY = {
     "filter_7_days": "கடந்த 7 நாட்கள்",
     "decline_order_title": "ஆர்டரை நிராகரிக்கவும்",
     "decline_reason_label": "நிராகரிப்பு காரணம்:",
-    "decline_notes_label": "கூடுதல் குறிப்புகள் (விருப்பத்தேர்வு):"
+    "decline_notes_label": "கூடுதல் குறிப்புகள் (விருப்பத்தேர்வு):",
+    "menu_avail_unavailable": "மெனு இருப்பு கிடைக்கவில்லை",
+    "items_available": "உருப்படிகள் உள்ளன"
   },
   "te": {
     "back_to_partner": "భాగస్వామి పోర్టల్‌కు తిరిగి వెళ్లండి",
@@ -2317,7 +2329,7 @@ const I18N_DICTIONARY = {
     "stock_avail_title": "మెనూ స్టాక్ & వస్తువుల లభ్యత",
     "stock_avail_desc": "పదార్థాలు అయిపోయినప్పుడు కస్టమర్ ఆర్డర్‌లను ఆపడానికి ఏదైనా వంటకాన్ని వెంటనే స్టాక్ లో లేదా అవుట్-ఆఫ్-స్టాక్ చేయండి.",
     "in_stock": "In Stock",
-    "sold_out": "86 / Sold Out",
+    "sold_out": "స్టాక్ లేదు",
     "accept_btn": "ఆర్డర్ అంగీకరించు",
     "start_cooking_btn": "వండటం ప్రారంభించండి",
     "packed_ready_btn": "ప్యాక్ చేయబడింది & సిద్ధం",
@@ -2602,7 +2614,9 @@ const I18N_DICTIONARY = {
     "filter_7_days": "గత 7 రోజులు",
     "decline_order_title": "ఆర్డర్‌ను తిరస్కరించండి",
     "decline_reason_label": "తిరస్కరణ కారణం:",
-    "decline_notes_label": "అదనపు గమనికలు (ఐచ్ఛికం):"
+    "decline_notes_label": "అదనపు గమనికలు (ఐచ్ఛికం):",
+    "menu_avail_unavailable": "మెనూ లభ్యత అందుబాటులో లేదు",
+    "items_available": "వస్తువులు అందుబాటులో ఉన్నాయి"
   },
   "kn": {
     "back_to_partner": "ಪಾಲುದಾರ ಪೋರ್ಟಲ್‌ಗೆ ಹಿಂತಿರುಗಿ",
@@ -2678,7 +2692,7 @@ const I18N_DICTIONARY = {
     "stock_avail_title": "ಮೆನು ಸ್ಟಾಕ್ ಮತ್ತು ವಸ್ತುಗಳ ಲಭ್ಯತೆ",
     "stock_avail_desc": "ಪದಾರ್ಥಗಳು ಮುಗಿದಿದ್ದರೆ ಗ್ರಾಹಕರ ಆರ್ಡರ್‌ಗಳನ್ನು ತಡೆಯಲು ಯಾವುದೇ ಖಾದ್ಯವನ್ನು ತಕ್ಷಣವೇ ಸ್ಟಾಕ್ ಅಥವಾ ಔಟ್-ಆಫ್-ಸ್ಟಾಕ್ ಮಾಡಿ.",
     "in_stock": "In Stock",
-    "sold_out": "86 / Sold Out",
+    "sold_out": "ಸ್ಟಾಕ್ ಇಲ್ಲ",
     "accept_btn": "ಆರ್ಡರ್ ಸ್ವೀಕರಿಸಿ",
     "start_cooking_btn": "ಅಡುಗೆ ಪ್ರಾರಂಭಿಸಿ",
     "packed_ready_btn": "ಪ್ಯಾಕ್ ಆಗಿದೆ & ಸಿದ್ಧ",
@@ -2963,7 +2977,9 @@ const I18N_DICTIONARY = {
     "filter_7_days": "ಕಳೆದ 7 ದಿನಗಳು",
     "decline_order_title": "ಆರ್ಡರ್ ತಿರಸ್ಕರಿಸಿ",
     "decline_reason_label": "ಅಧಿಕೃತ ಕಾರಣ:",
-    "decline_notes_label": "ಹೆಚ್ಚುವರಿ ಟಿಪ್ಪಣಿಗಳು (ಐಚ್ಛಿಕ):"
+    "decline_notes_label": "ಹೆಚ್ಚುವರಿ ಟಿಪ್ಪಣಿಗಳು (ಐಚ್ಛಿಕ):",
+    "menu_avail_unavailable": "ಮೆನು ಲಭ್ಯತೆ ಲಭ್ಯವಿಲ್ಲ",
+    "items_available": "ವಸ್ತುಗಳು ಲಭ್ಯವಿವೆ"
   },
   "bn": {
     "back_to_partner": "পার্টনার পোর্টালে ফিরুন",
@@ -3039,7 +3055,7 @@ const I18N_DICTIONARY = {
     "stock_avail_title": "মেনু স্টক এবং আইটেম উপলব্ধতা",
     "stock_avail_desc": "উপকরণ শেষ হয়ে গেলে গ্রাহকদের অর্ডার বন্ধ করতে যেকোনো পদ সাথে সাথে স্টক বা আউট-অফ-স্টক টগল করুন।",
     "in_stock": "In Stock",
-    "sold_out": "86 / Sold Out",
+    "sold_out": "স্টক শেষ",
     "accept_btn": "অর্ডার গ্রহণ করুন",
     "start_cooking_btn": "রান্না শুরু করুন",
     "packed_ready_btn": "প্যাকড এবং প্রস্তুত",
@@ -3324,7 +3340,9 @@ const I18N_DICTIONARY = {
     "filter_7_days": "গত ৭ দিন",
     "decline_order_title": "অর্ডার প্রত্যাখ্যান করুন",
     "decline_reason_label": "প্রত্যাখ্যানের কারণ:",
-    "decline_notes_label": "অতিরিক্ত নোট (ঐচ্ছিক):"
+    "decline_notes_label": "অতিরিক্ত নোট (ঐচ্ছিক):",
+    "menu_avail_unavailable": "মেনু উপলব্ধতা উপলব্ধ নেই",
+    "items_available": "আইটেম উপলব্ধ"
   },
   "ml": {
     "back_to_partner": "പാർട്ണർ പോർട്ടലിലേക്ക് മടങ്ങുക",
@@ -3400,7 +3418,7 @@ const I18N_DICTIONARY = {
     "stock_avail_title": "മെനു സ്റ്റോക്കും ലഭ്യതയും",
     "stock_avail_desc": "സാധനങ്ങൾ തീർന്നുപോയാൽ ഉപഭോക്തൃ ഓർഡറുകൾ തടയാൻ ഏത് വിഭവവും തത്സമയം സ്റ്റോക്ക് അല്ലെങ്കിൽ ഔട്ട്-ഓഫ്-സ്റ്റോക്ക് ആക്കുക.",
     "in_stock": "In Stock",
-    "sold_out": "86 / Sold Out",
+    "sold_out": "സ്റ്റോക്ക് തീർന്നു",
     "accept_btn": "ഓർഡർ സ്വീകരിക്കുക",
     "start_cooking_btn": "തയ്യാറാക്കാൻ തുടങ്ങുക",
     "packed_ready_btn": "പാക്ക് ചെയ്തു തയ്യാറാണ്",
@@ -3685,7 +3703,9 @@ const I18N_DICTIONARY = {
     "filter_7_days": "കഴിഞ്ഞ 7 ദിവസങ്ങൾ",
     "decline_order_title": "ഓർഡർ നിരസിക്കുക",
     "decline_reason_label": "നിരസിക്കാനുള്ള കാരണം:",
-    "decline_notes_label": "അധിക കുറിപ്പുകൾ (ഓപ്ഷണൽ):"
+    "decline_notes_label": "അധിക കുറിപ്പുകൾ (ഓപ്ഷണൽ):",
+    "menu_avail_unavailable": "മെനു ലഭ്യത ലഭ്യമല്ല",
+    "items_available": "വിഭവങ്ങൾ ലഭ്യമാണ്"
   },
   "pa": {
     "back_to_partner": "ਪਾਰਟਨਰ ਪੋਰਟਲ 'ਤੇ ਵਾਪਸ ਜਾਓ",
@@ -3761,7 +3781,7 @@ const I18N_DICTIONARY = {
     "stock_avail_title": "ਮੀਨੂ ਸਟਾਕ ਅਤੇ ਆਈਟਮ ਉਪਲਬਧਤਾ",
     "stock_avail_desc": "ਸਮੱਗਰੀ ਮੁੱਕ ਜਾਣ 'ਤੇ ਗਾਹਕਾਂ ਦੇ ਆਰਡਰ ਰੋਕਣ ਲਈ ਕਿਸੇ ਵੀ ਪਕਵਾਨ ਨੂੰ ਤੁਰੰਤ ਸਟਾਕ ਜਾਂ ਆਊਟ-ਆਫ-ਸਟਾਕ ਟੌਗਲ ਕਰੋ।",
     "in_stock": "स्टॉक में है",
-    "sold_out": "खत्म / सोल्ड आउट",
+    "sold_out": "ਸਟਾਕ ਖਤਮ",
     "accept_btn": "ਆਰਡਰ ਸਵੀਕਾਰ ਕਰੋ",
     "start_cooking_btn": "ਬਣਾਉਣਾ ਸ਼ੁਰੂ ਕਰੋ",
     "packed_ready_btn": "ਪੈਕ ਅਤੇ ਤਿਆਰ",
@@ -4046,7 +4066,9 @@ const I18N_DICTIONARY = {
     "filter_7_days": "ਪਿਛਲੇ 7 ਦਿਨ",
     "decline_order_title": "ਆਰਡਰ ਅਸਵੀਕਾਰ ਕਰੋ",
     "decline_reason_label": "ਅਸਵੀਕਾਰਨ ਦਾ ਕਾਰਨ:",
-    "decline_notes_label": "ਵਾਧੂ ਨੋਟਸ (ਵਿਕਲਪਿਕ):"
+    "decline_notes_label": "ਵਾਧੂ ਨੋਟਸ (ਵਿਕਲਪਿਕ):",
+    "menu_avail_unavailable": "ਮੀਨੂ ਉਪਲਬਧਤਾ ਉਪਲਬਧ ਨਹੀਂ",
+    "items_available": "ਆਈਟਮਾਂ ਉਪਲਬਧ ਹਨ"
   },
   "or": {
     "back_to_partner": "ପାର୍ଟନର ପୋର୍ଟାଲକୁ ଫେରନ୍ତୁ",
@@ -4122,7 +4144,7 @@ const I18N_DICTIONARY = {
     "stock_avail_title": "ମେନୁ ଷ୍ଟକ୍ ଏବଂ ଆଇଟମ୍ ଉପଲବ୍ଧତା",
     "stock_avail_desc": "ସାମଗ୍ରୀ ସରିଗଲେ ଗ୍ରାହକଙ୍କ ଅର୍ଡର ରୋକିବା ପାଇଁ ଯେକୌଣସି ଖାଦ୍ୟକୁ ତୁରନ୍ତ ଷ୍ଟକ୍ କିମ୍ବା ଆଉଟ୍-ଅଫ୍-ଷ୍ଟକ୍ ଟଗଲ୍ କରନ୍ତୁ।",
     "in_stock": "स्टॉक में है",
-    "sold_out": "खत्म / सोल्ड आउट",
+    "sold_out": "ଷ୍ଟକ୍ ସରିଯାଇଛି",
     "accept_btn": "ଅର୍ଡର ଗ୍ରହଣ କରନ୍ତୁ",
     "start_cooking_btn": "ରାନ୍ଧିବା ଆରମ୍ଭ କରନ୍ତୁ",
     "packed_ready_btn": "ପ୍ୟାକ୍ ହୋଇ ପ୍ରସ୍ତୁତ",
@@ -4407,7 +4429,9 @@ const I18N_DICTIONARY = {
     "filter_7_days": "ଗତ ୭ ଦିନ",
     "decline_order_title": "ଅର୍ଡର୍ ପ୍ରତ୍ୟାଖ୍ୟାନ କରନ୍ତୁ",
     "decline_reason_label": "ପ୍ରତ୍ୟାଖ୍ୟାନର କାରଣ:",
-    "decline_notes_label": "ଅତିରିକ୍ତ ଟିପ୍ପଣୀ (ଐଚ୍ଛିକ):"
+    "decline_notes_label": "ଅତିରିକ୍ତ ଟିପ୍ପଣୀ (ଐଚ୍ଛିକ):",
+    "menu_avail_unavailable": "ମେନୁ ଉପଲବ୍ଧତା ଅନୁପଲବ୍ଧ",
+    "items_available": "ଆଇଟମ୍ ଉପଲବ୍ଧ"
   }
 };
 

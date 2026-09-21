@@ -872,13 +872,20 @@ function renderNoStallsState() {
   const menuContainer = document.getElementById('vendorMenuItemsList');
   if (menuContainer) {
     menuContainer.innerHTML = `
-      <div class="py-6 text-center text-gray-400 text-xs">
-        No menu items yet. Register a stall first to configure dishes.
+      <div class="py-6 text-center text-gray-400 dark:text-zinc-500 text-xs">
+        ${tr('menu_avail_unavailable', 'Menu availability unavailable')}
       </div>
     `;
   }
   const countBadge = document.getElementById('vendorActiveCount');
   if (countBadge) countBadge.innerText = '0 Active';
+
+  const stockRatioBadge = document.getElementById('vendorStockRatioBadge');
+  if (stockRatioBadge) {
+    stockRatioBadge.innerText = tr('menu_avail_unavailable', 'Menu availability unavailable');
+    stockRatioBadge.className = 'px-3 py-1 rounded-full text-xs font-black bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 shrink-0';
+  }
+  PARTNER_STATE.vendorMenu = [];
 }
 
 function updateVendorTrustCard() {
@@ -1502,59 +1509,110 @@ window.confirmKdsDeclineOrder = confirmKdsDeclineOrder;
 
 // Menu Availability Management (Dynamically calculated availability ratio)
 async function loadVendorMenuItems() {
-  if (!PARTNER_STATE.vendorStallId) return;
+  const container = document.getElementById('vendorMenuItemsList');
+  const ratioBadge = document.getElementById('vendorStockRatioBadge');
+
+  if (!PARTNER_STATE.vendorStallId) {
+    if (ratioBadge) {
+      ratioBadge.innerText = (typeof t === 'function' ? t('menu_avail_unavailable') : null) || 'Menu availability unavailable';
+      ratioBadge.className = 'px-3 py-1 rounded-full text-xs font-black bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 shrink-0';
+    }
+    if (container) {
+      container.innerHTML = `<div class="py-6 text-center text-gray-400 dark:text-zinc-500 text-xs">${(typeof t === 'function' ? t('menu_avail_unavailable') : null) || 'Menu availability unavailable'}</div>`;
+    }
+    return;
+  }
+
   try {
-    const res = await fetch(`/api/stalls/${PARTNER_STATE.vendorStallId}`, {
+    const res = await fetch(`/api/stalls/${PARTNER_STATE.vendorStallId}/menu`, {
       headers: getPartnerAuthHeaders('vendor')
     });
-    const data = await res.json();
-    PARTNER_STATE.vendorMenu = data.items || [];
+    let menuItems = [];
+    if (res.ok) {
+      const data = await res.json();
+      menuItems = data.items || [];
+    } else {
+      const fallbackRes = await fetch(`/api/stalls/${PARTNER_STATE.vendorStallId}`, {
+        headers: getPartnerAuthHeaders('vendor')
+      });
+      if (fallbackRes.ok) {
+        const fbData = await fallbackRes.json();
+        menuItems = fbData.items || [];
+      }
+    }
+
+    // Ensure menu items belong strictly to the authenticated vendor's stall
+    PARTNER_STATE.vendorMenu = menuItems.filter(item => !item.stall_id || item.stall_id === PARTNER_STATE.vendorStallId);
 
     // Dynamically compute Menu Availability ratio (available_items / total_items)
     const totalCount = PARTNER_STATE.vendorMenu.length;
     const availableCount = PARTNER_STATE.vendorMenu.filter(i => i.inStock !== false).length;
+    const labelText = (typeof t === 'function' ? t('items_available') : null) || 'items available';
 
-    const ratioBadge = document.getElementById('vendorStockRatioBadge');
     if (ratioBadge) {
-      ratioBadge.innerText = `${availableCount}/${totalCount} Available`;
-      if (availableCount === totalCount && totalCount > 0) {
-        ratioBadge.className = 'px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 shrink-0';
-      } else if (availableCount === 0 && totalCount > 0) {
-        ratioBadge.className = 'px-3 py-1 rounded-full text-xs font-black bg-red-100 text-red-800 dark:bg-red-950/50 dark:text-red-300 shrink-0';
+      if (totalCount === 0) {
+        ratioBadge.innerText = (typeof t === 'function' ? t('menu_avail_unavailable') : null) || 'Menu availability unavailable';
+        ratioBadge.className = 'px-3 py-1 rounded-full text-xs font-black bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 shrink-0';
       } else {
-        ratioBadge.className = 'px-3 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 shrink-0';
+        ratioBadge.innerText = `${availableCount} / ${totalCount} ${labelText}`;
+        if (availableCount === totalCount) {
+          ratioBadge.className = 'px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 dark:bg-emerald-950/50 dark:text-emerald-300 shrink-0';
+        } else if (availableCount === 0) {
+          ratioBadge.className = 'px-3 py-1 rounded-full text-xs font-black bg-rose-100 text-rose-800 dark:bg-rose-950/50 dark:text-rose-300 shrink-0';
+        } else {
+          ratioBadge.className = 'px-3 py-1 rounded-full text-xs font-black bg-amber-100 text-amber-800 dark:bg-amber-950/50 dark:text-amber-300 shrink-0';
+        }
       }
     }
 
-    const container = document.getElementById('vendorMenuItemsList');
     if (!container) return;
 
     if (totalCount === 0) {
       container.innerHTML = `
-        <div class="py-6 text-center text-gray-400 text-xs">
-          No menu items registered yet for this stall.
+        <div class="py-6 text-center text-gray-400 dark:text-zinc-500 text-xs">
+          ${(typeof t === 'function' ? t('menu_avail_unavailable') : null) || 'No menu items registered yet for this stall.'}
         </div>
       `;
       return;
     }
 
-    container.innerHTML = PARTNER_STATE.vendorMenu.map(item => `
-      <div class="py-3 flex items-center justify-between">
-        <div>
-          <div class="font-bold text-xs text-gray-900 dark:text-gray-100">${item.name}</div>
-          <div class="text-[11px] text-gray-500 dark:text-gray-400">₹${item.price} • ${item.isVeg ? 'Veg' : 'Non-Veg'}</div>
+    const inStockLabel = (typeof t === 'function' ? t('in_stock') : null) || 'In Stock';
+    const outOfStockLabel = (typeof t === 'function' ? t('sold_out') : null) || 'Out of Stock';
+
+    container.innerHTML = PARTNER_STATE.vendorMenu.map(item => {
+      const isAvailable = item.inStock !== false;
+      return `
+        <div class="py-3 flex items-center justify-between gap-3 text-xs" data-item-id="${item.id}">
+          <div class="min-w-0">
+            <div class="flex items-center space-x-2">
+              <span class="w-2 h-2 rounded-full ${item.isVeg ? 'bg-emerald-500' : 'bg-rose-500'} shrink-0"></span>
+              <span class="font-extrabold text-gray-900 dark:text-zinc-100 truncate">${escapeHtml(item.name)}</span>
+            </div>
+            <div class="text-gray-500 dark:text-zinc-400 text-[11px] mt-0.5">
+              ₹${item.price} • ${escapeHtml(item.category || (item.isVeg ? 'Veg' : 'Non-Veg'))}
+            </div>
+          </div>
+          <button onclick="toggleItemStock('${item.id}', ${!isAvailable})"
+            class="px-3.5 py-1.5 rounded-xl font-bold text-xs transition shrink-0 flex items-center space-x-1.5 ${
+              isAvailable
+                ? 'bg-emerald-100 text-emerald-800 hover:bg-emerald-200 dark:bg-emerald-950/60 dark:text-emerald-300'
+                : 'bg-rose-100 text-rose-800 hover:bg-rose-200 dark:bg-rose-950/60 dark:text-rose-300'
+            }">
+            <i class="fa-solid ${isAvailable ? 'fa-check-circle' : 'fa-ban'}"></i>
+            <span>${isAvailable ? inStockLabel : outOfStockLabel}</span>
+          </button>
         </div>
-        <label class="relative inline-flex items-center cursor-pointer">
-          <input type="checkbox" ${item.inStock !== false ? 'checked' : ''} onchange="toggleItemStock('${item.id}', this.checked)" class="sr-only peer">
-          <div class="w-9 h-5 bg-gray-200 dark:bg-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-600"></div>
-          <span class="ml-2.5 text-xs font-bold ${item.inStock !== false ? 'text-emerald-600 dark:text-emerald-400' : 'text-red-500'}">
-            ${item.inStock !== false ? 'In Stock' : 'Sold Out'}
-          </span>
-        </label>
-      </div>
-    `).join('');
+      `;
+    }).join('');
   } catch (e) {
     console.error('Failed to load menu items:', e);
+    if (ratioBadge) {
+      ratioBadge.innerText = (typeof t === 'function' ? t('menu_avail_unavailable') : null) || 'Menu availability unavailable';
+      ratioBadge.className = 'px-3 py-1 rounded-full text-xs font-black bg-gray-100 text-gray-700 dark:bg-zinc-800 dark:text-zinc-300 shrink-0';
+    }
+    if (container) {
+      container.innerHTML = `<div class="py-6 text-center text-red-500 dark:text-red-400 text-xs">Failed to load menu stock</div>`;
+    }
   }
 }
 
@@ -1563,11 +1621,13 @@ async function toggleItemStock(itemId, inStock) {
     const res = await fetch(`/api/stalls/menu/${itemId}/stock`, {
       method: 'PATCH',
       headers: getPartnerAuthHeaders('vendor'),
-      body: JSON.stringify({ inStock: inStock })
+      body: JSON.stringify({ inStock: Boolean(inStock) })
     });
     const data = await res.json();
     if (data.success) {
-      showToast(inStock ? '✅ Item marked In Stock' : '⚠️ Item marked Sold Out');
+      showToast(inStock ? '✅ Item marked In Stock' : '⚠️ Item marked Out of Stock');
+      const item = PARTNER_STATE.vendorMenu.find(m => m.id === itemId);
+      if (item) item.inStock = Boolean(inStock);
       loadVendorMenuItems();
     } else {
       showToast(`❌ ${data.error || 'Failed to update stock status'}`);
@@ -1579,6 +1639,8 @@ async function toggleItemStock(itemId, inStock) {
   }
 }
 window.toggleItemStock = toggleItemStock;
+window.toggleVendorItemStock = toggleItemStock;
+window.loadVendorMenuItems = loadVendorMenuItems;
 
 // ==========================================================
 // 5. RIDER FLEET LOGIC
@@ -1984,6 +2046,16 @@ function renderRiderTrips(trips, settlements = []) {
 }
 
 // Helpers
+function escapeHtml(str) {
+  if (!str) return '';
+  return String(str)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
 function formatStatus(status) {
   const map = {
     PLACED: 'Order Placed',
