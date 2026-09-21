@@ -434,7 +434,7 @@ flowchart LR
 
 ### `v2.1.1` — Elimination of Residual 86/85 Placeholders & Dynamic Menu Availability Isolation
 - **Release Date**: September 21, 2026
-- **Git Commit**: `TBD` (`fix: eliminate 86/85 placeholder and enforce dynamic Menu Availability (v2.1.1)`)
+- **Git Commit**: `9c778dd` (`fix: eliminate 86/85 placeholder and enforce dynamic Menu Availability (v2.1.1)`)
 - **Key Architectural Accomplishments**:
   - **Total Eradication of Hardcoded 86/85 Terminology**:
     - Completely purged all remaining references to "86/85", "86ed", and hardcoded sample ratios across `public/partner.html`, `public/partner.js`, `public/app.js`, `scratch/build_i18n.js`, and `public/i18n.js`.
@@ -469,7 +469,7 @@ flowchart LR
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `v2.1.1` | 2026-09-21 | Data Integrity | Eliminate 86/85 placeholder and enforce dynamic Menu Availability (v2.1.1) |
+| `9c778dd` | 2026-09-21 | Data Integrity | Eliminate 86/85 placeholder and enforce dynamic Menu Availability (v2.1.1) |
 | `92c7b8b` | 2026-09-21 | Core Platform | Server-authoritative Vendor KDS, dynamic menu availability, role serializers & real-time order operations (v2.1.0) |
 | `60ba291` | 2026-09-21 | UI & Accessibility | Crystal-clear FSSAI dark theme contrast and balanced single-line hero badges across onboarding portals (v2.0.7) |
 | `669dc29` | 2026-09-21 | Architecture & UX | Strict Customer/Partner domain separation, large accessible back buttons, and partner portal registration shortcuts (v2.0.6) |
