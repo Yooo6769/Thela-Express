@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.2.1`  
+**Current Production Version**: `v2.2.2`  
 **Current Date**: September 23, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -40,6 +40,7 @@ flowchart LR
     v213 --> v214["v2.1.4<br/>Admin HQ Simplification & 1-Click Operations Engine"]
     v214 --> v220["v2.2.0<br/>Zomato-Inspired Dynamic Customer App & VIP Center"]
     v220 --> v221["v2.2.1<br/>Purge Restaurant Dining & Fake Data; Enforce 100% Street Food Authenticity"]
+    v221 --> v222["v2.2.2<br/>Theme Adaptation, Harmonized Atmosphere, Animated Veg Toggle, Dynamic Coupons & Buyable VIP"]
 ```
 
 ---
@@ -634,7 +635,7 @@ stateDiagram-v2
 
 | Test Script File | Primary Verification Objective | Number of Tests | Status |
 | :--- | :--- | :---: | :---: |
-| [`test_street_food_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_street_food_ux.js) | Authentic street food UX, zero fake names/emails, zero fake addresses, zero restaurant dining, authentic bottom dock & real wallet | 12 tests | ✅ Passed |
+| [`test_street_food_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_street_food_ux.js) | Authentic street food UX, theme harmonized atmosphere, zero 1971 fake count, visual veg toggle, buyable VIP, dynamic coupons & adaptive modals | 19 tests | ✅ Passed |
 | [`test_zomato_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_zomato_ux.js) | Zomato-inspired dynamic customer app experience, hero carousel, circular stories, quick filters, bottom dock, VIP Gold profile & wallet engine | 12 tests | ✅ Passed |
 | [`test_store_status_contradiction.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_store_status_contradiction.js) | Server-authoritative store status derivation, anti-bypass invariants, hoisting audit, zero 1.5 km copy | 7 suites | ✅ Passed |
 | [`test_vendor_rider_activation.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_vendor_rider_activation.js) | 7 mandatory activation gates, zero admin bypass, untrusted browser GPS, continuous revalidation, token scoping, rider dispatch gating | 8 suites | ✅ Passed |

@@ -39,15 +39,19 @@ test('Header has Street Carts badge and zero fake "District" branding', () => {
   assert(!html.includes('>District</span>'), 'Still contains copied Zomato District pill');
 });
 
-test('Header wallet pill & neutral avatar icon exist', () => {
+test('Header wallet pill & neutral avatar icon exist with dynamic VIP crown', () => {
   assert(html.includes('headerWalletAmount'), 'Missing wallet pill');
   assert(html.includes('id="authBtn"'), 'Missing auth button');
+  assert(html.includes('id="headerCrownBadge"'), 'Missing #headerCrownBadge');
+  assert(appJs.includes('crownBadge.classList.toggle(\'hidden\', !isVip)'), 'Crown badge not gated by VIP status');
 });
 
 test('Search row has integrated voice mic & pure veg toggle switch', () => {
   assert(html.includes('id="stickySearchRow"'), 'Missing #stickySearchRow');
   assert(html.includes('id="searchMicBtn"'), 'Missing #searchMicBtn');
   assert(html.includes('id="pureVegToggle"'), 'Missing #pureVegToggle');
+  assert(html.includes('id="vegSwitchTrack"'), 'Missing #vegSwitchTrack');
+  assert(html.includes('id="vegSwitchThumb"'), 'Missing #vegSwitchThumb');
 });
 
 console.log('\n--- TEST SUITE 2: Street Food Hero Carousel & Circular Dishes ---');
@@ -66,7 +70,7 @@ test('Circular Food Category Stories Rail has all 11 street dishes', () => {
   });
 });
 
-console.log('\n--- TEST SUITE 3: Quick Filter Pills Bar ---');
+console.log('\n--- TEST SUITE 3: Quick Filter Pills Bar & Interactive Filter Modal ---');
 test('Quick Filter Pills Bar contains 6 fast filters', () => {
   assert(html.includes('id="quickFiltersBar"'), 'Missing #quickFiltersBar');
   assert(html.includes('id="btnFilterAll"'), 'Missing #btnFilterAll');
@@ -75,6 +79,14 @@ test('Quick Filter Pills Bar contains 6 fast filters', () => {
   assert(html.includes('id="btnTopRated"'), 'Missing #btnTopRated');
   assert(html.includes('id="btnUnder100"'), 'Missing #btnUnder100');
   assert(html.includes('id="btnFavorites"'), 'Missing #btnFavorites');
+});
+
+test('Interactive Filter Modal exists and is wired in app.js', () => {
+  assert(html.includes('id="filterModal"'), 'Missing #filterModal');
+  assert(html.includes('id="modalFilterVeg"'), 'Missing #modalFilterVeg');
+  assert(html.includes('id="modalFilterNearFast"'), 'Missing #modalFilterNearFast');
+  assert(appJs.includes('openFilterDrawer'), 'Missing openFilterDrawer');
+  assert(appJs.includes('applyFiltersFromModal'), 'Missing applyFiltersFromModal');
 });
 
 console.log('\n--- TEST SUITE 4: Zero Restaurant "Dining" & Authentic Street Dock ---');
@@ -86,12 +98,13 @@ test('Customer UI contains zero restaurant "Dining" tabs or references', () => {
   assert(!html.includes('Your dining rewards'), 'Still contains Your dining rewards');
 });
 
-test('Floating bottom dock has Home, Under 100, Favorites, and Healthy Mode', () => {
+test('Floating bottom dock has Home, Under 100, Favorites, and Healthy Mode with theme adaptation', () => {
   assert(html.includes('id="floatingBottomDock"'), 'Missing #floatingBottomDock');
   assert(html.includes('switchDockTab(\'home\')'), 'Missing dock home tab');
   assert(html.includes('switchDockTab(\'under100\')'), 'Missing dock under100 tab');
   assert(html.includes('switchDockTab(\'favorites\')'), 'Missing dock favorites tab');
   assert(html.includes('toggleHealthyMode()'), 'Missing dock healthy mode tab');
+  assert(html.includes('bg-white/95 dark:bg-stone-950/95'), 'Dock does not adapt to light theme');
 });
 
 console.log('\n--- TEST SUITE 5: Zero Copied Personal Profiles & Zero Fake Savings ---');
@@ -109,17 +122,56 @@ test('Profile modal defaults to neutral Street Food Explorer', () => {
   assert(html.includes('Street Food Rewards & Wallet'), 'Missing Street Food Rewards & Wallet section');
 });
 
-console.log('\n--- TEST SUITE 6: JavaScript Engine Functions & Clean Architecture ---');
+console.log('\n--- TEST SUITE 6: Theme Adaptation, Zero 1971 Fake Count, Veg Switch & VIP ---');
+test('Theme harmonized atmosphere: floating motifs have watermark blend modes and soft opacities', () => {
+  assert(html.includes('mix-blend-mode: multiply'), 'Missing multiply blend mode for light theme atmosphere');
+  assert(html.includes('mix-blend-mode: screen'), 'Missing screen blend mode for dark theme atmosphere');
+  assert(html.includes('#thelaAtmosphere[data-density="high"] .motif-primary { opacity: 0.07; }'), 'Atmosphere opacity too high');
+});
+
+test('Zero fake 1,971 stalls count: removed from index.html and dynamic gating in app.js', () => {
+  assert(!html.includes('1,971'), 'Still contains hardcoded 1,971 stalls count');
+  assert(html.includes('id="thelasCountSeparator" class="hidden'), 'thelasCountSeparator not hidden by default');
+  assert(appJs.includes('thelasSeparator.classList.remove(\'hidden\')'), 'renderStalls does not unhide separator dynamically');
+});
+
+test('Visual VEG toggle physically translates thumb and alters track color in app.js', () => {
+  assert(appJs.includes('track.classList.add(\'bg-emerald-600\')'), 'Missing emerald track color in toggleVegFilter');
+  assert(appJs.includes('thumb.classList.add(\'translate-x-3.5\')'), 'Missing translate-x-3.5 thumb slide in toggleVegFilter');
+  assert(appJs.includes('thumb.classList.remove(\'translate-x-0\')'), 'Missing translate-x-0 removal in toggleVegFilter');
+});
+
+test('VIP Membership is buyable (@ ₹99) and not granted by default', () => {
+  assert(html.includes('Buy @ ₹99'), 'Missing Buy @ ₹99 prompt on VIP card');
+  assert(html.includes('id="profileVipCard"'), 'Missing #profileVipCard');
+  assert(appJs.includes('function buyThelaGoldMembership()'), 'Missing buyThelaGoldMembership function in app.js');
+  assert(appJs.includes('STATE.user.goldMember = true'), 'buyThelaGoldMembership does not activate goldMember');
+});
+
+test('Coupons start at 0 available and are earned from orders', () => {
+  assert(html.includes('id="profileCouponsCount">0 available'), 'Coupons card does not default to 0 available');
+  assert(!html.includes('12 new'), 'Still contains hardcoded 12 new coupons');
+  assert(appJs.includes('function renderCouponsDrawerContent()'), 'Missing renderCouponsDrawerContent in app.js');
+  assert(appJs.includes('STATE.user.earnedCoupons.push(newCoupon)'), 'Payment completion does not award earned coupon');
+});
+
+test('Profile Drawer, Eco Banner, and Modals adapt to active light/dark theme', () => {
+  assert(html.includes('bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 w-full sm:max-w-md h-full flex flex-col shadow-2xl'), 'Profile modal missing adaptive light/dark theme');
+  assert(html.includes('id="ecoPlanetBanner" class="mt-4 bg-white dark:bg-stone-900'), 'Eco Planet banner not adapted to light theme');
+});
+
+console.log('\n--- TEST SUITE 7: JavaScript Engine Functions & Clean Architecture ---');
 test('app.js defines carousel, filter toggles, companion modals, and wallet engine', () => {
   const requiredFns = [
     'initPromoCarousel', 'setCarouselSlide',
     'toggleNearAndFast', 'toggleNoPackaging', 'toggleTopRated', 'toggleHealthyMode',
     'applyActiveFilters', 'switchDockTab',
-    'openThelaGoldModal', 'closeThelaGoldModal',
-    'openCouponsDrawer', 'closeCouponsDrawer', 'applyPromoCode',
+    'openThelaGoldModal', 'closeThelaGoldModal', 'buyThelaGoldMembership',
+    'openCouponsDrawer', 'closeCouponsDrawer', 'renderCouponsDrawerContent', 'applyPromoCode',
     'openTrainFoodModal', 'closeTrainFoodModal', 'handleTrainDeliverySave',
     'openWalletDrawer', 'closeWalletDrawer', 'rechargeWallet',
-    'toggleProfileEditForm', 'cycleThemeMode', 'handleVoiceSearch'
+    'toggleProfileEditForm', 'cycleThemeMode', 'handleVoiceSearch',
+    'openFilterDrawer', 'closeFilterDrawer', 'applyFiltersFromModal'
   ];
   requiredFns.forEach(fn => {
     assert(appJs.includes(fn), `Missing function: ${fn}`);

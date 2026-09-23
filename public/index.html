@@ -128,11 +128,18 @@
     }
 
     /* Floating Drifter Motif Container */
+    /* Floating Drifter Motif Container — Theme Harmonized */
     .thela-motif {
       position: absolute;
-      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1), transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), filter 0.4s ease;
       will-change: transform, opacity;
       pointer-events: none !important;
+      mix-blend-mode: multiply;
+      filter: saturate(0.6) sepia(0.18);
+    }
+    html.dark .thela-motif {
+      mix-blend-mode: screen;
+      filter: saturate(0.85) brightness(1.2);
     }
 
     /* Drift Animation Variations */
@@ -186,29 +193,32 @@
       50% { opacity: 0.38; transform: scale(1.06); }
     }
 
-    /* 4-Tier Adaptive Density Rules */
+    /* 4-Tier Adaptive Density Rules — Harmonized with Theme */
     /* Level 1: HIGH — Hero & Craving Discovery */
-    #thelaAtmosphere[data-density="high"] .thela-glow-disk { opacity: 0.35; }
-    #thelaAtmosphere[data-density="high"] .motif-primary { opacity: 0.13; }
-    #thelaAtmosphere[data-density="high"] .motif-secondary { opacity: 0.09; }
-    #thelaAtmosphere[data-density="high"] .motif-steam { opacity: 0.15; }
+    #thelaAtmosphere[data-density="high"] .thela-glow-disk { opacity: 0.22; }
+    #thelaAtmosphere[data-density="high"] .motif-primary { opacity: 0.07; }
+    #thelaAtmosphere[data-density="high"] .motif-secondary { opacity: 0.04; }
+    #thelaAtmosphere[data-density="high"] .motif-steam { opacity: 0.08; }
 
     /* Level 2: MEDIUM — Discovery Carousels & Main Grid */
-    #thelaAtmosphere[data-density="medium"] .thela-glow-disk { opacity: 0.20; }
-    #thelaAtmosphere[data-density="medium"] .motif-primary { opacity: 0.08; }
-    #thelaAtmosphere[data-density="medium"] .motif-secondary { opacity: 0.03; }
-    #thelaAtmosphere[data-density="medium"] .motif-steam { opacity: 0.07; }
+    #thelaAtmosphere[data-density="medium"] .thela-glow-disk { opacity: 0.15; }
+    #thelaAtmosphere[data-density="medium"] .motif-primary { opacity: 0.05; }
+    #thelaAtmosphere[data-density="medium"] .motif-secondary { opacity: 0.02; }
+    #thelaAtmosphere[data-density="medium"] .motif-steam { opacity: 0.04; }
 
     /* Level 3: LOW — Vendor Stall Page & Menu */
-    #thelaAtmosphere[data-density="low"] .thela-glow-disk { opacity: 0.10; }
-    #thelaAtmosphere[data-density="low"] .motif-primary { opacity: 0.03; }
+    #thelaAtmosphere[data-density="low"] .thela-glow-disk { opacity: 0.08; }
+    #thelaAtmosphere[data-density="low"] .motif-primary { opacity: 0.02; }
     #thelaAtmosphere[data-density="low"] .motif-secondary { opacity: 0; }
-    #thelaAtmosphere[data-density="low"] .motif-steam { opacity: 0.03; }
+    #thelaAtmosphere[data-density="low"] .motif-steam { opacity: 0.02; }
 
     /* Level 4: MINIMAL — Cart, Checkout, Auth, Address, Customizer */
-    #thelaAtmosphere[data-density="minimal"] .thela-glow-disk { opacity: 0.05; }
+    #thelaAtmosphere[data-density="minimal"] .thela-glow-disk { opacity: 0.04; }
     #thelaAtmosphere[data-density="minimal"] .thela-motif { opacity: 0 !important; }
     #thelaAtmosphere[data-density="minimal"] * { animation-play-state: paused !important; }
+
+    html.dark #thelaAtmosphere[data-density="high"] .motif-primary { opacity: 0.08; }
+    html.dark #thelaAtmosphere[data-density="medium"] .motif-primary { opacity: 0.06; }
 
     /* Tab inactive battery saver */
     .atmosphere-paused * {
@@ -339,8 +349,8 @@
     <!-- 6. Wok & Swirling Street Noodles (Bottom Right Margin) -->
     <div class="thela-motif motif-primary anim-drift-b bottom-40 -right-4 sm:right-10 w-18 h-18 sm:w-22 sm:h-22" style="animation-delay: -11s;">
       <svg viewBox="0 0 100 100" class="w-full h-full drop-shadow-sm">
-        <path d="M18 50 C18 78 82 78 82 50 Z" fill="#292524" />
-        <path d="M14 50 L86 50" stroke="#44403c" stroke-width="3" stroke-linecap="round" />
+        <path d="M18 50 C18 78 82 78 82 50 Z" fill="#78350f" fill-opacity="0.8" />
+        <path d="M14 50 L86 50" stroke="#92400e" stroke-width="3" stroke-linecap="round" />
         <circle cx="14" cy="50" r="4" fill="none" stroke="#78716c" stroke-width="2" />
         <circle cx="86" cy="50" r="4" fill="none" stroke="#78716c" stroke-width="2" />
         <path d="M28 50 Q36 32 46 48 T66 42 T76 48" fill="none" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
@@ -436,12 +446,12 @@
           <span id="headerCartBadge" class="hidden ml-1 px-1.5 py-0.2 bg-white text-amber-700 rounded-full text-[10px] font-black">0</span>
         </button>
 
-        <!-- Auth / Profile Button with VIP Gold Avatar Ring (Screenshot 1 & 4) -->
-        <button id="authBtn" onclick="handleAuthBtnClick()" class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-amber-400 via-amber-200 to-amber-500 p-0.5 shadow-sm hover:scale-105 transition shrink-0" title="My Profile & Settings">
-          <div class="w-full h-full rounded-full bg-stone-900 text-amber-300 flex items-center justify-center font-black text-xs sm:text-sm">
+        <!-- Auth / Profile Button (Only shows VIP crown if membership bought) -->
+        <button id="authBtn" onclick="handleAuthBtnClick()" class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-sm hover:scale-105 transition shrink-0" title="My Profile & Settings">
+          <div id="headerAvatarInner" class="w-full h-full rounded-full flex items-center justify-center font-black text-xs sm:text-sm text-stone-700 dark:text-stone-200">
             <span id="headerAvatarInitial"><i class="fa-regular fa-user text-xs"></i></span>
           </div>
-          <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-500 text-stone-900 rounded-full flex items-center justify-center text-[7px] font-black shadow-xs">
+          <span id="headerCrownBadge" class="hidden absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-500 text-stone-950 rounded-full flex items-center justify-center text-[7px] font-black shadow-xs">
             <i class="fa-solid fa-crown text-[6px]"></i>
           </span>
         </button>
@@ -733,24 +743,24 @@
     <!-- Zomato-Style Quick Filter Pills Bar (Screenshots 1 & 2) -->
     <div id="quickFiltersBar" class="flex items-center space-x-2 overflow-x-auto hide-scrollbar py-1 text-xs select-none">
       <!-- Filters Dropdown Pill -->
-      <button id="btnFilterAll" onclick="openFilterDrawer()" class="px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-200 font-bold whitespace-nowrap shadow-xs hover:border-amber-500 transition flex items-center space-x-1 shrink-0">
+      <button id="btnFilterAll" onclick="openFilterDrawer()" class="px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-800 dark:text-stone-200 font-bold whitespace-nowrap shadow-xs hover:border-amber-500 transition flex items-center space-x-1 shrink-0">
         <span>Filters</span>
         <i class="fa-solid fa-chevron-down text-[9px] text-stone-400"></i>
       </button>
 
       <!-- Near & Fast Pill -->
-      <button id="btnNearFast" data-alias="pillNearFast" onclick="toggleNearAndFast()" class="px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-200 font-bold whitespace-nowrap shadow-xs hover:border-amber-500 transition flex items-center space-x-1 shrink-0">
+      <button id="btnNearFast" data-alias="pillNearFast" onclick="toggleNearAndFast()" class="px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-800 dark:text-stone-200 font-bold whitespace-nowrap shadow-xs hover:border-amber-500 transition flex items-center space-x-1 shrink-0">
         <i class="fa-solid fa-bolt text-amber-500 text-[11px]"></i>
         <span>Near & Fast</span>
       </button>
 
       <!-- No Packaging Charges Pill -->
-      <button id="btnNoPackaging" data-alias="pillNoPackaging" onclick="toggleNoPackaging()" class="px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-200 font-bold whitespace-nowrap shadow-xs hover:border-amber-500 transition shrink-0">
+      <button id="btnNoPackaging" data-alias="pillNoPackaging" onclick="toggleNoPackaging()" class="px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-800 dark:text-stone-200 font-bold whitespace-nowrap shadow-xs hover:border-amber-500 transition shrink-0">
         <span>No packaging charges</span>
       </button>
 
       <!-- Rating 4.0+ Pill -->
-      <button id="btnTopRated" data-alias="pillTopRated" onclick="toggleTopRated()" class="px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-200 font-bold whitespace-nowrap shadow-xs hover:border-amber-500 transition flex items-center space-x-1 shrink-0">
+      <button id="btnTopRated" data-alias="pillTopRated" onclick="toggleTopRated()" class="px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-800 dark:text-stone-200 font-bold whitespace-nowrap shadow-xs hover:border-amber-500 transition flex items-center space-x-1 shrink-0">
         <i class="fa-solid fa-star text-amber-500 text-[10px]"></i>
         <span>Rating 4.0+</span>
       </button>
@@ -761,7 +771,7 @@
       </button>
 
       <!-- Favorites Pill -->
-      <button onclick="filterCategory('favorites')" id="btnFavorites" data-alias="favPillBtn" class="px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-200 font-bold whitespace-nowrap hover:border-red-400 transition shadow-xs flex items-center space-x-1 shrink-0">
+      <button onclick="filterCategory('favorites')" id="btnFavorites" data-alias="favPillBtn" class="px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 text-stone-700 dark:text-stone-800 dark:text-stone-200 font-bold whitespace-nowrap hover:border-red-400 transition shadow-xs flex items-center space-x-1 shrink-0">
         <i class="fa-solid fa-heart text-red-500 text-[11px]"></i>
         <span data-i18n="favorites_tab">Favorites</span>
         <span id="favCountBadge" class="ml-1 bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 px-1.5 py-0.2 rounded-full text-[9px] font-black">0</span>
@@ -1043,32 +1053,32 @@
       </div>
 
       <!-- Neighborhood Street Thelas Count Separator (Screenshot 2) -->
-      <div class="py-2.5 flex items-center justify-center space-x-2 text-[11px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest border-y border-stone-200/60 dark:border-stone-800">
+      <div id="thelasCountSeparator" class="hidden py-2.5 flex items-center justify-center space-x-2 text-[11px] font-black text-stone-400 dark:text-stone-500 uppercase tracking-widest border-y border-stone-200/60 dark:border-stone-800">
         <i class="fa-solid fa-motorcycle text-amber-500"></i>
-        <span id="exploreMoreThelasCount">1,971 STREET FOOD THELAS DELIVERING TO YOU</span>
+        <span id="exploreMoreThelasCount">0 STREET FOOD THELAS DELIVERING TO YOU</span>
       </div>
     </section>
 
     <!-- ============================================================== -->
     <!-- ZOMATO-STYLE COMPLIANCE, HYGIENE & PLANET BANNER (Screenshot 3) -->
     <!-- ============================================================== -->
-    <section id="ecoPlanetBanner" class="mt-4 bg-stone-900 text-stone-100 rounded-3xl p-5 space-y-4 border border-stone-800 shadow-xl">
+    <section id="ecoPlanetBanner" class="mt-4 bg-white dark:bg-stone-900 text-stone-800 dark:text-stone-100 rounded-3xl p-5 space-y-4 border border-stone-200/80 dark:border-stone-800 shadow-md">
       <!-- Top Banner -->
-      <div class="flex items-center justify-between bg-gradient-to-r from-emerald-950 via-stone-900 to-emerald-900 p-4 rounded-2xl border border-emerald-800/40">
+      <div class="flex items-center justify-between bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100 dark:from-emerald-950 dark:via-stone-900 dark:to-emerald-900 p-4 rounded-2xl border border-emerald-200 dark:border-emerald-800/40">
         <div>
-          <div class="text-xs font-black text-emerald-400 uppercase tracking-wider">ECO & ETHICAL COMMERCE</div>
-          <div class="text-base sm:text-lg font-black text-white flex items-center space-x-1.5 mt-0.5">
+          <div class="text-xs font-black text-emerald-700 dark:text-emerald-400 uppercase tracking-wider">ECO & ETHICAL COMMERCE</div>
+          <div class="text-base sm:text-lg font-black text-stone-900 dark:text-white flex items-center space-x-1.5 mt-0.5">
             <span>Delivering for people and planet</span>
             <i class="fa-solid fa-arrow-right text-xs text-emerald-400"></i>
           </div>
         </div>
-        <div class="w-12 h-12 rounded-2xl bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-xl shrink-0">
+        <div class="w-12 h-12 rounded-2xl bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-400 flex items-center justify-center text-xl shrink-0">
           <i class="fa-solid fa-leaf"></i>
         </div>
       </div>
 
       <!-- Bullet Disclosures (Strictly matching Screenshot 3) -->
-      <ul class="text-xs text-stone-400 space-y-2 list-disc pl-4 font-medium leading-relaxed">
+      <ul class="text-xs text-stone-600 dark:text-stone-400 space-y-2 list-disc pl-4 font-medium leading-relaxed">
         <li>Menu items, nutritional information and prices are set directly by authentic street food vendors.</li>
         <li>Nutritional information values displayed are indicative, per serving and may vary depending on ingredients, portion size and customizations.</li>
         <li>An average active adult requires 2,000 kcal energy per day, however, calorie needs may vary.</li>
@@ -1077,13 +1087,13 @@
       </ul>
 
       <!-- Report Issue & FSSAI Footer (Screenshot 3) -->
-      <div class="pt-2 border-t border-stone-800 flex flex-wrap items-center justify-between gap-2 text-xs">
+      <div class="pt-2 border-t border-stone-200 dark:border-stone-800 flex flex-wrap items-center justify-between gap-2 text-xs">
         <button type="button" onclick="reportMenuIssue()" class="text-red-400 hover:text-red-300 font-bold flex items-center space-x-1">
           <span>Report an issue with the menu</span>
           <i class="fa-solid fa-chevron-right text-[10px]"></i>
         </button>
         <div class="flex items-center space-x-2 text-stone-400 font-mono text-[11px] cursor-pointer" onclick="openTrustModal(STATE.stalls[0]?.id || '')">
-          <span class="italic font-serif font-black text-white text-xs">fssai</span>
+          <span class="italic font-serif font-black text-stone-900 dark:text-white text-xs">fssai</span>
           <span>Lic. No. 13322004000125</span>
         </div>
       </div>
@@ -1641,30 +1651,30 @@
   <!-- ============================================================== -->
 <!-- DRAWER: USER PROFILE & SETTINGS (ZOMATO-STYLE ACCOUNT CENTER - Screenshots 4 & 5) -->
   <div id="profileModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex justify-end transition-all">
-    <div class="bg-stone-950 text-white w-full sm:max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 overflow-y-auto hide-scrollbar">
+    <div class="bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 w-full sm:max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 overflow-y-auto hide-scrollbar border-l border-stone-200 dark:border-stone-800">
       
       <!-- Top Action Bar with Back Arrow (Screenshot 4) -->
-      <div class="p-4 flex items-center justify-between border-b border-stone-800 shrink-0">
-        <button onclick="closeProfileModal()" class="w-9 h-9 rounded-full bg-stone-900 text-stone-300 flex items-center justify-center hover:bg-stone-800 transition" title="Back">
+      <div class="p-4 flex items-center justify-between border-b border-stone-200 dark:border-stone-800 shrink-0">
+        <button onclick="closeProfileModal()" class="w-9 h-9 rounded-full bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-300 flex items-center justify-center hover:bg-stone-200 dark:hover:bg-stone-800 transition" title="Back">
           <i class="fa-solid fa-arrow-left"></i>
         </button>
-        <span class="text-xs font-black text-stone-400 uppercase tracking-wider">Account Center</span>
+        <span class="text-xs font-black text-stone-600 dark:text-stone-400 uppercase tracking-wider">Account Center</span>
         <div class="w-9"></div>
       </div>
 
       <div class="p-4 space-y-4 flex-1">
         <!-- Profile Header Card (Screenshot 4) -->
-        <div class="bg-stone-900 border border-stone-800 rounded-3xl p-4 flex items-center space-x-3.5 relative overflow-hidden">
+        <div class="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-3xl p-4 flex items-center space-x-3.5 relative overflow-hidden">
           <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-200 to-amber-500 p-0.5 shadow-md shrink-0">
-            <div id="profileAvatar" class="w-full h-full rounded-full bg-stone-950 text-amber-200 flex items-center justify-center font-black text-xl">
+            <div id="profileAvatar" class="w-full h-full rounded-full bg-amber-100 dark:bg-stone-950 text-amber-700 dark:text-amber-200 flex items-center justify-center font-black text-xl">
               <span id="profileAvatarLetter"><i class="fa-solid fa-user text-base"></i></span>
             </div>
           </div>
           <div class="min-w-0 flex-1">
-            <h2 id="profileModalName" data-alias="profileDisplayName" class="font-black text-lg text-white truncate">Street Food Explorer</h2>
-            <div id="profileModalEmail" data-alias="profileDisplayEmail" class="text-xs text-stone-400 truncate">Guest User</div>
+            <h2 id="profileModalName" data-alias="profileDisplayName" class="font-black text-lg text-stone-900 dark:text-white truncate">Street Food Explorer</h2>
+            <div id="profileModalEmail" data-alias="profileDisplayEmail" class="text-xs text-stone-500 dark:text-stone-400 truncate">Guest User</div>
             <div id="profileDisplayPhone" class="hidden text-xs text-stone-400">+91 ••••• •••••</div>
-            <button type="button" onclick="toggleProfileEditForm()" class="text-xs font-bold text-amber-400 hover:text-amber-300 mt-0.5 flex items-center space-x-1">
+            <button type="button" onclick="toggleProfileEditForm()" class="text-xs font-bold text-amber-600 dark:text-amber-400 hover:underline mt-0.5 flex items-center space-x-1">
               <span>Edit profile</span>
               <i class="fa-solid fa-caret-right text-[10px]"></i>
             </button>
@@ -1679,27 +1689,27 @@
         </div>
 
         <!-- Collapsible Edit Profile Form -->
-        <form id="profileEditForm" data-alias="editProfileForm" onsubmit="handleUpdateProfile(event)" class="hidden bg-stone-900 border border-stone-800 rounded-2xl p-4 space-y-3">
-          <div class="flex items-center justify-between border-b border-stone-800 pb-2">
-            <h3 class="text-xs font-black text-stone-300 uppercase tracking-wider">Edit Personal Details</h3>
+        <form id="profileEditForm" data-alias="editProfileForm" onsubmit="handleUpdateProfile(event)" class="hidden bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 space-y-3">
+          <div class="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-2">
+            <h3 class="text-xs font-black text-stone-700 dark:text-stone-300 uppercase tracking-wider">Edit Personal Details</h3>
             <button type="button" onclick="toggleProfileEditForm()" class="text-[10px] text-stone-400">Cancel</button>
           </div>
 
           <div class="space-y-1 text-xs">
             <label class="font-bold text-stone-400">Your Full Name</label>
             <input type="text" id="profileNameInput" placeholder="Enter your full name" value="" required
-              class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 font-semibold text-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+              class="w-full bg-white dark:bg-stone-950 border border-stone-300 dark:border-stone-800 rounded-xl px-3 py-2 font-semibold text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500">
           </div>
 
           <div class="space-y-1 text-xs">
             <label class="font-bold text-stone-400">Email Address</label>
             <input type="email" id="profileEmailInput" placeholder="Enter your email address" value=""
-              class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 font-semibold text-white focus:outline-none focus:ring-2 focus:ring-amber-500">
+              class="w-full bg-white dark:bg-stone-950 border border-stone-300 dark:border-stone-800 rounded-xl px-3 py-2 font-semibold text-stone-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500">
           </div>
 
-          <div class="flex items-center justify-between bg-stone-950 p-2.5 rounded-xl border border-stone-800">
+          <div class="flex items-center justify-between bg-white dark:bg-stone-950 p-2.5 rounded-xl border border-stone-200 dark:border-stone-800">
             <div class="text-xs">
-              <div class="font-bold text-stone-200">Pure Veg Mode</div>
+              <div class="font-bold text-stone-800 dark:text-stone-200">Pure Veg Mode</div>
               <div class="text-[10px] text-stone-400">Only show 100% vegetarian food carts</div>
             </div>
             <input type="checkbox" id="profileVegPrefToggle" class="w-4 h-4 accent-green-600 rounded cursor-pointer">
@@ -1710,54 +1720,54 @@
           </button>
         </form>
 
-        <!-- Gold Member VIP Card (Screenshot 4) -->
-        <div onclick="openThelaGoldModal()" class="cursor-pointer bg-gradient-to-r from-amber-950/80 via-stone-900 to-amber-950/60 border border-amber-500/30 rounded-2xl p-3.5 flex items-center justify-between shadow-md hover:border-amber-500/60 transition group select-none">
+        <!-- Gold Member VIP Card (Screenshots 3 & 4) — Buyable & Dynamic -->
+        <div id="profileVipCard" onclick="openThelaGoldModal()" class="cursor-pointer bg-gradient-to-r from-amber-50 via-orange-50 to-amber-100 dark:from-amber-950/80 dark:via-stone-900 dark:to-amber-950/60 border border-amber-300/80 dark:border-amber-500/30 rounded-2xl p-3.5 flex items-center justify-between shadow-sm hover:border-amber-500/60 transition group select-none">
           <div class="flex items-center space-x-2.5">
-            <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-400 flex items-center justify-center text-sm">
-              <i class="fa-solid fa-crown text-amber-400"></i>
+            <div class="w-8 h-8 rounded-full bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-crown text-amber-500 dark:text-amber-400"></i>
             </div>
             <div>
-              <div class="font-black text-sm text-amber-200">Gold member</div>
-              <div class="text-[10px] text-amber-400/80 font-medium">Free delivery on orders above ₹99</div>
+              <div id="profileGoldTitle" class="font-black text-sm text-amber-950 dark:text-amber-200">Thela VIP Club</div>
+              <div id="profileGoldSub" class="text-[10px] text-amber-800/90 dark:text-amber-400/80 font-medium">Free delivery on orders above ₹99</div>
             </div>
           </div>
-          <div class="flex items-center space-x-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-full text-xs font-black">
-            <span id="profileGoldSavings">Free Delivery Active</span>
+          <div id="profileGoldBadge" class="flex items-center space-x-1 bg-amber-500 text-stone-950 px-2.5 py-1 rounded-full text-xs font-black shadow-xs">
+            <span id="profileGoldSavings">Buy @ ₹99</span>
             <i class="fa-solid fa-chevron-right text-[9px]"></i>
           </div>
         </div>
 
-        <!-- 2 Quick Cards: Thela Money & Coupons (Screenshot 4) -->
+        <!-- 2 Quick Cards: Thela Money & Coupons (Screenshots 3 & 4) — Adaptive & Dynamic -->
         <div class="grid grid-cols-2 gap-2.5 select-none">
-          <div onclick="openWalletDrawer()" class="cursor-pointer bg-stone-900 border border-stone-800 rounded-2xl p-3.5 flex items-center space-x-3 hover:bg-stone-850 transition">
-            <div class="w-8 h-8 rounded-xl bg-stone-800 text-stone-300 flex items-center justify-center text-sm">
+          <div onclick="openWalletDrawer()" class="cursor-pointer bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-3.5 flex items-center space-x-3 hover:bg-stone-100 dark:hover:bg-stone-100 dark:hover:bg-stone-850 transition shadow-xs">
+            <div class="w-8 h-8 rounded-xl bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 flex items-center justify-center text-sm">
               <i class="fa-solid fa-wallet"></i>
             </div>
             <div>
-              <div class="text-[11px] text-stone-400 font-bold">Thela Money</div>
-              <div class="text-sm font-black text-white" id="profileWalletAmount" data-alias="profileMoneyAmount">₹0</div>
+              <div class="text-[11px] text-stone-500 dark:text-stone-400 font-bold">Thela Money</div>
+              <div class="text-sm font-black text-stone-900 dark:text-white" id="profileWalletAmount" data-alias="profileMoneyAmount">₹0</div>
             </div>
           </div>
 
-          <div onclick="openCouponsDrawer()" class="cursor-pointer bg-stone-900 border border-stone-800 rounded-2xl p-3.5 flex items-center space-x-3 hover:bg-stone-850 transition">
-            <div class="w-8 h-8 rounded-xl bg-stone-800 text-stone-300 flex items-center justify-center text-sm">
-              <i class="fa-solid fa-percent text-amber-400"></i>
+          <div onclick="openCouponsDrawer()" class="cursor-pointer bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-3.5 flex items-center space-x-3 hover:bg-stone-100 dark:hover:bg-stone-100 dark:hover:bg-stone-850 transition shadow-xs">
+            <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-stone-800 text-amber-600 dark:text-amber-400 flex items-center justify-center text-sm">
+              <i class="fa-solid fa-percent"></i>
             </div>
             <div>
-              <div class="text-[11px] text-stone-400 font-bold">Your coupons</div>
-              <div class="text-xs font-black text-emerald-400">12 new</div>
+              <div class="text-[11px] text-stone-500 dark:text-stone-400 font-bold">Your coupons</div>
+              <div class="text-xs font-black text-emerald-600 dark:text-emerald-400" id="profileCouponsCount">0 available</div>
             </div>
           </div>
         </div>
 
         <!-- App Update Available (Screenshot 4) -->
-        <div class="bg-stone-900 border border-stone-800 rounded-2xl p-3 flex items-center justify-between text-xs select-none">
+        <div class="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-3 flex items-center justify-between text-xs select-none">
           <div class="flex items-center space-x-2.5 text-stone-300 font-bold">
             <i class="fa-solid fa-rotate text-stone-400"></i>
             <span>App version</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="text-red-400 font-mono font-bold">v2.2.0</span>
+            <span class="text-amber-600 dark:text-amber-400 font-mono font-bold">v2.2.2</span>
             <i class="fa-solid fa-chevron-right text-[10px] text-stone-500"></i>
           </div>
         </div>
@@ -1766,13 +1776,13 @@
         <div class="space-y-2 select-none">
           <div class="flex items-center space-x-2">
             <div class="w-1 h-3.5 rounded-full bg-red-500"></div>
-            <h3 class="text-xs font-black text-stone-300 tracking-wider">Your preferences</h3>
+            <h3 class="text-xs font-black text-stone-700 dark:text-stone-300 tracking-wider">Your preferences</h3>
           </div>
 
-          <div class="bg-stone-900 border border-stone-800 rounded-2xl divide-y divide-stone-800 text-xs">
+          <div class="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl divide-y divide-stone-200 dark:divide-stone-800 text-xs">
             <!-- Veg Mode -->
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="toggleVegFilter()">
-              <div class="flex items-center space-x-3 text-stone-200 font-bold">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-850" onclick="toggleVegFilter()">
+              <div class="flex items-center space-x-3 text-stone-800 dark:text-stone-200 font-bold">
                 <span class="w-4 h-4 rounded border border-green-500 flex items-center justify-center p-0.5">
                   <span class="w-2 h-2 rounded-full bg-green-500"></span>
                 </span>
@@ -1786,7 +1796,7 @@
 
             <!-- Personalized Ratings -->
             <div class="p-3.5 flex items-center justify-between">
-              <div class="flex items-center space-x-3 text-stone-200 font-bold">
+              <div class="flex items-center space-x-3 text-stone-800 dark:text-stone-200 font-bold">
                 <i class="fa-regular fa-star text-stone-400"></i>
                 <span>Show personalised ratings</span>
               </div>
@@ -1794,8 +1804,8 @@
             </div>
 
             <!-- Appearance -->
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="cycleThemeMode()">
-              <div class="flex items-center space-x-3 text-stone-200 font-bold">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-850" onclick="cycleThemeMode()">
+              <div class="flex items-center space-x-3 text-stone-800 dark:text-stone-200 font-bold">
                 <i class="fa-solid fa-palette text-stone-400"></i>
                 <span>Appearance</span>
               </div>
@@ -1806,8 +1816,8 @@
             </div>
 
             <!-- Payment Methods -->
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="openPaymentMethods()">
-              <div class="flex items-center space-x-3 text-stone-200 font-bold">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-850" onclick="openPaymentMethods()">
+              <div class="flex items-center space-x-3 text-stone-800 dark:text-stone-200 font-bold">
                 <i class="fa-regular fa-credit-card text-stone-400"></i>
                 <span>Payment methods</span>
               </div>
@@ -1820,52 +1830,52 @@
         <div class="space-y-2 select-none">
           <div class="flex items-center space-x-2">
             <div class="w-1 h-3.5 rounded-full bg-red-500"></div>
-            <h3 class="text-xs font-black text-stone-300 tracking-wider">Food delivery</h3>
+            <h3 class="text-xs font-black text-stone-700 dark:text-stone-300 tracking-wider">Food delivery</h3>
           </div>
 
-          <div class="bg-stone-900 border border-stone-800 rounded-2xl divide-y divide-stone-800 text-xs">
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="openOrderHistoryModal()">
-              <div class="flex items-center space-x-3 text-stone-200 font-bold">
+          <div class="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl divide-y divide-stone-200 dark:divide-stone-800 text-xs">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-850" onclick="openOrderHistoryModal()">
+              <div class="flex items-center space-x-3 text-stone-800 dark:text-stone-200 font-bold">
                 <i class="fa-solid fa-bag-shopping text-stone-400"></i>
                 <span>Your orders</span>
               </div>
               <i class="fa-solid fa-chevron-right text-[10px] text-stone-500"></i>
             </div>
 
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="openAddressDrawer()">
-              <div class="flex items-center space-x-3 text-stone-200 font-bold">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-850" onclick="openAddressDrawer()">
+              <div class="flex items-center space-x-3 text-stone-800 dark:text-stone-200 font-bold">
                 <i class="fa-solid fa-location-dot text-stone-400"></i>
                 <span>Address book</span>
               </div>
               <i class="fa-solid fa-chevron-right text-[10px] text-stone-500"></i>
             </div>
 
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="filterCategory('favorites'); closeProfileModal();">
-              <div class="flex items-center space-x-3 text-stone-200 font-bold">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-850" onclick="filterCategory('favorites'); closeProfileModal();">
+              <div class="flex items-center space-x-3 text-stone-800 dark:text-stone-200 font-bold">
                 <i class="fa-regular fa-bookmark text-stone-400"></i>
                 <span>Your collections</span>
               </div>
               <i class="fa-solid fa-chevron-right text-[10px] text-stone-500"></i>
             </div>
 
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="openTrainFoodModal()">
-              <div class="flex items-center space-x-3 text-stone-200 font-bold">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-850" onclick="openTrainFoodModal()">
+              <div class="flex items-center space-x-3 text-stone-800 dark:text-stone-200 font-bold">
                 <i class="fa-solid fa-train text-stone-400"></i>
                 <span>Order on train</span>
               </div>
               <i class="fa-solid fa-chevron-right text-[10px] text-stone-500"></i>
             </div>
 
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="openHelpDrawer()">
-              <div class="flex items-center space-x-3 text-stone-200 font-bold">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-850" onclick="openHelpDrawer()">
+              <div class="flex items-center space-x-3 text-stone-800 dark:text-stone-200 font-bold">
                 <i class="fa-regular fa-message text-stone-400"></i>
                 <span>Online ordering help</span>
               </div>
               <i class="fa-solid fa-chevron-right text-[10px] text-stone-500"></i>
             </div>
 
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="scrollToDiscoverySection('secHiddenGems'); closeProfileModal();">
-              <div class="flex items-center space-x-3 text-stone-200 font-bold">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-850" onclick="scrollToDiscoverySection('secHiddenGems'); closeProfileModal();">
+              <div class="flex items-center space-x-3 text-stone-800 dark:text-stone-200 font-bold">
                 <i class="fa-regular fa-eye-slash text-stone-400"></i>
                 <span>Hidden street stalls</span>
               </div>
@@ -1878,20 +1888,20 @@
         <div class="space-y-2 select-none">
           <div class="flex items-center space-x-2">
             <div class="w-1 h-3.5 rounded-full bg-amber-500"></div>
-            <h3 class="text-xs font-black text-stone-300 tracking-wider">Street Food Rewards & Wallet</h3>
+            <h3 class="text-xs font-black text-stone-700 dark:text-stone-300 tracking-wider">Street Food Rewards & Wallet</h3>
           </div>
 
-          <div class="bg-stone-900 border border-stone-800 rounded-2xl divide-y divide-stone-800 text-xs">
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="openOrderHistoryModal()">
-              <div class="flex items-center space-x-3 text-stone-200 font-bold">
+          <div class="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl divide-y divide-stone-200 dark:divide-stone-800 text-xs">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-850" onclick="openOrderHistoryModal()">
+              <div class="flex items-center space-x-3 text-stone-800 dark:text-stone-200 font-bold">
                 <i class="fa-solid fa-clock-rotate-left text-amber-500"></i>
                 <span>Your Street Orders</span>
               </div>
               <i class="fa-solid fa-chevron-right text-[10px] text-stone-500"></i>
             </div>
 
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="openWalletDrawer()">
-              <div class="flex items-center space-x-3 text-stone-200 font-bold">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-850" onclick="openWalletDrawer()">
+              <div class="flex items-center space-x-3 text-stone-800 dark:text-stone-200 font-bold">
                 <i class="fa-solid fa-wallet text-amber-400"></i>
                 <span>Thela Money Wallet</span>
               </div>
@@ -1901,8 +1911,8 @@
               </div>
             </div>
 
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="openCouponsDrawer()">
-              <div class="flex items-center space-x-3 text-stone-200 font-bold">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-100 dark:hover:bg-stone-850" onclick="openCouponsDrawer()">
+              <div class="flex items-center space-x-3 text-stone-800 dark:text-stone-200 font-bold">
                 <i class="fa-solid fa-gift text-rose-400"></i>
                 <span>Coupons & Street Offers</span>
               </div>
@@ -1913,7 +1923,7 @@
 
         <!-- Logout Button -->
         <div class="pt-2 pb-6">
-          <button type="button" onclick="handleLogout()" class="w-full bg-stone-900 hover:bg-stone-850 border border-red-500/30 text-red-400 rounded-2xl py-3 text-xs font-black transition flex items-center justify-center space-x-2">
+          <button type="button" onclick="handleLogout()" class="w-full bg-stone-900 hover:bg-stone-100 dark:hover:bg-stone-850 border border-red-500/30 text-red-400 rounded-2xl py-3 text-xs font-black transition flex items-center justify-center space-x-2">
             <i class="fa-solid fa-arrow-right-from-bracket"></i>
             <span>Log Out of Account</span>
           </button>
@@ -2219,8 +2229,75 @@
   <!-- ============================================================== -->
   <!-- FLOATING MODERN FROSTED-GLASS BOTTOM DOCK (Screenshots 1 & 2)  -->
   <!-- ============================================================== -->
+  <!-- ============================================================== -->
+  <!-- MODAL: INTERACTIVE FILTER & SORT DRAWER                        -->
+  <!-- ============================================================== -->
+  <div id="filterModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all">
+    <div class="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-5 space-y-4 shadow-2xl border border-stone-200 dark:border-stone-800 animate-in slide-in-from-bottom duration-200">
+      <div class="flex items-center justify-between border-b border-stone-200 dark:border-stone-800 pb-3">
+        <div class="flex items-center space-x-2">
+          <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center">
+            <i class="fa-solid fa-sliders text-sm"></i>
+          </div>
+          <h3 class="font-black text-base">Filters & Sorting</h3>
+        </div>
+        <button onclick="closeFilterDrawer()" class="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:text-white flex items-center justify-center">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Quick Toggles -->
+      <div class="space-y-2.5 text-xs font-bold">
+        <div class="text-[11px] font-black uppercase text-stone-400 tracking-wider">Quick Filters</div>
+        
+        <label class="flex items-center justify-between p-3 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-800 cursor-pointer hover:border-amber-500 transition">
+          <div class="flex items-center space-x-2.5">
+            <span class="w-4 h-4 rounded border border-green-500 flex items-center justify-center p-0.5">
+              <span class="w-2 h-2 rounded-full bg-green-500"></span>
+            </span>
+            <span>Pure Veg Stalls Only</span>
+          </div>
+          <input type="checkbox" id="modalFilterVeg" class="w-4 h-4 accent-emerald-600 rounded">
+        </label>
+
+        <label class="flex items-center justify-between p-3 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-800 cursor-pointer hover:border-amber-500 transition">
+          <div class="flex items-center space-x-2.5">
+            <i class="fa-solid fa-bolt text-amber-500"></i>
+            <span>Near & Fast Delivery (&lt; 25 mins)</span>
+          </div>
+          <input type="checkbox" id="modalFilterNearFast" class="w-4 h-4 accent-amber-500 rounded">
+        </label>
+
+        <label class="flex items-center justify-between p-3 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-800 cursor-pointer hover:border-amber-500 transition">
+          <div class="flex items-center space-x-2.5">
+            <i class="fa-solid fa-leaf text-emerald-500"></i>
+            <span>Zero Packaging Fee Stalls</span>
+          </div>
+          <input type="checkbox" id="modalFilterNoPackaging" class="w-4 h-4 accent-emerald-500 rounded">
+        </label>
+
+        <label class="flex items-center justify-between p-3 rounded-2xl bg-stone-50 dark:bg-stone-800/60 border border-stone-200 dark:border-stone-800 cursor-pointer hover:border-amber-500 transition">
+          <div class="flex items-center space-x-2.5">
+            <i class="fa-solid fa-star text-amber-500"></i>
+            <span>Top Rated (4.0+ Stars)</span>
+          </div>
+          <input type="checkbox" id="modalFilterTopRated" class="w-4 h-4 accent-amber-500 rounded">
+        </label>
+      </div>
+
+      <div class="pt-2 flex items-center space-x-2">
+        <button onclick="clearAllFiltersFromModal()" class="w-1/3 py-2.5 rounded-xl border border-stone-200 dark:border-stone-700 text-stone-600 dark:text-stone-300 font-bold text-xs hover:bg-stone-100 dark:hover:bg-stone-800 transition">
+          Clear All
+        </button>
+        <button onclick="applyFiltersFromModal()" class="flex-1 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shadow-md transition">
+          Apply Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
   <nav id="floatingBottomDock" class="fixed bottom-4 inset-x-0 mx-auto max-w-sm w-[92%] z-30 transition-all duration-300">
-    <div class="backdrop-blur-xl bg-stone-900/90 dark:bg-stone-950/95 text-white border border-stone-700/60 dark:border-stone-800 rounded-full shadow-2xl px-3 py-2 flex items-center justify-between select-none">
+    <div class="backdrop-blur-xl bg-white/95 dark:bg-stone-950/95 text-stone-800 dark:text-white border border-stone-200/80 dark:border-stone-800 rounded-full shadow-2xl px-3 py-2 flex items-center justify-between select-none">
       <!-- Home Tab -->
       <button onclick="switchDockTab('home')" id="dockTabHome" class="flex flex-col items-center px-3 py-1 rounded-full text-amber-500 font-bold transition">
         <i class="fa-solid fa-house text-sm"></i>
@@ -2228,13 +2305,13 @@
       </button>
 
       <!-- Under ₹100 Tab -->
-      <button onclick="switchDockTab('under100')" id="dockTabUnder100" class="flex flex-col items-center px-3 py-1 rounded-full text-stone-400 hover:text-white font-bold transition">
+      <button onclick="switchDockTab('under100')" id="dockTabUnder100" class="flex flex-col items-center px-3 py-1 rounded-full text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white font-bold transition">
         <i class="fa-solid fa-receipt text-sm"></i>
         <span class="text-[9px] mt-0.5">Under ₹100</span>
       </button>
 
       <!-- Favorites Tab -->
-      <button onclick="switchDockTab('favorites')" id="dockTabFavorites" class="flex flex-col items-center px-3 py-1 rounded-full text-stone-400 hover:text-white font-bold transition">
+      <button onclick="switchDockTab('favorites')" id="dockTabFavorites" class="flex flex-col items-center px-3 py-1 rounded-full text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white font-bold transition">
         <i class="fa-solid fa-heart text-sm"></i>
         <span class="text-[9px] mt-0.5">Favorites</span>
       </button>
@@ -2251,7 +2328,7 @@
   <!-- MODAL: THELA GOLD VIP MEMBERSHIP CLUB                           -->
   <!-- ============================================================== -->
   <div id="thelaGoldModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-stone-900 border border-amber-500/40 text-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl relative overflow-hidden">
+    <div class="bg-white dark:bg-stone-900 border border-amber-300 dark:border-amber-500/40 text-stone-900 dark:text-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl relative overflow-hidden">
       <div class="absolute -right-12 -top-12 w-40 h-40 bg-amber-500/20 rounded-full blur-2xl pointer-events-none"></div>
 
       <div class="flex items-center justify-between relative z-10">
@@ -2264,21 +2341,21 @@
             <p class="text-[10px] text-amber-200/80">Exclusive Street Connoisseur Club</p>
           </div>
         </div>
-        <button onclick="closeThelaGoldModal()" class="w-8 h-8 rounded-full bg-stone-800 text-stone-400 hover:text-white flex items-center justify-center">
+        <button onclick="closeThelaGoldModal()" class="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 dark:hover:text-white flex items-center justify-center">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
 
       <!-- Savings Pill -->
-      <div class="bg-gradient-to-r from-amber-950/80 to-stone-950 p-3 rounded-2xl border border-amber-500/30 flex items-center justify-between">
+      <div id="goldModalStatusBox" class="bg-gradient-to-r from-amber-50 to-orange-50 dark:from-amber-950/80 dark:to-stone-950 p-3 rounded-2xl border border-amber-200 dark:border-amber-500/30 flex items-center justify-between">
         <div>
           <div class="text-[10px] text-amber-400/80 uppercase font-black">Lifetime Savings</div>
-          <div class="text-xl font-black text-amber-300" id="goldModalSavings">₹0</div>
+          <div class="text-xl font-black text-amber-700 dark:text-amber-300" id="goldModalSavings">₹0</div>
         </div>
-        <span class="bg-amber-400 text-stone-950 text-[10px] font-black px-2.5 py-1 rounded-full uppercase">Active Member</span>
+        <span id="goldModalBadge" class="bg-amber-400 text-stone-950 text-[10px] font-black px-2.5 py-1 rounded-full uppercase">Join Club</span>
       </div>
 
-      <div class="space-y-2 text-xs text-stone-300">
+      <div class="space-y-2 text-xs text-stone-700 dark:text-stone-300">
         <div class="flex items-center space-x-2.5">
           <i class="fa-solid fa-motorcycle text-amber-400 text-xs w-4"></i>
           <span><strong>Unlimited FREE Delivery</strong> on carts above ₹99</span>
@@ -2297,8 +2374,8 @@
         </div>
       </div>
 
-      <button onclick="showToast('Your Gold Membership is active & auto-applied!'); closeThelaGoldModal();" class="w-full bg-gradient-to-r from-amber-400 to-amber-500 text-stone-950 rounded-xl py-3 text-xs font-black hover:from-amber-300 hover:to-amber-400 transition shadow-md">
-        Continue Enjoying Gold Perks
+      <button id="goldModalActionBtn" onclick="buyThelaGoldMembership()" class="w-full bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 rounded-xl py-3 text-xs font-black transition shadow-md">
+        Buy VIP Membership @ ₹99
       </button>
     </div>
   </div>
@@ -2306,19 +2383,19 @@
   <!-- ============================================================== -->
   <!-- DRAWER: COUPONS & PROMO DEALS (12 ACTIVE VOUCHERS)              -->
   <!-- ============================================================== -->
-  <div id="couponsDrawer" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-end transition-all">
-    <div class="bg-stone-950 text-white w-full sm:max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 overflow-y-auto hide-scrollbar">
-      <div class="p-4 border-b border-stone-800 flex items-center justify-between">
+  <div id="couponsDrawer" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end transition-all">
+    <div class="bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 w-full sm:max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 overflow-y-auto hide-scrollbar border-l border-stone-200 dark:border-stone-800">
+      <div class="p-4 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between">
         <div class="flex items-center space-x-2">
           <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
             <i class="fa-solid fa-percent text-xs"></i>
           </div>
           <div>
-            <h3 class="font-black text-sm text-white">Your Available Coupons</h3>
-            <p class="text-[10px] text-stone-400">12 street food savings vouchers active</p>
+            <h3 class="font-black text-sm text-stone-900 dark:text-white">Your Available Coupons</h3>
+            <p class="text-[10px] text-stone-500 dark:text-stone-400" id="couponsDrawerSubtitle">Coupons unlocked by placing street food orders</p>
           </div>
         </div>
-        <button onclick="closeCouponsDrawer()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center">
+        <button onclick="closeCouponsDrawer()" class="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:text-white flex items-center justify-center">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
@@ -2332,8 +2409,8 @@
   <!-- ============================================================== -->
   <!-- MODAL: FOOD ON TRAIN / RAILWAY EXPRESS DELIVERY                 -->
   <!-- ============================================================== -->
-  <div id="trainFoodModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-stone-900 border border-cyan-500/40 text-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl">
+  <div id="trainFoodModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-stone-900 border border-stone-200 dark:border-cyan-500/40 text-stone-900 dark:text-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-2">
           <div class="w-9 h-9 rounded-xl bg-cyan-500/20 text-cyan-400 flex items-center justify-center">
@@ -2392,19 +2469,19 @@
   <!-- ============================================================== -->
   <!-- DRAWER: THELA WALLET & 1-TAP REFUND CREDITS                    -->
   <!-- ============================================================== -->
-  <div id="walletDrawer" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex justify-end transition-all">
-    <div class="bg-stone-950 text-white w-full sm:max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 overflow-y-auto hide-scrollbar">
-      <div class="p-4 border-b border-stone-800 flex items-center justify-between">
+  <div id="walletDrawer" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end transition-all">
+    <div class="bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 w-full sm:max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200 overflow-y-auto hide-scrollbar border-l border-stone-200 dark:border-stone-800">
+      <div class="p-4 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between">
         <div class="flex items-center space-x-2">
           <div class="w-8 h-8 rounded-xl bg-amber-500/20 text-amber-400 flex items-center justify-center font-bold">
             <i class="fa-solid fa-wallet text-xs"></i>
           </div>
           <div>
-            <h3 class="font-black text-sm text-white">Thela Money Wallet</h3>
-            <p class="text-[10px] text-stone-400">Instant 1-tap checkout & lightning refunds</p>
+            <h3 class="font-black text-sm text-stone-900 dark:text-white">Thela Money Wallet</h3>
+            <p class="text-[10px] text-stone-500 dark:text-stone-400">Instant 1-tap checkout & lightning refunds</p>
           </div>
         </div>
-        <button onclick="closeWalletDrawer()" class="w-8 h-8 rounded-full bg-stone-900 text-stone-400 hover:text-white flex items-center justify-center">
+        <button onclick="closeWalletDrawer()" class="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-900 text-stone-600 dark:text-stone-400 hover:bg-stone-200 dark:hover:text-white flex items-center justify-center">
           <i class="fa-solid fa-xmark text-sm"></i>
         </button>
       </div>
@@ -2419,18 +2496,18 @@
 
         <!-- Recharge Suggestions -->
         <div class="space-y-1.5 text-xs">
-          <label class="font-bold text-stone-400">Quick Recharge Amount</label>
+          <label class="font-bold text-stone-700 dark:text-stone-400">Quick Recharge Amount</label>
           <div class="grid grid-cols-3 gap-2">
-            <button onclick="rechargeWallet(200)" class="py-2 rounded-xl bg-stone-900 border border-stone-800 hover:border-amber-500 text-white font-bold transition">+₹200</button>
-            <button onclick="rechargeWallet(500)" class="py-2 rounded-xl bg-stone-900 border border-stone-800 hover:border-amber-500 text-white font-bold transition">+₹500</button>
-            <button onclick="rechargeWallet(1000)" class="py-2 rounded-xl bg-stone-900 border border-stone-800 hover:border-amber-500 text-white font-bold transition">+₹1000</button>
+            <button onclick="rechargeWallet(200)" class="py-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 hover:border-amber-500 text-stone-900 dark:text-white font-bold transition shadow-xs">+₹200</button>
+            <button onclick="rechargeWallet(500)" class="py-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 hover:border-amber-500 text-stone-900 dark:text-white font-bold transition shadow-xs">+₹500</button>
+            <button onclick="rechargeWallet(1000)" class="py-2 rounded-xl bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 hover:border-amber-500 text-stone-900 dark:text-white font-bold transition shadow-xs">+₹1000</button>
           </div>
         </div>
 
         <!-- Transactions history -->
         <div class="space-y-2">
-          <div class="text-xs font-black text-stone-400 uppercase tracking-wider">Recent Transactions</div>
-          <div class="bg-stone-900 border border-stone-800 rounded-2xl p-4 text-center text-xs text-stone-500">
+          <div class="text-xs font-black text-stone-500 dark:text-stone-400 uppercase tracking-wider">Recent Transactions</div>
+          <div class="bg-stone-50 dark:bg-stone-900 border border-stone-200 dark:border-stone-800 rounded-2xl p-4 text-center text-xs text-stone-500 dark:text-stone-400">
             <i class="fa-solid fa-clock-rotate-left text-2xl text-stone-700 mb-1"></i>
             <div>No recent wallet debits or recharges</div>
           </div>
