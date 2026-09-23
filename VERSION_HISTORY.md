@@ -487,7 +487,7 @@ flowchart LR
 
 ### `v2.1.3` — Partner KDS Control Header Layout & Touch Optimization
 - **Release Date**: September 23, 2026
-- **Git Commit**: `TBD` (`fix: optimize partner KDS header layout and touch targets (v2.1.3)`)
+- **Git Commit**: `98bfd95` (`fix: optimize partner KDS control header layout and touch targets (v2.1.3)`)
 - **Key Architectural Accomplishments**:
   - **Prominent Top-Right CTA Positioning**:
     - Relocated the **New Stall Register** button to the top-right corner of the Vendor KDS card, completely filling the previously vacant whitespace next to the header title.
@@ -505,7 +505,7 @@ flowchart LR
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `v2.1.3` | 2026-09-23 | UI & Mobile UX | Optimize partner KDS control header layout and touch targets (v2.1.3) |
+| `98bfd95` | 2026-09-23 | UI & Mobile UX | Optimize partner KDS control header layout and touch targets (v2.1.3) |
 | `27c6a60` | 2026-09-21 | Admin Operations | Administrative stall and rider deletion engine with UI controls (v2.1.2) |
 | `9c778dd` | 2026-09-21 | Data Integrity | Eliminate 86/85 placeholder and enforce dynamic Menu Availability (v2.1.1) |
 | `92c7b8b` | 2026-09-21 | Core Platform | Server-authoritative Vendor KDS, dynamic menu availability, role serializers & real-time order operations (v2.1.0) |
