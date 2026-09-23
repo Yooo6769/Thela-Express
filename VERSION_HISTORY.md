@@ -2,8 +2,8 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.1.2`  
-**Current Date**: September 21, 2026  
+**Current Production Version**: `v2.1.3`  
+**Current Date**: September 23, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
 **Local Document Paths**:
@@ -36,6 +36,7 @@ flowchart LR
     v207 --> v210["v2.1.0<br/>Server-Authoritative Vendor KDS & Real-Time Ops"]
     v210 --> v211["v2.1.1<br/>Zero 86/85 & Dynamic Menu Availability"]
     v211 --> v212["v2.1.2<br/>Admin Application Deletion & Pruning Engine"]
+    v212 --> v213["v2.1.3<br/>Partner KDS Control Header Layout & Touch Optimization"]
 ```
 
 ---
@@ -484,11 +485,28 @@ flowchart LR
 
 ---
 
+### `v2.1.3` — Partner KDS Control Header Layout & Touch Optimization
+- **Release Date**: September 23, 2026
+- **Git Commit**: `TBD` (`fix: optimize partner KDS header layout and touch targets (v2.1.3)`)
+- **Key Architectural Accomplishments**:
+  - **Prominent Top-Right CTA Positioning**:
+    - Relocated the **New Stall Register** button to the top-right corner of the Vendor KDS card, completely filling the previously vacant whitespace next to the header title.
+    - Upgraded button styling to a vibrant gradient (`from-orange-500 to-amber-600`) with an explicit circle-plus icon (`fa-circle-plus`), rounded pill corners (`rounded-2xl`), subtle drop shadow, and a generous 40px+ touch target.
+  - **Full-Width Stall Selector Decoupling**:
+    - Removed the cramped inline button from the Active Stall dropdown row.
+    - Decoupled `<select id="vendorStallSelect">` into its own full-width container featuring a storefront icon (`fa-store`), clear label, and custom dropdown chevron (`fa-chevron-down`), eliminating horizontal overflow, text clipping, and off-screen button pushing on mobile screens.
+  - **Mobile Responsive Balance & Strict Invariant Preservation**:
+    - Preserved all state machine, socket bindings, and event handlers (`onVendorStallChange()`, `vendorToggleOpenBtn`, `vendorOpenLabel`).
+    - Retained 100% localization coverage across all 12 Indian languages using `data-i18n="new_stall_reg"`.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `v2.1.2` | 2026-09-21 | Admin Operations | Administrative stall and rider deletion engine with UI controls (v2.1.2) |
+| `v2.1.3` | 2026-09-23 | UI & Mobile UX | Optimize partner KDS control header layout and touch targets (v2.1.3) |
+| `27c6a60` | 2026-09-21 | Admin Operations | Administrative stall and rider deletion engine with UI controls (v2.1.2) |
 | `9c778dd` | 2026-09-21 | Data Integrity | Eliminate 86/85 placeholder and enforce dynamic Menu Availability (v2.1.1) |
 | `92c7b8b` | 2026-09-21 | Core Platform | Server-authoritative Vendor KDS, dynamic menu availability, role serializers & real-time order operations (v2.1.0) |
 | `60ba291` | 2026-09-21 | UI & Accessibility | Crystal-clear FSSAI dark theme contrast and balanced single-line hero badges across onboarding portals (v2.0.7) |
