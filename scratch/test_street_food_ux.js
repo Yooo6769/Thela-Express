@@ -39,11 +39,12 @@ test('Header has Street Carts badge and zero fake "District" branding', () => {
   assert(!html.includes('>District</span>'), 'Still contains copied Zomato District pill');
 });
 
-test('Header wallet pill & neutral avatar icon exist with dynamic VIP crown', () => {
+test('Header wallet pill & explicit prominent Log in button exist with dynamic VIP crown', () => {
   assert(html.includes('headerWalletAmount'), 'Missing wallet pill');
   assert(html.includes('id="authBtn"'), 'Missing auth button');
-  assert(html.includes('id="headerCrownBadge"'), 'Missing #headerCrownBadge');
-  assert(appJs.includes('crownBadge.classList.toggle(\'hidden\', !isVip)'), 'Crown badge not gated by VIP status');
+  assert(html.includes('<span>Log in</span>'), 'Missing explicit Log in label in header');
+  assert(appJs.includes('if (isVip)'), 'VIP status logic missing in updateAuthUI');
+  assert(appJs.includes('<i class="fa-solid fa-crown text-[6px]"></i>'), 'Crown badge not dynamically rendered for VIP');
 });
 
 test('Search row has integrated voice mic & pure veg toggle switch', () => {
@@ -98,11 +99,13 @@ test('Customer UI contains zero restaurant "Dining" tabs or references', () => {
   assert(!html.includes('Your dining rewards'), 'Still contains Your dining rewards');
 });
 
-test('Floating bottom dock has Home, Under 100, Favorites, and Healthy Mode with theme adaptation', () => {
+test('Floating bottom dock has Home, Under 100, Favorites, Account/Login, and Healthy Mode with theme adaptation', () => {
   assert(html.includes('id="floatingBottomDock"'), 'Missing #floatingBottomDock');
   assert(html.includes('switchDockTab(\'home\')'), 'Missing dock home tab');
   assert(html.includes('switchDockTab(\'under100\')'), 'Missing dock under100 tab');
   assert(html.includes('switchDockTab(\'favorites\')'), 'Missing dock favorites tab');
+  assert(html.includes('id="dockTabAccount"'), 'Missing dock Account/Login tab');
+  assert(html.includes('id="dockAccountLabel"'), 'Missing dockAccountLabel');
   assert(html.includes('toggleHealthyMode()'), 'Missing dock healthy mode tab');
   assert(html.includes('bg-white/95 dark:bg-stone-950/95'), 'Dock does not adapt to light theme');
 });

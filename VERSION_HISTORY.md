@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.2.2`  
+**Current Production Version**: `v2.2.3`  
 **Current Date**: September 23, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -41,6 +41,7 @@ flowchart LR
     v214 --> v220["v2.2.0<br/>Zomato-Inspired Dynamic Customer App & VIP Center"]
     v220 --> v221["v2.2.1<br/>Purge Restaurant Dining & Fake Data; Enforce 100% Street Food Authenticity"]
     v221 --> v222["v2.2.2<br/>Theme Adaptation, Harmonized Atmosphere, Animated Veg Toggle, Dynamic Coupons & Buyable VIP"]
+    v222 --> v223["v2.2.3<br/>Explicit Prominent Login Button & Bottom Dock Account Access"]
 ```
 
 ---
@@ -519,6 +520,59 @@ flowchart LR
     - Added green **"✓ Approve & Launch"** (`POST /api/admin/stalls/:id/quick-approve`) and **"✓ Activate"** (`POST /api/admin/riders/:id/quick-approve`) buttons, allowing operators to instantly promote submitted accounts to live production.
   - **Search & Status Filtering**:
     - Added real-time client-side search by name, phone, area, and status (All, Live & Open, Pending Approval) for both stalls and delivery fleet.
+
+---
+
+### `v2.2.0` — Zomato-Inspired Dynamic Customer App & VIP Center
+- **Release Date**: September 23, 2026
+- **Git Commit**: `a944fdc` (`feat: zomato-inspired dynamic customer storefront and VIP center (v2.2.0)`)
+- **Key Architectural Accomplishments**:
+  - **Dynamic Festive Food Hero Carousel**: Multi-banner carousel with auto-sliding cards, promo codes, and indicator dots.
+  - **Circular Food Category Stories Rail**: Horizontal rail featuring 11 authentic street food specialties with animated badges.
+  - **Quick Filter Pills & Bottom Dock**: Under ₹100, Top Rated, Near & Fast, and Eco Packaging filters with sticky bottom navigation.
+  - **Customer VIP Center & Thela Wallet Drawer**: Profile modal and instant wallet balance view.
+
+---
+
+### `v2.2.1` — Purge Restaurant Dining & Fake Data; Enforce 100% Street Food Authenticity
+- **Release Date**: September 23, 2026
+- **Git Commit**: `a9146a7` (`feat: purge restaurant dining, fake profiles, and fake addresses; enforce authentic street food cart UX (v2.2.1)`)
+- **Key Architectural Accomplishments**:
+  - **Purge Restaurant Dining & Copied Profiles**: Removed dining tabs and fake personal profiles/addresses.
+  - **Universal Test OTP `1234`**: Integrated universal test code `1234` for rapid profile testing and development.
+  - **Neutral Street Food Discovery**: Defaulted location to neutral prompt and set profile defaults to "Street Food Explorer".
+
+---
+
+### `v2.2.2` — Theme Adaptation, Harmonized Atmosphere, Animated Veg Toggle, Dynamic Coupons & Buyable VIP
+- **Release Date**: September 23, 2026
+- **Git Commit**: `90257b2` (`feat: harmonize floating atmosphere background, adapt profile & banners to theme, fix visual veg toggle, remove 1971 fake count, dynamic coupons & buyable VIP (v2.2.2)`)
+- **Key Architectural Accomplishments**:
+  - **Atmospheric Background Harmonization**: Calibrated opacities (0.07 high, 0.05 medium) and blend modes (`multiply` on Light, `screen` on Dark) so street motifs never clash with body text.
+  - **Zero Fake 1,971 Stalls Count**: Removed hardcoded count; count dynamically renders only when active stalls > 0.
+  - **Visual & Animated VEG Toggle**: Physically animates switch thumb (`translate-x-3.5`) and colors track emerald (`bg-emerald-600`).
+  - **Interactive Quick Filter Drawer**: Added responsive filter modal with cuisine, budget, rating, and distance options.
+  - **Buyable VIP Club (@ ₹99)**: VIP membership is no longer granted by default; must be purchased, unlocking avatar crown and benefits.
+  - **Dynamic Earned Coupons**: Coupons start at `0 available` and are dynamically awarded upon completed orders.
+  - **Theme-Adaptive Modals & Drawers**: Converted Profile Drawer, Bottom Dock, and Eco Banner from hardcoded black to dynamic Light/Dark theme styles.
+
+---
+
+### `v2.2.3` — Explicit Prominent Login Button & Bottom Dock Account Access
+- **Release Date**: September 23, 2026
+- **Git Commit**: `v2.2.3` (pending commit)
+- **Key Architectural Accomplishments**:
+  - **Prominent Header "Log in" Pill**:
+    - Replaced the obscure 32px circular silhouette button with an explicit, high-visibility amber pill button: `<button id="authBtn">...<i class="fa-solid fa-arrow-right-to-bracket"></i><span>Log in</span></button>`.
+    - Eliminates user confusion when logged out; clearly invites user to log in or create an account.
+    - Dynamically swaps to user initials avatar (and gold crown badge if VIP) upon successful login.
+  - **1-Tap Bottom Dock "Account / Login" Tab**:
+    - Injected `#dockTabAccount` into `#floatingBottomDock`, providing instant 1-tap thumb access on mobile viewports.
+    - Displays `Login` with user icon when unauthenticated, and switches to first name with amber accent when logged in.
+  - **Theme-Adapted Authentication Modal**:
+    - Restyled `#authModal` inputs and dialog card to support both Light and Dark modes (`bg-white dark:bg-stone-900 border-stone-200 dark:border-stone-800`).
+  - **Automated Verification**:
+    - Updated `scratch/test_street_food_ux.js` to assert explicit login button in header and dock. All 19 tests passing 100%.
 
 ---
 

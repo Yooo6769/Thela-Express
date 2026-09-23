@@ -446,14 +446,10 @@
           <span id="headerCartBadge" class="hidden ml-1 px-1.5 py-0.2 bg-white text-amber-700 rounded-full text-[10px] font-black">0</span>
         </button>
 
-        <!-- Auth / Profile Button (Only shows VIP crown if membership bought) -->
-        <button id="authBtn" onclick="handleAuthBtnClick()" class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-stone-100 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 shadow-sm hover:scale-105 transition shrink-0" title="My Profile & Settings">
-          <div id="headerAvatarInner" class="w-full h-full rounded-full flex items-center justify-center font-black text-xs sm:text-sm text-stone-700 dark:text-stone-200">
-            <span id="headerAvatarInitial"><i class="fa-regular fa-user text-xs"></i></span>
-          </div>
-          <span id="headerCrownBadge" class="hidden absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-500 text-stone-950 rounded-full flex items-center justify-center text-[7px] font-black shadow-xs">
-            <i class="fa-solid fa-crown text-[6px]"></i>
-          </span>
+        <!-- Auth / Profile / Login Button (Explicit Login pill when logged out, Avatar when logged in) -->
+        <button id="authBtn" onclick="handleAuthBtnClick()" class="flex items-center space-x-1.5 px-3 py-1.5 sm:px-3.5 sm:py-2 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs shadow-sm transition active:scale-95 shrink-0 cursor-pointer" title="Click to Log In / Sign Up">
+          <i class="fa-solid fa-arrow-right-to-bracket text-xs"></i>
+          <span>Log in</span>
         </button>
       </div>
     </div>
@@ -1602,31 +1598,31 @@
   <!-- MODAL: PHONE NUMBER OTP AUTHENTICATION                         -->
   <!-- ============================================================== -->
   <div id="authModal" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
-    <div class="bg-white w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl">
+    <div class="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 w-full max-w-sm rounded-3xl p-5 space-y-4 shadow-2xl border border-stone-200 dark:border-stone-800">
       <div class="flex items-center justify-between">
         <div class="flex items-center space-x-2">
-          <div class="w-9 h-9 rounded-xl bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+          <div class="w-9 h-9 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
             <i class="fa-solid fa-mobile-screen"></i>
           </div>
-          <h3 class="font-extrabold text-base text-gray-900">Phone Login</h3>
+          <h3 class="font-extrabold text-base text-stone-900 dark:text-white">Phone Login</h3>
         </div>
         <button onclick="closeAuthModal()" class="text-gray-400 hover:text-gray-600">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
-      <p class="text-xs text-gray-500">Enter your name and mobile number to receive live tracking and delivery updates.</p>
+      <p class="text-xs text-stone-500 dark:text-stone-400">Enter your name and mobile number to receive live tracking and delivery updates.</p>
 
       <div class="space-y-3">
         <div>
           <input type="text" id="authNameInput" placeholder="Enter your full name" value=""
-            class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+            class="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-stone-900 dark:text-white rounded-xl px-3 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
         </div>
 
         <div class="relative">
           <span class="absolute left-3 top-1/2 -translate-y-1/2 text-xs font-bold text-gray-500">+91</span>
           <input type="tel" id="authPhoneInput" maxlength="10" placeholder="10-digit mobile number" value=""
-            class="w-full bg-white border border-gray-200 rounded-xl pl-12 pr-3 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+            class="w-full bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-stone-900 dark:text-white rounded-xl pl-12 pr-3 py-2.5 text-sm font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
         </div>
 
         <div id="authOtpSection" class="hidden space-y-2">
@@ -1635,7 +1631,7 @@
             <span class="text-orange-600 font-bold cursor-pointer" onclick="handleSendOtp()">Resend</span>
           </div>
           <input type="text" id="authOtpInput" maxlength="4" placeholder="Enter 4-digit OTP" value=""
-            class="w-full text-center tracking-widest text-lg font-mono font-bold bg-gray-50 border border-gray-200 rounded-xl py-2 focus:outline-none focus:ring-2 focus:ring-orange-500">
+            class="w-full text-center tracking-widest text-lg font-mono font-bold bg-stone-50 dark:bg-stone-950 border border-stone-200 dark:border-stone-800 text-stone-900 dark:text-white rounded-xl py-2 focus:outline-none focus:ring-2 focus:ring-amber-500">
           <p class="text-[11px] text-stone-500 text-center py-1">
             Enter the 4-digit code sent to your phone or use test code: <strong class="text-orange-600 font-mono">1234</strong>
           </p>
@@ -2311,9 +2307,15 @@
       </button>
 
       <!-- Favorites Tab -->
-      <button onclick="switchDockTab('favorites')" id="dockTabFavorites" class="flex flex-col items-center px-3 py-1 rounded-full text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white font-bold transition">
+      <button onclick="switchDockTab('favorites')" id="dockTabFavorites" class="flex flex-col items-center px-2.5 py-1 rounded-full text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white font-bold transition">
         <i class="fa-solid fa-heart text-sm"></i>
         <span class="text-[9px] mt-0.5">Favorites</span>
+      </button>
+
+      <!-- Account / Login Tab (Instant 1-tap access from dock) -->
+      <button onclick="handleAuthBtnClick()" id="dockTabAccount" class="flex flex-col items-center px-2.5 py-1 rounded-full text-stone-500 hover:text-stone-900 dark:text-stone-400 dark:hover:text-white font-bold transition" title="Account / Login">
+        <i class="fa-regular fa-user text-sm" id="dockAccountIcon"></i>
+        <span class="text-[9px] mt-0.5" id="dockAccountLabel">Login</span>
       </button>
 
       <!-- Healthy Mode / Veg Pill Button (Screenshot 1) -->
