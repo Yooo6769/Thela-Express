@@ -72,8 +72,34 @@
     </div>
   </header>
 
+  <!-- Floating Toast Notification System -->
+  <div id="adminToastContainer" class="fixed top-20 right-5 z-50 flex flex-col space-y-2 pointer-events-none max-w-sm w-full"></div>
+
   <!-- Main Admin Dashboard Container -->
-  <main class="flex-1 max-w-7xl w-full mx-auto px-6 py-6 space-y-6">
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 space-y-6">
+    
+    <!-- Quick Operations & Simple Guide Banner -->
+    <div class="bg-gradient-to-r from-orange-950/40 via-gray-850 to-gray-800 border border-orange-500/30 rounded-2xl p-4 sm:p-5 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 shadow-sm">
+      <div class="space-y-1">
+        <div class="flex items-center space-x-2">
+          <span class="px-2.5 py-0.5 rounded-full text-[10px] font-black uppercase bg-orange-500/20 text-orange-400 border border-orange-500/30">Operations Command</span>
+          <h2 class="text-sm sm:text-base font-black text-white">Simple Platform Manager</h2>
+        </div>
+        <p class="text-xs text-gray-300">
+          Easily add stalls and riders, approve accounts in 1 click, or remove test records with the direct <span class="text-red-400 font-bold">Delete</span> button.
+        </p>
+      </div>
+      <div class="flex items-center space-x-2.5 shrink-0 w-full sm:w-auto">
+        <button type="button" onclick="openQuickAddVendorModal()" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 active:scale-95 text-white font-extrabold text-xs flex items-center justify-center space-x-2 shadow-md transition">
+          <i class="fa-solid fa-circle-plus"></i>
+          <span>+ Add Vendor / Stall</span>
+        </button>
+        <button type="button" onclick="openQuickAddRiderModal()" class="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 active:scale-95 text-white font-extrabold text-xs flex items-center justify-center space-x-2 shadow-md transition">
+          <i class="fa-solid fa-user-plus"></i>
+          <span>+ Add Rider</span>
+        </button>
+      </div>
+    </div>
     
     <!-- Top KPI Overview Metrics -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -103,20 +129,20 @@
     </div>
 
     <!-- Admin Tabs Bar -->
-    <div class="flex items-center space-x-2 border-b border-gray-800 pb-2">
-      <button onclick="switchAdminTab('stalls')" id="tabBtnStalls" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white transition">
+    <div class="flex items-center space-x-2 border-b border-gray-800 pb-2 overflow-x-auto">
+      <button onclick="switchAdminTab('stalls')" id="tabBtnStalls" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-orange-600 text-white transition shrink-0">
         🍽️ <span data-i18n="tab_stalls">Stalls & Carts</span> (<span id="countStallsTab">0</span>)
       </button>
-      <button onclick="switchAdminTab('riders')" id="tabBtnRiders" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-white transition">
+      <button onclick="switchAdminTab('riders')" id="tabBtnRiders" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-white transition shrink-0">
         🛵 <span data-i18n="tab_riders">Delivery Fleet</span> (<span id="countRidersTab">0</span>)
       </button>
-      <button onclick="switchAdminTab('orders')" id="tabBtnOrders" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-white transition">
+      <button onclick="switchAdminTab('orders')" id="tabBtnOrders" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-white transition shrink-0">
         📦 <span data-i18n="tab_orders">Live Order Ledger</span>
       </button>
-      <button onclick="switchAdminTab('payouts')" id="tabBtnPayouts" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-white transition">
+      <button onclick="switchAdminTab('payouts')" id="tabBtnPayouts" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-white transition shrink-0">
         💰 <span data-i18n="tab_financial">Payout Settlements (UPI)</span>
       </button>
-      <button onclick="switchAdminTab('settings')" id="tabBtnSettings" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-white transition">
+      <button onclick="switchAdminTab('settings')" id="tabBtnSettings" class="admin-tab px-4 py-2 rounded-xl text-xs font-bold bg-gray-800 text-gray-400 hover:text-white transition shrink-0">
         ⚙️ <span data-i18n="tab_settings">Platform Settings</span>
       </button>
     </div>
@@ -124,9 +150,33 @@
     <!-- TAB 1: STALLS MANAGEMENT -->
     <section id="tabContentStalls" class="space-y-4">
       <div class="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden shadow-sm">
-        <div class="p-4 border-b border-gray-700 flex justify-between items-center">
-          <h2 class="font-extrabold text-sm text-white" data-i18n="registered_stalls_title">Registered Street Food Stalls</h2>
-          <span class="text-xs text-gray-400" data-i18n="stalls_subtitle">1-click verify & launch vendor kitchen POS</span>
+        <div class="p-4 border-b border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="font-extrabold text-sm sm:text-base text-white" data-i18n="registered_stalls_title">Registered Street Food Stalls</h2>
+              <span id="stallsFilterCount" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-gray-700 text-gray-300">0 Stalls</span>
+            </div>
+            <p class="text-xs text-gray-400 mt-0.5" data-i18n="stalls_subtitle">1-click verify & launch vendor kitchen POS</p>
+          </div>
+          <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+            <!-- Search Input -->
+            <div class="relative min-w-[180px] flex-1 sm:flex-none">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+              <input type="text" id="stallSearchInput" oninput="filterStallsTable()" placeholder="Search stall, phone..." class="w-full bg-gray-900 border border-gray-700 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-orange-500">
+            </div>
+            <!-- Status Filter -->
+            <select id="stallStatusFilter" onchange="filterStallsTable()" class="bg-gray-900 border border-gray-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-gray-200 focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <option value="all">All Statuses</option>
+              <option value="live">Live & Open</option>
+              <option value="pending">Pending Approval</option>
+              <option value="closed">Closed / Inactive</option>
+            </select>
+            <!-- Add Stall Button -->
+            <button type="button" onclick="openQuickAddVendorModal()" class="px-3.5 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 active:scale-95 text-white font-extrabold text-xs flex items-center space-x-1.5 shadow-sm transition shrink-0">
+              <i class="fa-solid fa-circle-plus"></i>
+              <span data-i18n="new_stall_reg">+ Add Stall</span>
+            </button>
+          </div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
@@ -152,9 +202,33 @@
     <!-- TAB 2: RIDERS FLEET MANAGEMENT -->
     <section id="tabContentRiders" class="hidden space-y-4">
       <div class="bg-gray-800 border border-gray-700 rounded-2xl overflow-hidden shadow-sm">
-        <div class="p-4 border-b border-gray-700 flex justify-between items-center">
-          <h2 class="font-extrabold text-sm text-white" data-i18n="registered_riders_title">Registered Delivery Partners</h2>
-          <span class="text-xs text-gray-400" data-i18n="riders_subtitle">Manage fleet active status & payouts</span>
+        <div class="p-4 border-b border-gray-700 flex flex-col md:flex-row md:items-center justify-between gap-3">
+          <div>
+            <div class="flex items-center space-x-2">
+              <h2 class="font-extrabold text-sm sm:text-base text-white" data-i18n="registered_riders_title">Registered Delivery Partners</h2>
+              <span id="ridersFilterCount" class="px-2 py-0.5 rounded-full text-[10px] font-black bg-gray-700 text-gray-300">0 Riders</span>
+            </div>
+            <p class="text-xs text-gray-400 mt-0.5" data-i18n="riders_subtitle">Manage fleet active status & payouts</p>
+          </div>
+          <div class="flex items-center space-x-2 flex-wrap gap-y-2">
+            <!-- Search Input -->
+            <div class="relative min-w-[180px] flex-1 sm:flex-none">
+              <i class="fa-solid fa-magnifying-glass absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-xs"></i>
+              <input type="text" id="riderSearchInput" oninput="filterRidersTable()" placeholder="Search rider, phone..." class="w-full bg-gray-900 border border-gray-700 rounded-xl pl-8 pr-3 py-1.5 text-xs text-white placeholder-gray-500 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <!-- Status Filter -->
+            <select id="riderStatusFilter" onchange="filterRidersTable()" class="bg-gray-900 border border-gray-700 rounded-xl px-2.5 py-1.5 text-xs font-bold text-gray-200 focus:outline-none focus:ring-2 focus:ring-emerald-500">
+              <option value="all">All Riders</option>
+              <option value="online">Online & Ready</option>
+              <option value="pending">Pending Review</option>
+              <option value="offline">Offline</option>
+            </select>
+            <!-- Add Rider Button -->
+            <button type="button" onclick="openQuickAddRiderModal()" class="px-3.5 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 active:scale-95 text-white font-extrabold text-xs flex items-center space-x-1.5 shadow-sm transition shrink-0">
+              <i class="fa-solid fa-user-plus"></i>
+              <span data-i18n="new_rider_reg">+ Add Rider</span>
+            </button>
+          </div>
         </div>
         <div class="overflow-x-auto">
           <table class="w-full text-left text-xs">
@@ -391,6 +465,126 @@
         </form>
       </div>
     </section>
+
+    <!-- Quick Add Vendor Modal -->
+    <div id="quickAddVendorModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-gray-800 border border-gray-700 max-w-md w-full rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in duration-150">
+        <div class="flex items-center justify-between border-b border-gray-700 pb-3">
+          <div class="flex items-center space-x-2 text-orange-500">
+            <i class="fa-solid fa-circle-plus text-lg"></i>
+            <h3 class="font-extrabold text-base text-white">Add New Food Stall</h3>
+          </div>
+          <button type="button" onclick="closeQuickAddVendorModal()" class="w-8 h-8 rounded-full bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center text-sm transition">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <form id="quickVendorForm" onsubmit="submitQuickAddVendor(event)" class="space-y-3.5 text-xs">
+          <div>
+            <label class="block font-bold text-gray-300 mb-1">Stall or Cart Name *</label>
+            <input type="text" id="quickVendorName" required placeholder="e.g. Sharma Chaat Bhandar" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white font-bold focus:outline-none focus:ring-2 focus:ring-orange-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-gray-300 mb-1">Owner Name</label>
+              <input type="text" id="quickVendorOwner" placeholder="e.g. Rajesh Sharma" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white font-medium focus:outline-none focus:ring-2 focus:ring-orange-500">
+            </div>
+            <div>
+              <label class="block font-bold text-gray-300 mb-1">Owner Phone (10-digit) *</label>
+              <input type="tel" id="quickVendorPhone" required maxlength="10" placeholder="e.g. 9876543210" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-orange-400 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-orange-500">
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-gray-300 mb-1">Food Category</label>
+              <select id="quickVendorCategory" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+                <option value="chaat">Chaat & Golgappe</option>
+                <option value="rolls">Rolls & Frankies</option>
+                <option value="south_indian">Dosa & Idli</option>
+                <option value="momos">Momos & Dimsums</option>
+                <option value="beverages">Chai & Beverages</option>
+                <option value="sweets">Jalebi & Sweets</option>
+                <option value="parathas">Parathas & Thali</option>
+              </select>
+            </div>
+            <div>
+              <label class="block font-bold text-gray-300 mb-1">Street Address / Landmark</label>
+              <input type="text" id="quickVendorAddress" placeholder="e.g. Near Metro Station" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white font-medium focus:outline-none focus:ring-2 focus:ring-orange-500">
+            </div>
+          </div>
+
+          <div class="bg-gray-900/80 border border-gray-700/60 rounded-xl p-3 flex items-start space-x-2.5">
+            <input type="checkbox" id="quickVendorMakeLive" checked class="mt-0.5 rounded text-orange-600 focus:ring-orange-500 w-4 h-4 cursor-pointer">
+            <label for="quickVendorMakeLive" class="cursor-pointer text-gray-300 select-none">
+              <span class="font-bold text-white block">Make Live & Open Immediately</span>
+              <span class="text-[11px] text-gray-400 block">Pre-configures sample menu items and verifies gates so customers can order right away.</span>
+            </label>
+          </div>
+
+          <div class="flex items-center space-x-2 pt-2 border-t border-gray-700">
+            <button type="button" onclick="closeQuickAddVendorModal()" class="flex-1 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold transition">Cancel</button>
+            <button type="submit" id="quickVendorSubmitBtn" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-orange-500 to-amber-600 hover:from-orange-600 hover:to-amber-700 text-white font-extrabold shadow-md transition">Save & Launch Stall</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Quick Add Rider Modal -->
+    <div id="quickAddRiderModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
+      <div class="bg-gray-800 border border-gray-700 max-w-md w-full rounded-3xl p-6 shadow-2xl space-y-4 animate-in fade-in duration-150">
+        <div class="flex items-center justify-between border-b border-gray-700 pb-3">
+          <div class="flex items-center space-x-2 text-emerald-500">
+            <i class="fa-solid fa-user-plus text-lg"></i>
+            <h3 class="font-extrabold text-base text-white">Add Delivery Partner</h3>
+          </div>
+          <button type="button" onclick="closeQuickAddRiderModal()" class="w-8 h-8 rounded-full bg-gray-700 text-gray-400 hover:text-white flex items-center justify-center text-sm transition">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <form id="quickRiderForm" onsubmit="submitQuickAddRider(event)" class="space-y-3.5 text-xs">
+          <div>
+            <label class="block font-bold text-gray-300 mb-1">Rider Full Name *</label>
+            <input type="text" id="quickRiderName" required placeholder="e.g. Vikram Kumar" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block font-bold text-gray-300 mb-1">Mobile Phone (10-digit) *</label>
+              <input type="tel" id="quickRiderPhone" required maxlength="10" placeholder="e.g. 9876543211" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-emerald-400 font-mono font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+            </div>
+            <div>
+              <label class="block font-bold text-gray-300 mb-1">Vehicle Type</label>
+              <select id="quickRiderVehicle" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500">
+                <option value="EV Scooter">⚡ EV Scooter</option>
+                <option value="Bicycle">🚲 Eco Bicycle</option>
+                <option value="Motorcycle">🛵 Motorcycle</option>
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <label class="block font-bold text-gray-300 mb-1">Operating Zone / Hub</label>
+            <input type="text" id="quickRiderArea" placeholder="e.g. Koramangala 5th Block" class="w-full bg-gray-900 border border-gray-700 rounded-xl p-2.5 text-white font-medium focus:outline-none focus:ring-2 focus:ring-emerald-500">
+          </div>
+
+          <div class="bg-gray-900/80 border border-gray-700/60 rounded-xl p-3 flex items-start space-x-2.5">
+            <input type="checkbox" id="quickRiderMakeActive" checked class="mt-0.5 rounded text-emerald-600 focus:ring-emerald-500 w-4 h-4 cursor-pointer">
+            <label for="quickRiderMakeActive" class="cursor-pointer text-gray-300 select-none">
+              <span class="font-bold text-white block">Make Active Immediately</span>
+              <span class="text-[11px] text-gray-400 block">Marks profile approved and duty set to ONLINE for instant delivery gig assignment.</span>
+            </label>
+          </div>
+
+          <div class="flex items-center space-x-2 pt-2 border-t border-gray-700">
+            <button type="button" onclick="closeQuickAddRiderModal()" class="flex-1 py-2.5 rounded-xl bg-gray-700 hover:bg-gray-600 text-gray-300 font-bold transition">Cancel</button>
+            <button type="submit" id="quickRiderSubmitBtn" class="flex-1 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-extrabold shadow-md transition">Save & Activate Rider</button>
+          </div>
+        </form>
+      </div>
+    </div>
 
     <!-- Modal: Vendor Verification & Hygiene Audit Console -->
     <div id="adminAuditModal" class="hidden fixed inset-0 z-50 bg-black/75 backdrop-blur-sm flex items-center justify-center p-4">
@@ -717,15 +911,64 @@
     }
 
     let currentAuditStallId = null;
+    let currentStallFilter = 'all';
+    let currentStallSearch = '';
+    let currentRiderFilter = 'all';
+    let currentRiderSearch = '';
+
+    function filterStallsTable() {
+      currentStallSearch = (document.getElementById('stallSearchInput')?.value || '').toLowerCase().trim();
+      currentStallFilter = document.getElementById('stallStatusFilter')?.value || 'all';
+      renderStallsTable(ADMIN_DATA.stalls || []);
+    }
+
+    function filterRidersTable() {
+      currentRiderSearch = (document.getElementById('riderSearchInput')?.value || '').toLowerCase().trim();
+      currentRiderFilter = document.getElementById('riderStatusFilter')?.value || 'all';
+      renderRidersTable(ADMIN_DATA.riders || []);
+    }
 
     function renderStallsTable(stalls) {
       const tbody = document.getElementById('stallsTableBody');
+      const countBadge = document.getElementById('stallsFilterCount');
       if (!stalls || stalls.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">${t('no_stalls_title', 'No stalls registered yet.')}</td></tr>`;
+        if (countBadge) countBadge.innerText = '0 Stalls';
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-500">
+          <div class="space-y-2">
+            <p class="font-bold">${t('no_stalls_title', 'No stalls registered yet.')}</p>
+            <button onclick="openQuickAddVendorModal()" class="px-3 py-1.5 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-bold text-xs inline-flex items-center space-x-1 transition shadow-sm">
+              <i class="fa-solid fa-circle-plus"></i>
+              <span>+ Add Your First Street Stall</span>
+            </button>
+          </div>
+        </td></tr>`;
         return;
       }
 
-      tbody.innerHTML = stalls.map(s => {
+      // Apply search and status filtering
+      const filtered = stalls.filter(s => {
+        if (currentStallFilter === 'live' && !(s.status === 'LIVE' && s.isOpen)) return false;
+        if (currentStallFilter === 'pending' && s.status === 'LIVE') return false;
+        if (currentStallFilter === 'closed' && !(s.status === 'LIVE' && !s.isOpen)) return false;
+
+        if (currentStallSearch) {
+          const matchName = (s.name || '').toLowerCase().includes(currentStallSearch);
+          const matchOwner = (s.owner_name || '').toLowerCase().includes(currentStallSearch);
+          const matchPhone = (s.owner_phone || '').includes(currentStallSearch);
+          const matchAddr = (s.address || '').toLowerCase().includes(currentStallSearch);
+          if (!matchName && !matchOwner && !matchPhone && !matchAddr) return false;
+        }
+        return true;
+      });
+
+      if (countBadge) countBadge.innerText = `${filtered.length} Stalls`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400 text-xs">No stalls match your search filter "${escapeHtml(currentStallSearch || currentStallFilter)}".</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(s => {
         const status = s.status || 'APPLICATION_SUBMITTED';
         let stBadgeClass = 'bg-amber-900/60 text-amber-300 border border-amber-700/50';
         if (status === 'LIVE') stBadgeClass = 'bg-emerald-900/60 text-emerald-300 border border-emerald-700/50';
@@ -815,23 +1058,28 @@
                 ${status === 'LIVE' ? (s.isOpen ? 'OPEN' : 'CLOSED') : 'INACTIVE'}
               </span>
             </td>
-            <td class="p-3 text-right space-x-1 whitespace-nowrap">
-              <button type="button" onclick="openAuditModal('${s.id}')" class="px-2 py-1 bg-amber-600 hover:bg-amber-500 text-white rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1" title="Audit Regulatory & Hygiene">
-                <i class="fa-solid fa-clipboard-check"></i>
-                <span>Audit</span>
-              </button>
-              <button type="button" onclick="openStallTransitionModal('${s.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1" title="Transition Lifecycle Status">
-                <i class="fa-solid fa-arrows-split-up-and-left"></i>
-                <span>Stage</span>
-              </button>
-              <button type="button" onclick="openTimelineModal('${s.id}', 'stall')" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1" title="View Audit Trail">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-              </button>
-              <a href="/partner.html?role=vendor&stallId=${s.id}" target="_blank" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-[10px] font-bold inline-block">
-                POS ➔
+            <td class="p-3 text-right space-x-1.5 whitespace-nowrap">
+              ${status !== 'LIVE' ? `
+                <button type="button" onclick="quickApproveStall('${s.id}', '${escapeHtml(s.name)}')" class="px-2.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white rounded-xl text-xs font-black transition inline-flex items-center space-x-1 shadow-sm" title="Approve & Launch Immediately in 1 Click">
+                  <i class="fa-solid fa-bolt text-amber-300"></i>
+                  <span>Launch Live</span>
+                </button>
+              ` : `
+                <span class="px-2 py-1 text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 rounded-xl inline-flex items-center space-x-1">
+                  <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                  <span>Live</span>
+                </span>
+              `}
+              <a href="/partner.html?role=vendor&stallId=${s.id}" target="_blank" class="px-2.5 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-xl text-xs font-bold inline-flex items-center space-x-1 transition" title="Open Vendor Kitchen POS Display">
+                <i class="fa-solid fa-store text-orange-400"></i>
+                <span>POS</span>
               </a>
-              <button type="button" onclick="deleteStall('${s.id}', '${escapeHtml(s.name)}')" class="px-2 py-1 bg-red-800/60 hover:bg-red-700 text-red-200 border border-red-700/50 rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1" title="Delete Stall Application">
+              <button type="button" onclick="deleteStallFast('${s.id}', '${escapeHtml(s.name)}')" class="px-2.5 py-1.5 bg-red-600 hover:bg-red-500 active:scale-95 text-white rounded-xl text-xs font-black transition inline-flex items-center space-x-1 shadow-sm" title="Permanently Delete Stall in 1 Click">
                 <i class="fa-solid fa-trash-can"></i>
+                <span>Delete</span>
+              </button>
+              <button type="button" onclick="openAuditModal('${s.id}')" class="px-2 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-400 hover:text-white border border-gray-700 rounded-xl text-xs font-semibold transition inline-flex items-center" title="Full Regulatory Audit">
+                <i class="fa-solid fa-ellipsis-vertical"></i>
               </button>
             </td>
           </tr>
@@ -1018,16 +1266,52 @@
 
     function renderRidersTable(riders) {
       const tbody = document.getElementById('ridersTableBody');
+      const countBadge = document.getElementById('ridersFilterCount');
       if (!riders || riders.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-gray-500">No delivery partners registered yet.</td></tr>`;
+        if (countBadge) countBadge.innerText = '0 Riders';
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-500">
+          <div class="space-y-2">
+            <p class="font-bold">No delivery partners registered yet.</p>
+            <button onclick="openQuickAddRiderModal()" class="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs inline-flex items-center space-x-1 transition shadow-sm">
+              <i class="fa-solid fa-user-plus"></i>
+              <span>+ Add Your First Delivery Rider</span>
+            </button>
+          </div>
+        </td></tr>`;
         return;
       }
-      tbody.innerHTML = riders.map(r => {
+
+      // Apply search and status filtering
+      const filtered = riders.filter(r => {
+        if (currentRiderFilter === 'online' && !r.is_online) return false;
+        if (currentRiderFilter === 'pending' && ['APPROVED', 'AVAILABLE'].includes(r.status)) return false;
+        if (currentRiderFilter === 'offline' && r.is_online) return false;
+
+        if (currentRiderSearch) {
+          const matchName = (r.name || '').toLowerCase().includes(currentRiderSearch);
+          const matchPhone = (r.phone || '').includes(currentRiderSearch);
+          const matchVeh = (r.vehicle || '').toLowerCase().includes(currentRiderSearch);
+          const matchArea = (r.area || '').toLowerCase().includes(currentRiderSearch);
+          if (!matchName && !matchPhone && !matchVeh && !matchArea) return false;
+        }
+        return true;
+      });
+
+      if (countBadge) countBadge.innerText = `${filtered.length} Riders`;
+
+      if (filtered.length === 0) {
+        tbody.innerHTML = `<tr><td colspan="7" class="p-6 text-center text-gray-400 text-xs">No delivery partners match your search filter "${escapeHtml(currentRiderSearch || currentRiderFilter)}".</td></tr>`;
+        return;
+      }
+
+      tbody.innerHTML = filtered.map(r => {
         const status = r.status || 'APPLICATION_SUBMITTED';
         let rBadge = 'bg-amber-900/60 text-amber-300 border border-amber-700/50';
         if (['APPROVED', 'AVAILABLE'].includes(status)) rBadge = 'bg-emerald-900/60 text-emerald-300 border border-emerald-700/50';
         else if (status === 'SUSPENDED') rBadge = 'bg-red-900/60 text-red-300 border border-red-700/50';
         else if (status === 'IDENTITY_REVIEW') rBadge = 'bg-purple-900/60 text-purple-300 border border-purple-700/50';
+
+        const isApproved = ['APPROVED', 'AVAILABLE'].includes(status);
 
         return `
           <tr class="hover:bg-gray-800/80 transition">
@@ -1042,7 +1326,7 @@
             <td class="p-3 text-emerald-400 font-mono">+91 ${r.phone}</td>
             <td class="p-3">
               <div>${r.vehicle}</div>
-              <div class="text-[10px] text-gray-500 font-mono">${r.vehicle_number || 'EV'}</div>
+              <div class="text-[10px] text-gray-500 font-mono">${r.vehicle_number || 'KA-01-EV'}</div>
             </td>
             <td class="p-3 text-gray-300">${r.area || 'Zone pending'}</td>
             <td class="p-3 font-mono text-gray-300">${r.upi_id || `${r.phone}@upi`}</td>
@@ -1051,19 +1335,25 @@
                 ${r.is_online ? 'ONLINE' : 'OFFLINE'}
               </span>
             </td>
-            <td class="p-3 text-right space-x-1 whitespace-nowrap">
-              <button type="button" onclick="openRiderTransitionModal('${r.id}')" class="px-2 py-1 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1">
-                <i class="fa-solid fa-arrows-split-up-and-left"></i>
-                <span>Review</span>
-              </button>
-              <button type="button" onclick="openTimelineModal('${r.id}', 'rider')" class="px-2 py-1 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1">
-                <i class="fa-solid fa-clock-rotate-left"></i>
-              </button>
-              <a href="/partner.html?role=rider&riderId=${r.id}" target="_blank" class="px-2 py-1 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-[10px] font-bold inline-block">
-                ${t('open_rider_console_btn', 'Console ➔')}
+            <td class="p-3 text-right space-x-1.5 whitespace-nowrap">
+              ${!isApproved ? `
+                <button type="button" onclick="quickApproveRider('${r.id}', '${escapeHtml(r.name)}')" class="px-2.5 py-1.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 active:scale-95 text-white rounded-xl text-xs font-black transition inline-flex items-center space-x-1 shadow-sm" title="Activate Delivery Partner in 1 Click">
+                  <i class="fa-solid fa-bolt text-amber-300"></i>
+                  <span>Activate</span>
+                </button>
+              ` : `
+                <span class="px-2 py-1 text-[11px] font-bold text-emerald-400 bg-emerald-950/60 border border-emerald-800/60 rounded-xl inline-flex items-center space-x-1">
+                  <i class="fa-solid fa-circle-check text-emerald-400"></i>
+                  <span>Ready</span>
+                </span>
+              `}
+              <a href="/partner.html?role=rider&riderId=${r.id}" target="_blank" class="px-2.5 py-1.5 bg-gray-700 hover:bg-gray-600 text-gray-200 rounded-xl text-xs font-bold inline-flex items-center space-x-1 transition" title="Open Rider Delivery Console">
+                <i class="fa-solid fa-motorcycle text-emerald-400"></i>
+                <span>Console</span>
               </a>
-              <button type="button" onclick="deleteRider('${r.id}', '${escapeHtml(r.name)}')" class="px-2 py-1 bg-red-800/60 hover:bg-red-700 text-red-200 border border-red-700/50 rounded-lg text-[10px] font-bold transition inline-flex items-center space-x-1" title="Delete Delivery Partner">
+              <button type="button" onclick="deleteRiderFast('${r.id}', '${escapeHtml(r.name)}')" class="px-2.5 py-1.5 bg-red-600 hover:bg-red-500 active:scale-95 text-white rounded-xl text-xs font-black transition inline-flex items-center space-x-1 shadow-sm" title="Permanently Delete Rider in 1 Click">
                 <i class="fa-solid fa-trash-can"></i>
+                <span>Delete</span>
               </button>
             </td>
           </tr>
@@ -1509,10 +1799,30 @@
         .replace(/'/g, '&#039;');
     }
 
-    async function deleteStall(stallId, stallName) {
-      if (!confirm(`Are you sure you want to permanently delete stall "${stallName}"?\n\nThis will remove the stall application and all its menu items.`)) {
-        return;
-      }
+    function showToast(message, color = 'orange') {
+      const container = document.getElementById('adminToastContainer');
+      if (!container) return;
+      const toast = document.createElement('div');
+      let bg = 'bg-orange-600';
+      if (color === 'red') bg = 'bg-red-600';
+      else if (color === 'green') bg = 'bg-emerald-600';
+
+      toast.className = `${bg} text-white px-4 py-3 rounded-2xl text-xs font-black shadow-2xl flex items-center space-x-2 border border-white/20 transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto`;
+      toast.innerHTML = `<span>${message}</span>`;
+      container.appendChild(toast);
+
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+        toast.classList.add('translate-y-0', 'opacity-100');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
+
+    async function deleteStallFast(stallId, stallName) {
       try {
         const res = await fetch(`/api/admin/stalls/${stallId}`, {
           method: 'DELETE',
@@ -1520,21 +1830,18 @@
         });
         const data = await res.json();
         if (data.success) {
-          alert(data.message || 'Stall deleted successfully.');
+          showToast(`🗑️ Stall "${stallName}" deleted completely in 1 click!`, 'red');
           loadAdminData();
         } else {
-          alert(data.error || 'Failed to delete stall.');
+          showToast(data.error || 'Failed to delete stall', 'red');
         }
       } catch (e) {
         console.error(e);
-        alert('Error connecting to server to delete stall.');
+        showToast('Error deleting stall', 'red');
       }
     }
 
-    async function deleteRider(riderId, riderName) {
-      if (!confirm(`Are you sure you want to permanently delete delivery partner "${riderName}"?`)) {
-        return;
-      }
+    async function deleteRiderFast(riderId, riderName) {
       try {
         const res = await fetch(`/api/admin/riders/${riderId}`, {
           method: 'DELETE',
@@ -1542,15 +1849,156 @@
         });
         const data = await res.json();
         if (data.success) {
-          alert(data.message || 'Rider deleted successfully.');
+          showToast(`🗑️ Rider "${riderName}" deleted completely in 1 click!`, 'red');
           loadAdminData();
         } else {
-          alert(data.error || 'Failed to delete rider.');
+          showToast(data.error || 'Failed to delete rider', 'red');
         }
       } catch (e) {
         console.error(e);
-        alert('Error connecting to server to delete rider.');
+        showToast('Error deleting rider', 'red');
       }
+    }
+
+    async function quickApproveStall(stallId, stallName) {
+      try {
+        const res = await fetch(`/api/admin/stalls/${stallId}/quick-approve`, {
+          method: 'POST',
+          headers: { 'Authorization': ADMIN_AUTH_TOKEN }
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`🚀 Stall "${stallName}" is now APPROVED & LIVE!`, 'green');
+          loadAdminData();
+        } else {
+          showToast(data.error || 'Failed to approve stall', 'red');
+        }
+      } catch (e) {
+        console.error(e);
+        showToast('Error approving stall', 'red');
+      }
+    }
+
+    async function quickApproveRider(riderId, riderName) {
+      try {
+        const res = await fetch(`/api/admin/riders/${riderId}/quick-approve`, {
+          method: 'POST',
+          headers: { 'Authorization': ADMIN_AUTH_TOKEN }
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(`🛵 Rider "${riderName}" is now APPROVED & ONLINE!`, 'green');
+          loadAdminData();
+        } else {
+          showToast(data.error || 'Failed to activate rider', 'red');
+        }
+      } catch (e) {
+        console.error(e);
+        showToast('Error activating rider', 'red');
+      }
+    }
+
+    function openQuickAddVendorModal() {
+      document.getElementById('quickVendorForm').reset();
+      document.getElementById('quickVendorMakeLive').checked = true;
+      document.getElementById('quickAddVendorModal').classList.remove('hidden');
+    }
+
+    function closeQuickAddVendorModal() {
+      document.getElementById('quickAddVendorModal').classList.add('hidden');
+    }
+
+    async function submitQuickAddVendor(e) {
+      e.preventDefault();
+      const btn = document.getElementById('quickVendorSubmitBtn');
+      btn.disabled = true;
+      btn.innerText = 'Creating Stall...';
+
+      const payload = {
+        name: document.getElementById('quickVendorName').value.trim(),
+        owner_name: document.getElementById('quickVendorOwner').value.trim() || 'Vendor Owner',
+        owner_phone: document.getElementById('quickVendorPhone').value.trim(),
+        category: document.getElementById('quickVendorCategory').value,
+        address: document.getElementById('quickVendorAddress').value.trim() || 'Local Street Market',
+        makeLive: document.getElementById('quickVendorMakeLive').checked
+      };
+
+      try {
+        const res = await fetch('/api/admin/stalls', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': ADMIN_AUTH_TOKEN },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          closeQuickAddVendorModal();
+          showToast(payload.makeLive ? `🎉 Stall "${data.stall.name}" created and launched LIVE!` : `✓ Stall "${data.stall.name}" registered!`, 'green');
+          loadAdminData();
+        } else {
+          alert(data.error || 'Failed to create stall');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Server error creating stall');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Save & Launch Stall';
+      }
+    }
+
+    function openQuickAddRiderModal() {
+      document.getElementById('quickRiderForm').reset();
+      document.getElementById('quickRiderMakeActive').checked = true;
+      document.getElementById('quickAddRiderModal').classList.remove('hidden');
+    }
+
+    function closeQuickAddRiderModal() {
+      document.getElementById('quickAddRiderModal').classList.add('hidden');
+    }
+
+    async function submitQuickAddRider(e) {
+      e.preventDefault();
+      const btn = document.getElementById('quickRiderSubmitBtn');
+      btn.disabled = true;
+      btn.innerText = 'Registering Rider...';
+
+      const payload = {
+        name: document.getElementById('quickRiderName').value.trim(),
+        phone: document.getElementById('quickRiderPhone').value.trim(),
+        vehicle: document.getElementById('quickRiderVehicle').value,
+        area: document.getElementById('quickRiderArea').value.trim() || 'Central Zone',
+        makeActive: document.getElementById('quickRiderMakeActive').checked
+      };
+
+      try {
+        const res = await fetch('/api/admin/riders', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': ADMIN_AUTH_TOKEN },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (data.success) {
+          closeQuickAddRiderModal();
+          showToast(payload.makeActive ? `🛵 Rider "${data.rider.name}" created and set ONLINE!` : `✓ Rider "${data.rider.name}" registered!`, 'green');
+          loadAdminData();
+        } else {
+          alert(data.error || 'Failed to create rider');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Server error creating rider');
+      } finally {
+        btn.disabled = false;
+        btn.innerText = 'Save & Activate Rider';
+      }
+    }
+
+    async function deleteStall(stallId, stallName) {
+      return deleteStallFast(stallId, stallName);
+    }
+
+    async function deleteRider(riderId, riderName) {
+      return deleteRiderFast(riderId, riderName);
     }
   </script>
 </body>

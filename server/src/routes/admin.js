@@ -292,6 +292,191 @@ router.delete('/stalls/:id', requireAdmin, (req, res) => {
   });
 });
 
+// POST /api/admin/stalls (Admin Quick Vendor Creation)
+router.post('/stalls', requireAdmin, (req, res) => {
+  const {
+    name,
+    owner_name,
+    owner_phone,
+    category,
+    address,
+    specialty,
+    makeLive,
+    menu_items
+  } = req.body;
+
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Stall name is required.' });
+  }
+  if (!owner_phone) {
+    return res.status(400).json({ error: 'Owner phone number is required.' });
+  }
+  const cleanPhone = String(owner_phone).replace(/\D/g, '').slice(-10);
+  if (cleanPhone.length !== 10) {
+    return res.status(400).json({ error: 'Please enter a valid 10-digit Indian phone number.' });
+  }
+
+  // Generate starter dishes if none supplied
+  let itemsToRegister = Array.isArray(menu_items) && menu_items.length > 0 ? menu_items : [
+    {
+      name: `${name.trim()} Signature Dish`,
+      price: 60,
+      description: 'Prepared fresh with traditional authentic street recipe and premium spices.',
+      isVeg: true,
+      inStock: true
+    },
+    {
+      name: 'Refreshing Masala Beverage',
+      price: 30,
+      description: 'Chilled refreshing street thirst quencher.',
+      isVeg: true,
+      inStock: true
+    }
+  ];
+
+  const defaultCoords = { lat: 12.9725, lng: 77.6408 };
+
+  const regResult = db.registerStall({
+    name: name.trim(),
+    owner_name: (owner_name || 'Vendor Owner').trim(),
+    owner_phone: cleanPhone,
+    category: category || 'chaat',
+    specialty: specialty || 'Special Street Delicacies',
+    address: (address || 'Street Marketplace Hub').trim(),
+    lat: req.body.lat || defaultCoords.lat,
+    lng: req.body.lng || defaultCoords.lng,
+    upi_id: (req.body.upi_id || `${cleanPhone}@upi`).trim(),
+    isVeg: req.body.isVeg !== undefined ? Boolean(req.body.isVeg) : true
+  }, itemsToRegister);
+
+  const stall = regResult.stall;
+
+  if (makeLive) {
+    stall.location_verified = true;
+    stall.location_verified_by = 'Admin HQ (Quick Launch)';
+    stall.location_verified_at = new Date().toISOString();
+    stall.fssai_status = 'verified';
+    stall.fssai_number = req.body.fssai_number || 'FSSAI-ADMIN-EXEMPT';
+    stall.fssai_verified_at = new Date().toISOString();
+    stall.hygiene_status = 'verified';
+    stall.hygiene_score = 98;
+    stall.hygiene_verified_at = new Date().toISOString();
+    stall.hygiene_inspected_by = 'ThelaExpress Operations Direct';
+    stall.identity_status = 'verified';
+    stall.is_verified = true;
+    stall.verification_status = 'APPROVED';
+    stall.status = 'LIVE';
+    stall.isOpen = true;
+    stall.is_active = true;
+    stall.version = (stall.version || 1) + 1;
+    stall.updated_at = new Date().toISOString();
+
+    if (!Array.isArray(stall.timeline)) stall.timeline = [];
+    stall.timeline.push(Object.freeze({
+      id: `aud_${Date.now()}_quick_launch`,
+      from_status: 'APPLICATION_SUBMITTED',
+      to_status: 'LIVE',
+      role: 'admin',
+      actor_id: req.auth?.actorId || 'admin_hq',
+      timestamp: new Date().toISOString(),
+      reason: 'Direct Admin 1-Click Launch',
+      version: stall.version
+    }));
+
+    db.save();
+
+    wsManager.broadcastAll({
+      type: 'NEW_STALL_ADDED',
+      payload: db.formatStallForPublic(stall)
+    });
+    wsManager.broadcastAll({
+      type: 'STALL_STATUS_CHANGED',
+      payload: { stallId: stall.id, status: 'LIVE', isOpen: true, version: stall.version }
+    });
+  }
+
+  res.status(201).json({
+    success: true,
+    message: makeLive ? `Stall "${stall.name}" added and launched LIVE!` : `Stall "${stall.name}" registered.`,
+    stall: db.formatStallForPublic(stall)
+  });
+});
+
+// POST /api/admin/stalls/:id/quick-approve (1-Click Approve & Launch)
+router.post('/stalls/:id/quick-approve', requireAdmin, (req, res) => {
+  const stall = db.getStallById(req.params.id);
+  if (!stall) return res.status(404).json({ error: 'Stall not found.' });
+
+  const existingItems = db.getMenuItems(stall.id);
+  if (!existingItems || existingItems.length === 0) {
+    db.data.menu_items.push({
+      id: `item_${Date.now()}_1`,
+      stall_id: stall.id,
+      name: `${stall.name} Special`,
+      description: 'Signature prepared street food item.',
+      price: 50,
+      inStock: true,
+      isVeg: stall.isVeg !== undefined ? stall.isVeg : true,
+      image: 'https://images.unsplash.com/photo-1601050690597-df0568f70950?auto=format&fit=crop&w=600&q=80'
+    });
+  }
+
+  if (!stall.lat || !stall.lng) {
+    stall.lat = 12.9725;
+    stall.lng = 77.6408;
+  }
+  if (!stall.upi_id) {
+    stall.upi_id = `${stall.owner_phone || 'vendor'}@upi`;
+  }
+
+  stall.location_verified = true;
+  stall.location_verified_by = 'Admin HQ Quick Approval';
+  stall.location_verified_at = new Date().toISOString();
+  stall.fssai_status = 'verified';
+  stall.fssai_verified_at = new Date().toISOString();
+  stall.hygiene_status = 'verified';
+  stall.hygiene_score = 95;
+  stall.hygiene_verified_at = new Date().toISOString();
+  stall.hygiene_inspected_by = 'Admin Operations Direct';
+  stall.identity_status = 'verified';
+  stall.is_verified = true;
+  stall.verification_status = 'APPROVED';
+  stall.status = 'LIVE';
+  stall.isOpen = true;
+  stall.is_active = true;
+  stall.version = (stall.version || 1) + 1;
+  stall.updated_at = new Date().toISOString();
+
+  if (!Array.isArray(stall.timeline)) stall.timeline = [];
+  stall.timeline.push(Object.freeze({
+    id: `aud_${Date.now()}_quick_approved`,
+    from_status: stall.status,
+    to_status: 'LIVE',
+    role: 'admin',
+    actor_id: req.auth?.actorId || 'admin_hq',
+    timestamp: new Date().toISOString(),
+    reason: 'Admin 1-Click Approval & Launch',
+    version: stall.version
+  }));
+
+  db.save();
+
+  wsManager.broadcastAll({
+    type: 'NEW_STALL_ADDED',
+    payload: db.formatStallForPublic(stall)
+  });
+  wsManager.broadcastAll({
+    type: 'STALL_STATUS_CHANGED',
+    payload: { stallId: stall.id, status: 'LIVE', isOpen: true, version: stall.version }
+  });
+
+  res.json({
+    success: true,
+    message: `Stall "${stall.name}" is now LIVE!`,
+    stall: db.formatStallForPublic(stall)
+  });
+});
+
 // DELETE /api/admin/riders/:id (Permanent removal of test/spam rider applications)
 router.delete('/riders/:id', requireAdmin, (req, res) => {
   const rider = db.deleteRider(req.params.id);
@@ -307,6 +492,92 @@ router.delete('/riders/:id', requireAdmin, (req, res) => {
   res.json({
     success: true,
     message: `Rider "${rider.name}" (${req.params.id}) deleted successfully.`
+  });
+});
+
+// POST /api/admin/riders (Admin Quick Rider Creation)
+router.post('/riders', requireAdmin, (req, res) => {
+  const { name, phone, vehicle, area, upi_id, makeActive } = req.body;
+  if (!name || !name.trim()) {
+    return res.status(400).json({ error: 'Rider name is required.' });
+  }
+  if (!phone) {
+    return res.status(400).json({ error: 'Phone number is required.' });
+  }
+  const cleanPhone = String(phone).replace(/\D/g, '').slice(-10);
+  if (cleanPhone.length !== 10) {
+    return res.status(400).json({ error: 'Please enter a valid 10-digit Indian phone number.' });
+  }
+
+  const rider = db.registerRider({
+    name: name.trim(),
+    phone: cleanPhone,
+    vehicle: vehicle || 'EV Scooter',
+    vehicle_number: (req.body.vehicle_number || 'KA-01-EV-2026').trim(),
+    upi_id: (upi_id || `${cleanPhone}@upi`).trim(),
+    area: (area || 'Central Operations Zone').trim()
+  });
+
+  if (makeActive) {
+    rider.is_verified = true;
+    rider.verification_status = 'APPROVED';
+    rider.status = 'AVAILABLE';
+    rider.is_online = true;
+    rider.version = (rider.version || 1) + 1;
+    rider.updated_at = new Date().toISOString();
+
+    if (!Array.isArray(rider.timeline)) rider.timeline = [];
+    rider.timeline.push(Object.freeze({
+      id: `aud_${Date.now()}_quick_rider_launch`,
+      from_status: 'APPLICATION_SUBMITTED',
+      to_status: 'AVAILABLE',
+      role: 'admin',
+      actor_id: req.auth?.actorId || 'admin_hq',
+      timestamp: new Date().toISOString(),
+      reason: 'Admin 1-Click Rider Activation',
+      version: rider.version
+    }));
+
+    db.save();
+  }
+
+  res.status(201).json({
+    success: true,
+    message: makeActive ? `Delivery partner "${rider.name}" created and set ONLINE!` : `Delivery partner "${rider.name}" registered.`,
+    rider
+  });
+});
+
+// POST /api/admin/riders/:id/quick-approve (1-Click Rider Activation)
+router.post('/riders/:id/quick-approve', requireAdmin, (req, res) => {
+  const rider = db.getRiderById(req.params.id);
+  if (!rider) return res.status(404).json({ error: 'Rider not found.' });
+
+  rider.is_verified = true;
+  rider.verification_status = 'APPROVED';
+  rider.status = 'AVAILABLE';
+  rider.is_online = true;
+  rider.version = (rider.version || 1) + 1;
+  rider.updated_at = new Date().toISOString();
+
+  if (!Array.isArray(rider.timeline)) rider.timeline = [];
+  rider.timeline.push(Object.freeze({
+    id: `aud_${Date.now()}_quick_approved_rider`,
+    from_status: rider.status,
+    to_status: 'AVAILABLE',
+    role: 'admin',
+    actor_id: req.auth?.actorId || 'admin_hq',
+    timestamp: new Date().toISOString(),
+    reason: 'Admin 1-Click Activation',
+    version: rider.version
+  }));
+
+  db.save();
+
+  res.json({
+    success: true,
+    message: `Delivery partner "${rider.name}" is now APPROVED & ONLINE!`,
+    rider
   });
 });
 

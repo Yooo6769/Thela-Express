@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.1.3`  
+**Current Production Version**: `v2.1.4`  
 **Current Date**: September 23, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -37,6 +37,7 @@ flowchart LR
     v210 --> v211["v2.1.1<br/>Zero 86/85 & Dynamic Menu Availability"]
     v211 --> v212["v2.1.2<br/>Admin Application Deletion & Pruning Engine"]
     v212 --> v213["v2.1.3<br/>Partner KDS Control Header Layout & Touch Optimization"]
+    v213 --> v214["v2.1.4<br/>Admin HQ Simplification & 1-Click Operations Engine"]
 ```
 
 ---
@@ -501,10 +502,28 @@ flowchart LR
 
 ---
 
+### `v2.1.4` — Admin HQ Simplification & 1-Click Operations Engine
+- **Release Date**: September 23, 2026
+- **Git Commit**: `TBD` (`feat: simplify admin HQ with 1-click vendor and rider operations (v2.1.4)`)
+- **Key Architectural Accomplishments**:
+  - **1-Click Direct Vendor & Rider Deletion**:
+    - Replaced hidden, off-screen icon buttons with prominent, high-visibility red **Delete** buttons (`bg-red-600 hover:bg-red-500`) directly visible on every stall and rider row.
+    - Purges the record and all associated menu items completely from the database and UI in 1 single click, accompanied by an instant floating toast notification and real-time WebSocket broadcast (`STALL_DELETED`, `RIDER_DELETED`).
+  - **Quick Add Modals & 10-Second Onboarding**:
+    - Introduced clean in-dashboard popup modals for registering food stalls (`quickAddVendorModal`) and delivery partners (`quickAddRiderModal`) without requiring multi-page external onboarding flows.
+    - Provided a **"Make Live & Open Immediately"** toggle that automatically configures starter menu items and verifies gates for instant ordering.
+  - **1-Click Rapid Approval Engine**:
+    - Added green **"✓ Approve & Launch"** (`POST /api/admin/stalls/:id/quick-approve`) and **"✓ Activate"** (`POST /api/admin/riders/:id/quick-approve`) buttons, allowing operators to instantly promote submitted accounts to live production.
+  - **Search & Status Filtering**:
+    - Added real-time client-side search by name, phone, area, and status (All, Live & Open, Pending Approval) for both stalls and delivery fleet.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
+| `v2.1.4` | 2026-09-23 | Admin Operations | Simplify admin HQ with 1-click vendor and rider operations (v2.1.4) |
 | `98bfd95` | 2026-09-23 | UI & Mobile UX | Optimize partner KDS control header layout and touch targets (v2.1.3) |
 | `27c6a60` | 2026-09-21 | Admin Operations | Administrative stall and rider deletion engine with UI controls (v2.1.2) |
 | `9c778dd` | 2026-09-21 | Data Integrity | Eliminate 86/85 placeholder and enforce dynamic Menu Availability (v2.1.1) |
