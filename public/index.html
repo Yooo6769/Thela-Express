@@ -408,11 +408,11 @@
               <span>Home</span>
               <i class="fa-solid fa-chevron-down text-[8px] sm:text-[9px] ml-1 text-stone-400"></i>
             </span>
-            <span class="hidden xs:inline-block px-1.5 py-0.2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white text-[8px] font-black rounded-md tracking-wider uppercase">District</span>
+            <span class="hidden xs:inline-block px-1.5 py-0.5 bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[9px] font-extrabold rounded-md tracking-wide" id="headerDistrictPill">Street Carts</span>
           </div>
           <div class="text-[9px] sm:text-[11px] text-stone-500 dark:text-stone-400 font-medium flex items-center cursor-pointer hover:text-amber-600 transition min-w-0" onclick="event.stopPropagation(); openAddressDrawer();" title="Click to select or change delivery address">
             <i class="fa-solid fa-location-dot text-amber-600 mr-0.5 sm:mr-1 text-[9px] sm:text-xs shrink-0"></i>
-            <span id="headerLocation" class="font-bold text-stone-700 dark:text-stone-300 max-w-[110px] xs:max-w-[160px] sm:max-w-[280px] truncate" data-i18n="select_location">73A RM Block, Sector 2, Sahibabad...</span>
+            <span id="headerLocation" class="font-bold text-stone-700 dark:text-stone-300 max-w-[110px] xs:max-w-[160px] sm:max-w-[280px] truncate" data-i18n="select_location">Select Delivery Location</span>
           </div>
         </div>
       </div>
@@ -439,7 +439,7 @@
         <!-- Auth / Profile Button with VIP Gold Avatar Ring (Screenshot 1 & 4) -->
         <button id="authBtn" onclick="handleAuthBtnClick()" class="relative w-8 h-8 sm:w-9 sm:h-9 rounded-full bg-gradient-to-tr from-amber-400 via-amber-200 to-amber-500 p-0.5 shadow-sm hover:scale-105 transition shrink-0" title="My Profile & Settings">
           <div class="w-full h-full rounded-full bg-stone-900 text-amber-300 flex items-center justify-center font-black text-xs sm:text-sm">
-            <span id="headerAvatarInitial">A</span>
+            <span id="headerAvatarInitial"><i class="fa-regular fa-user text-xs"></i></span>
           </div>
           <span class="absolute -top-1 -right-1 w-3.5 h-3.5 bg-amber-500 text-stone-900 rounded-full flex items-center justify-center text-[7px] font-black shadow-xs">
             <i class="fa-solid fa-crown text-[6px]"></i>
@@ -1657,12 +1657,12 @@
         <div class="bg-stone-900 border border-stone-800 rounded-3xl p-4 flex items-center space-x-3.5 relative overflow-hidden">
           <div class="w-14 h-14 rounded-full bg-gradient-to-tr from-amber-400 via-yellow-200 to-amber-500 p-0.5 shadow-md shrink-0">
             <div id="profileAvatar" class="w-full h-full rounded-full bg-stone-950 text-amber-200 flex items-center justify-center font-black text-xl">
-              <span id="profileAvatarLetter">A</span>
+              <span id="profileAvatarLetter"><i class="fa-solid fa-user text-base"></i></span>
             </div>
           </div>
           <div class="min-w-0 flex-1">
-            <h2 id="profileModalName" data-alias="profileDisplayName" class="font-black text-lg text-white truncate">Anurag</h2>
-            <div id="profileModalEmail" data-alias="profileDisplayEmail" class="text-xs text-stone-400 truncate">anuragdgsingh614@gmail.com</div>
+            <h2 id="profileModalName" data-alias="profileDisplayName" class="font-black text-lg text-white truncate">Street Food Explorer</h2>
+            <div id="profileModalEmail" data-alias="profileDisplayEmail" class="text-xs text-stone-400 truncate">Guest User</div>
             <div id="profileDisplayPhone" class="hidden text-xs text-stone-400">+91 ••••• •••••</div>
             <button type="button" onclick="toggleProfileEditForm()" class="text-xs font-bold text-amber-400 hover:text-amber-300 mt-0.5 flex items-center space-x-1">
               <span>Edit profile</span>
@@ -1687,13 +1687,13 @@
 
           <div class="space-y-1 text-xs">
             <label class="font-bold text-stone-400">Your Full Name</label>
-            <input type="text" id="profileNameInput" placeholder="Enter your full name" value="Anurag" required
+            <input type="text" id="profileNameInput" placeholder="Enter your full name" value="" required
               class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 font-semibold text-white focus:outline-none focus:ring-2 focus:ring-amber-500">
           </div>
 
           <div class="space-y-1 text-xs">
             <label class="font-bold text-stone-400">Email Address</label>
-            <input type="email" id="profileEmailInput" placeholder="Enter your email address" value="anuragdgsingh614@gmail.com"
+            <input type="email" id="profileEmailInput" placeholder="Enter your email address" value=""
               class="w-full bg-stone-950 border border-stone-800 rounded-xl px-3 py-2 font-semibold text-white focus:outline-none focus:ring-2 focus:ring-amber-500">
           </div>
 
@@ -1722,7 +1722,7 @@
             </div>
           </div>
           <div class="flex items-center space-x-1 bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2.5 py-1 rounded-full text-xs font-black">
-            <span id="profileGoldSavings">saved ₹10,816</span>
+            <span id="profileGoldSavings">Free Delivery Active</span>
             <i class="fa-solid fa-chevron-right text-[9px]"></i>
           </div>
         </div>
@@ -1874,37 +1874,37 @@
           </div>
         </div>
 
-        <!-- Section 3: Dining & experiences (Screenshot 5) -->
+        <!-- Section 3: Street Food Rewards & Wallet -->
         <div class="space-y-2 select-none">
           <div class="flex items-center space-x-2">
-            <div class="w-1 h-3.5 rounded-full bg-red-500"></div>
-            <h3 class="text-xs font-black text-stone-300 tracking-wider">Dining & experiences</h3>
+            <div class="w-1 h-3.5 rounded-full bg-amber-500"></div>
+            <h3 class="text-xs font-black text-stone-300 tracking-wider">Street Food Rewards & Wallet</h3>
           </div>
 
           <div class="bg-stone-900 border border-stone-800 rounded-2xl divide-y divide-stone-800 text-xs">
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="showToast('Your dining ledger is clear')">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="openOrderHistoryModal()">
               <div class="flex items-center space-x-3 text-stone-200 font-bold">
-                <i class="fa-solid fa-clock-rotate-left text-stone-400"></i>
-                <span>Your dining transactions</span>
+                <i class="fa-solid fa-clock-rotate-left text-amber-500"></i>
+                <span>Your Street Orders</span>
               </div>
               <i class="fa-solid fa-chevron-right text-[10px] text-stone-500"></i>
             </div>
 
-            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="showToast('You have 250 ThelaCoins')">
+            <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="openWalletDrawer()">
               <div class="flex items-center space-x-3 text-stone-200 font-bold">
-                <i class="fa-solid fa-coins text-amber-400"></i>
-                <span>Your ThelaCoins</span>
+                <i class="fa-solid fa-wallet text-amber-400"></i>
+                <span>Thela Money Wallet</span>
               </div>
               <div class="flex items-center space-x-1 text-amber-400 font-black">
-                <span>250</span>
+                <span id="profileWalletAmount">₹0</span>
                 <i class="fa-solid fa-chevron-right text-[10px]"></i>
               </div>
             </div>
 
             <div class="p-3.5 flex items-center justify-between cursor-pointer hover:bg-stone-850" onclick="openCouponsDrawer()">
               <div class="flex items-center space-x-3 text-stone-200 font-bold">
-                <i class="fa-solid fa-gift text-pink-400"></i>
-                <span>Your dining rewards</span>
+                <i class="fa-solid fa-gift text-rose-400"></i>
+                <span>Coupons & Street Offers</span>
               </div>
               <i class="fa-solid fa-chevron-right text-[10px] text-stone-500"></i>
             </div>
@@ -2233,10 +2233,10 @@
         <span class="text-[9px] mt-0.5">Under ₹100</span>
       </button>
 
-      <!-- Dining / Stalls Tab -->
-      <button onclick="switchDockTab('dining')" id="dockTabDining" class="flex flex-col items-center px-3 py-1 rounded-full text-stone-400 hover:text-white font-bold transition">
-        <i class="fa-solid fa-utensils text-sm"></i>
-        <span class="text-[9px] mt-0.5">Dining</span>
+      <!-- Favorites Tab -->
+      <button onclick="switchDockTab('favorites')" id="dockTabFavorites" class="flex flex-col items-center px-3 py-1 rounded-full text-stone-400 hover:text-white font-bold transition">
+        <i class="fa-solid fa-heart text-sm"></i>
+        <span class="text-[9px] mt-0.5">Favorites</span>
       </button>
 
       <!-- Healthy Mode / Veg Pill Button (Screenshot 1) -->
@@ -2260,7 +2260,7 @@
             <i class="fa-solid fa-crown text-base"></i>
           </div>
           <div>
-            <h3 class="font-black text-base text-amber-300">Thela Gold VIP</h3>
+            <h3 class="font-black text-base text-amber-300">Thela Street Rewards</h3>
             <p class="text-[10px] text-amber-200/80">Exclusive Street Connoisseur Club</p>
           </div>
         </div>
@@ -2273,7 +2273,7 @@
       <div class="bg-gradient-to-r from-amber-950/80 to-stone-950 p-3 rounded-2xl border border-amber-500/30 flex items-center justify-between">
         <div>
           <div class="text-[10px] text-amber-400/80 uppercase font-black">Lifetime Savings</div>
-          <div class="text-xl font-black text-amber-300">₹10,816</div>
+          <div class="text-xl font-black text-amber-300" id="goldModalSavings">₹0</div>
         </div>
         <span class="bg-amber-400 text-stone-950 text-[10px] font-black px-2.5 py-1 rounded-full uppercase">Active Member</span>
       </div>
@@ -2356,7 +2356,13 @@
             <option>Anand Vihar Terminal (ANVT)</option>
             <option>New Delhi Railway Station (NDLS)</option>
             <option>Old Delhi Jn (DLI)</option>
-            <option selected>Sahibabad Jn (SBB)</option>
+            <option value="" disabled selected>Select Nearest Railway Station</option>
+              <option value="NDLS">New Delhi (NDLS)</option>
+              <option value="HWH">Howrah Jn (HWH)</option>
+              <option value="CSMT">Mumbai CSMT</option>
+              <option value="CNB">Kanpur Central (CNB)</option>
+              <option value="PNBE">Patna Jn (PNBE)</option>
+              <option value="GZB">Ghaziabad Jn (GZB)</option>
             <option>Hazrat Nizamuddin (NZM)</option>
           </select>
         </div>

@@ -174,24 +174,15 @@ const AtmosphereManager = {
 };
 
 async function loadStoredUser() {
-  let saved = localStorage.getItem('thela_user');
-  if (!saved) {
-    const defaultAnurag = {
-      name: 'Anurag',
-      phone: '9876543210',
-      email: 'anurag@thelaexpress.com',
-      goldMember: true,
-      goldSavings: 10816,
-      walletBalance: 0,
-      vegPreference: false,
-      addresses: [
-        { id: 'addr_1', tag: 'Home', title: 'B-402, Shivalik Residency', address: 'B-402, Shivalik Residency, Near Metro Pillar 142', isDefault: true }
-      ],
-      favorites: []
-    };
-    localStorage.setItem('thela_user', JSON.stringify(defaultAnurag));
-    saved = JSON.stringify(defaultAnurag);
-  }
+  // Purge any legacy mocked profiles
+  try {
+    const raw = localStorage.getItem('thela_user');
+    if (raw && (raw.includes('anuragdgsingh') || raw.includes('Shivalik') || raw.includes('10816'))) {
+      localStorage.removeItem('thela_user');
+    }
+  } catch (e) {}
+
+  const saved = localStorage.getItem('thela_user');
   if (saved) {
     try {
       STATE.user = JSON.parse(saved);
@@ -278,9 +269,9 @@ function updateHeaderLocation() {
     if (addrEl) addrEl.innerText = STATE.activeAddress.title || STATE.activeAddress.address || 'Select Address';
     if (locEl) locEl.innerText = `${icon} ${STATE.activeAddress.tag}: ${STATE.activeAddress.title || STATE.activeAddress.address}`;
   } else {
-    if (tagEl) tagEl.innerText = 'Home';
-    if (addrEl) addrEl.innerText = 'B-402, Shivalik Residency, Near Metro Pillar 142';
-    if (locEl) locEl.innerText = 'Select Delivery Location';
+    if (tagEl) tagEl.innerText = (typeof t === 'function' ? t('select_location', 'Location') : 'Location');
+    if (addrEl) addrEl.innerText = (typeof t === 'function' ? t('select_location', 'Select Delivery Location') : 'Select Delivery Location');
+    if (locEl) locEl.innerText = (typeof t === 'function' ? t('select_location', 'Select Delivery Location') : 'Select Delivery Location');
   }
 }
 
@@ -3495,21 +3486,24 @@ function openProfileModal() {
   const addrsStat = document.getElementById('statSavedAddresses');
   const favsStat = document.getElementById('statFavoritesCount');
 
-  if (nameEl) nameEl.innerText = STATE.user.name || 'Anurag';
-  if (phoneEl) phoneEl.innerText = `+91 ${STATE.user.phone || '9876543210'}`;
-  const emailEl = document.getElementById('profileModalEmail');
-  if (emailEl) emailEl.innerText = STATE.user.email || 'anurag@thelaexpress.com';
+  const displayName = (STATE.user && STATE.user.name) ? STATE.user.name : 'Street Food Explorer';
+  if (nameEl) nameEl.innerText = displayName;
+  if (phoneEl) phoneEl.innerText = (STATE.user && STATE.user.phone) ? `+91 ${STATE.user.phone}` : '';
+  const emailEl = document.getElementById('profileModalEmail') || document.getElementById('profileDisplayEmail');
+  if (emailEl) emailEl.innerText = (STATE.user && STATE.user.email) ? STATE.user.email : 'Add email address';
+  const avatarLetter = document.getElementById('profileAvatarLetter');
+  if (avatarLetter) avatarLetter.innerText = displayName.charAt(0).toUpperCase() || 'U';
   const goldSavingsEl = document.getElementById('profileGoldSavings');
-  if (goldSavingsEl) goldSavingsEl.innerText = `₹${(STATE.user.goldSavings || 10816).toLocaleString('en-IN')}`;
+  if (goldSavingsEl) goldSavingsEl.innerText = (STATE.user && STATE.user.goldSavings) ? `₹${STATE.user.goldSavings} saved` : 'Free Delivery Active';
   const walletEl = document.getElementById('profileWalletAmount');
-  if (walletEl) walletEl.innerText = `₹${STATE.user.walletBalance || 0}`;
+  if (walletEl) walletEl.innerText = `₹${(STATE.user && STATE.user.walletBalance) || 0}`;
 
-  if (nameInput) nameInput.value = STATE.user.name || 'Anurag';
-  if (emailInput) emailInput.value = STATE.user.email || 'anurag@thelaexpress.com';
-  if (vegToggle) vegToggle.checked = !!STATE.user.vegPreference;
-  if (ordersStat) ordersStat.innerText = STATE.activeOrders.length || 18;
-  if (addrsStat) addrsStat.innerText = (STATE.user.addresses && STATE.user.addresses.length) || 2;
-  if (favsStat) favsStat.innerText = STATE.favorites.length || 6;
+  if (nameInput) nameInput.value = (STATE.user && STATE.user.name) || '';
+  if (emailInput) emailInput.value = (STATE.user && STATE.user.email) || '';
+  if (vegToggle) vegToggle.checked = !!(STATE.user && STATE.user.vegPreference);
+  if (ordersStat) ordersStat.innerText = STATE.activeOrders.length || 0;
+  if (addrsStat) addrsStat.innerText = (STATE.user && STATE.user.addresses && STATE.user.addresses.length) || 0;
+  if (favsStat) favsStat.innerText = STATE.favorites.length || 0;
 
   document.getElementById('profileModal').classList.remove('hidden');
   AtmosphereManager.pushOverride('profileModal', 'minimal');
@@ -4179,15 +4173,15 @@ function applyActiveFilters() {
 }
 
 function switchDockTab(tab) {
-  ['home', 'under100', 'dining', 'healthy', 'account'].forEach(t => {
-    const el = document.getElementById(`dockTab_${t}`);
+  ['home', 'under100', 'favorites', 'healthy', 'account'].forEach(t => {
+    const el = document.getElementById(`dockTab_${t}`) || document.getElementById(`dockTab${t.charAt(0).toUpperCase() + t.slice(1)}`);
     if (el) {
       if (t === tab) {
-        el.classList.add('text-rose-600', 'dark:text-rose-400', 'font-black');
-        el.classList.remove('text-stone-500', 'dark:text-stone-400');
+        el.classList.add('text-amber-500', 'font-black');
+        el.classList.remove('text-stone-400');
       } else {
-        el.classList.remove('text-rose-600', 'dark:text-rose-400', 'font-black');
-        el.classList.add('text-stone-500', 'dark:text-stone-400');
+        el.classList.remove('text-amber-500', 'font-black');
+        el.classList.add('text-stone-400');
       }
     }
   });
@@ -4197,9 +4191,9 @@ function switchDockTab(tab) {
     filterCategory('all');
   } else if (tab === 'under100') {
     scrollToDiscoverySection('secUnder100');
-  } else if (tab === 'dining') {
-    scrollToDiscoverySection('secLateNight');
-    showToast('🎪 Street Carnival & Night Tawa Feast!');
+  } else if (tab === 'favorites') {
+    filterCategory('favorites');
+    showToast('❤️ Showing your favorite street carts');
   } else if (tab === 'healthy') {
     toggleHealthyMode();
   } else if (tab === 'account') {
