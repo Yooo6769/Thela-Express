@@ -525,7 +525,7 @@ flowchart LR
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `[HEAD]` | 2026-09-23 | Authenticity & Privacy | Purge restaurant dining, fake profiles, and fake addresses; enforce authentic street food cart UX (v2.2.1) |
+| `a9146a7` | 2026-09-23 | Authenticity & Privacy | Purge restaurant dining, fake profiles, and fake addresses; enforce authentic street food cart UX (v2.2.1) |
 | `a944fdc` | 2026-09-23 | Customer Experience | Zomato-inspired dynamic customer storefront and VIP center (v2.2.0) |
 | `07d60be` | 2026-09-23 | Admin Operations | Simplify admin HQ with 1-click vendor and rider operations (v2.1.4) |
 | `98bfd95` | 2026-09-23 | UI & Mobile UX | Optimize partner KDS control header layout and touch targets (v2.1.3) |
