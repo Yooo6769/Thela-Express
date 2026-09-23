@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.1.4`  
+**Current Production Version**: `v2.2.0`  
 **Current Date**: September 23, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -38,6 +38,7 @@ flowchart LR
     v211 --> v212["v2.1.2<br/>Admin Application Deletion & Pruning Engine"]
     v212 --> v213["v2.1.3<br/>Partner KDS Control Header Layout & Touch Optimization"]
     v213 --> v214["v2.1.4<br/>Admin HQ Simplification & 1-Click Operations Engine"]
+    v214 --> v220["v2.2.0<br/>Zomato-Inspired Dynamic Customer App & VIP Center"]
 ```
 
 ---
@@ -523,6 +524,7 @@ flowchart LR
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
+| `[HEAD]` | 2026-09-23 | Customer Experience | Zomato-inspired dynamic customer storefront and VIP center (v2.2.0) |
 | `07d60be` | 2026-09-23 | Admin Operations | Simplify admin HQ with 1-click vendor and rider operations (v2.1.4) |
 | `98bfd95` | 2026-09-23 | UI & Mobile UX | Optimize partner KDS control header layout and touch targets (v2.1.3) |
 | `27c6a60` | 2026-09-21 | Admin Operations | Administrative stall and rider deletion engine with UI controls (v2.1.2) |
@@ -630,6 +632,7 @@ stateDiagram-v2
 
 | Test Script File | Primary Verification Objective | Number of Tests | Status |
 | :--- | :--- | :---: | :---: |
+| [`test_zomato_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_zomato_ux.js) | Zomato-inspired dynamic customer app experience, hero carousel, circular stories, quick filters, bottom dock, VIP Gold profile & wallet engine | 12 tests | ✅ Passed |
 | [`test_store_status_contradiction.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_store_status_contradiction.js) | Server-authoritative store status derivation, anti-bypass invariants, hoisting audit, zero 1.5 km copy | 7 suites | ✅ Passed |
 | [`test_vendor_rider_activation.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_vendor_rider_activation.js) | 7 mandatory activation gates, zero admin bypass, untrusted browser GPS, continuous revalidation, token scoping, rider dispatch gating | 8 suites | ✅ Passed |
 | [`test_payments_ledger.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_payments_ledger.js) | Server-authoritative pricing, append-only double-entry ledger, settlement states, proportional refunds, EOD balance reconciliation | 19 tests | ✅ Passed |

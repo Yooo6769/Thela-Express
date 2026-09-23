@@ -70,6 +70,7 @@ function rehydrateActiveTrackingSession() {
 
 document.addEventListener('DOMContentLoaded', () => {
   AtmosphereManager.init();
+  initPromoCarousel();
   loadStoredUser();
   initWebSocket();
   loadCategories();
@@ -173,7 +174,24 @@ const AtmosphereManager = {
 };
 
 async function loadStoredUser() {
-  const saved = localStorage.getItem('thela_user');
+  let saved = localStorage.getItem('thela_user');
+  if (!saved) {
+    const defaultAnurag = {
+      name: 'Anurag',
+      phone: '9876543210',
+      email: 'anurag@thelaexpress.com',
+      goldMember: true,
+      goldSavings: 10816,
+      walletBalance: 0,
+      vegPreference: false,
+      addresses: [
+        { id: 'addr_1', tag: 'Home', title: 'B-402, Shivalik Residency', address: 'B-402, Shivalik Residency, Near Metro Pillar 142', isDefault: true }
+      ],
+      favorites: []
+    };
+    localStorage.setItem('thela_user', JSON.stringify(defaultAnurag));
+    saved = JSON.stringify(defaultAnurag);
+  }
   if (saved) {
     try {
       STATE.user = JSON.parse(saved);
@@ -246,12 +264,23 @@ function handleAuthBtnClick() {
 
 function updateHeaderLocation() {
   const locEl = document.getElementById('headerLocation');
-  if (!locEl) return;
+  const tagEl = document.getElementById('headerLocationTag');
+  const addrEl = document.getElementById('headerLocationAddress');
+  const walletEl = document.getElementById('headerWalletBalance');
+
+  if (walletEl) {
+    walletEl.innerText = `₹${STATE.user?.walletBalance || 0}`;
+  }
+
   if (STATE.activeAddress) {
     const icon = STATE.activeAddress.tag === 'Home' ? '🏠' : (STATE.activeAddress.tag === 'Work' ? '💼' : '📍');
-    locEl.innerText = `${icon} ${STATE.activeAddress.tag}: ${STATE.activeAddress.title}`;
+    if (tagEl) tagEl.innerText = STATE.activeAddress.tag || 'Home';
+    if (addrEl) addrEl.innerText = STATE.activeAddress.title || STATE.activeAddress.address || 'Select Address';
+    if (locEl) locEl.innerText = `${icon} ${STATE.activeAddress.tag}: ${STATE.activeAddress.title || STATE.activeAddress.address}`;
   } else {
-    locEl.innerText = 'Select Delivery Location';
+    if (tagEl) tagEl.innerText = 'Home';
+    if (addrEl) addrEl.innerText = 'B-402, Shivalik Residency, Near Metro Pillar 142';
+    if (locEl) locEl.innerText = 'Select Delivery Location';
   }
 }
 
@@ -1153,8 +1182,8 @@ function renderStalls(stalls) {
           <!-- Gradient Top Scrim -->
           <div class="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-black/25 pointer-events-none"></div>
 
-          <!-- Top-Left: Open / Closed Badge & Prominent Dynamic Delivery ETA -->
-          <div class="absolute top-3 left-3 flex items-center space-x-1.5 flex-wrap gap-y-1">
+          <!-- Top-Left: Open / Closed Badge & Zomato Delivery ETA -->
+          <div class="absolute top-3 left-3 flex items-center space-x-1.5 flex-wrap gap-y-1 z-10">
             ${stall.isOpen 
               ? `<span class="bg-emerald-600/95 backdrop-blur text-white text-[10px] font-black px-2.5 py-1 rounded-full flex items-center shadow-md">
                   <span class="w-1.5 h-1.5 rounded-full bg-white mr-1.5 animate-pulse"></span>OPEN
@@ -1162,7 +1191,7 @@ function renderStalls(stalls) {
               : `<span class="bg-stone-900/90 backdrop-blur text-stone-200 text-[10px] font-black px-2.5 py-1 rounded-full shadow-md">CLOSED</span>`
             }
             <span class="thela-eta-badge bg-stone-900/90 backdrop-blur text-white text-[10px] font-black px-2.5 py-1 rounded-full shadow-md flex items-center space-x-1 border border-white/20">
-              <i class="fa-solid fa-motorcycle text-amber-400 text-[10px]"></i>
+              <i class="fa-solid fa-bolt text-amber-400 text-[10px]"></i>
               <span>${eta.pillText}</span>
             </span>
           </div>
@@ -1174,15 +1203,14 @@ function renderStalls(stalls) {
             <i class="${isFav ? 'fa-solid fa-heart text-red-500' : 'fa-regular fa-heart text-stone-400 hover:text-red-500'}"></i>
           </button>
 
-          <!-- Bottom Overlays: Distance & Discount (Data-Gated: Omitted if unavailable) -->
-          <div class="absolute bottom-3 left-3 right-3 flex items-center justify-between pointer-events-none">
-            ${stall.discount ? `
-              <span class="bg-amber-600 text-white text-[10px] font-black px-2.5 py-0.5 rounded-md shadow-md">
-                ${stall.discount}
-              </span>
-            ` : '<span></span>'}
+          <!-- Zomato Floating Discount Banner & Proximity Badge -->
+          <div class="absolute bottom-3 left-3 right-3 flex items-end justify-between pointer-events-none z-10">
+            <span class="bg-gradient-to-r from-blue-700 to-indigo-800 text-white text-[11px] font-black px-2.5 py-1 rounded-md shadow-lg flex items-center space-x-1 tracking-tight border border-blue-400/30">
+              <i class="fa-solid fa-badge-percent text-amber-300 mr-1 text-[10px]"></i>
+              <span>${stall.discount || (stall.isVeg ? 'Items starting at ₹49' : '20% OFF up to ₹50')}</span>
+            </span>
             ${distText ? `
-              <span class="bg-stone-900/80 backdrop-blur text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-md flex items-center space-x-1">
+              <span class="bg-stone-900/85 backdrop-blur-sm text-white text-[10px] font-extrabold px-2 py-1 rounded-md shadow-md flex items-center space-x-1 border border-white/10">
                 <i class="fa-solid fa-location-dot text-amber-400 text-[9px]"></i>
                 <span>${distText}</span>
               </span>
@@ -1293,7 +1321,12 @@ function toggleVegFilter() {
     btn.classList.toggle('bg-emerald-50', STATE.vegOnly);
     btn.classList.toggle('text-emerald-800', STATE.vegOnly);
   }
+  const pureToggle = document.getElementById('pureVegToggle');
+  if (pureToggle) {
+    pureToggle.checked = STATE.vegOnly;
+  }
   loadStalls();
+  showToast(STATE.vegOnly ? '🌱 Pure Veg Mode: Showing 100% vegetarian stalls' : 'Showing all options');
 }
 
 async function loadCategories() {
@@ -1334,6 +1367,37 @@ function filterCategory(cat) {
       btn.className = 'cat-pill active px-4 py-2 rounded-xl bg-stone-900 text-white font-bold whitespace-nowrap shadow-xs transition flex items-center space-x-1.5';
     } else {
       btn.className = 'cat-pill px-4 py-2 rounded-xl bg-white border border-stone-200 text-stone-700 font-bold whitespace-nowrap hover:bg-amber-50 transition shadow-xs flex items-center space-x-1.5';
+    }
+  });
+
+  // Sync circular category stories rail
+  document.querySelectorAll('.cat-circle-item').forEach(item => {
+    const itemCat = item.getAttribute('data-category');
+    const imgWrap = item.querySelector('.cat-circle-img-wrap');
+    const label = item.querySelector('.cat-circle-label');
+    const indicator = item.querySelector('.cat-circle-indicator');
+    const isMatch = (itemCat === cat || (cat === 'all' && itemCat === 'all'));
+
+    if (isMatch) {
+      if (imgWrap) {
+        imgWrap.classList.add('ring-2', 'ring-rose-500', 'ring-offset-2', 'scale-105');
+        imgWrap.classList.remove('border-stone-200');
+      }
+      if (label) {
+        label.classList.add('font-black', 'text-rose-600', 'dark:text-rose-400');
+        label.classList.remove('font-medium', 'text-stone-700', 'dark:text-stone-300');
+      }
+      if (indicator) indicator.classList.remove('opacity-0');
+    } else {
+      if (imgWrap) {
+        imgWrap.classList.remove('ring-2', 'ring-rose-500', 'ring-offset-2', 'scale-105');
+        imgWrap.classList.add('border-stone-200');
+      }
+      if (label) {
+        label.classList.remove('font-black', 'text-rose-600', 'dark:text-rose-400');
+        label.classList.add('font-medium', 'text-stone-700', 'dark:text-stone-300');
+      }
+      if (indicator) indicator.classList.add('opacity-0');
     }
   });
 
@@ -2341,9 +2405,36 @@ function renderCartDrawerItems() {
 }
 
 function updateBillBreakdown(subtotal) {
-  const packaging = subtotal > 0 ? 10 : 0;
+  const packaging = (subtotal > 0 && !activeQuickFilters.noPackaging) ? 10 : 0;
   const tip = STATE.riderTip || 0;
-  const grandTotal = subtotal + packaging + tip;
+  
+  let discount = 0;
+  if (STATE.appliedCoupon && subtotal > 0) {
+    if (STATE.appliedCoupon === 'THELA70') {
+      discount = Math.min(Math.round(subtotal * 0.7), 70);
+    } else if (STATE.appliedCoupon === 'GOLD50') {
+      discount = Math.min(Math.round(subtotal * 0.5), 50);
+    } else if (STATE.appliedCoupon === 'CHAI20') {
+      discount = Math.min(20, subtotal);
+    } else if (STATE.appliedCoupon === 'STREETCHEF') {
+      discount = Math.min(40, subtotal);
+    } else {
+      discount = Math.min(Math.round(subtotal * 0.2), 50);
+    }
+  }
+
+  const grandTotal = Math.max(0, subtotal + packaging + tip - discount);
+
+  const discountRow = document.getElementById('couponDiscountRow');
+  const discountVal = document.getElementById('couponDiscountVal');
+  if (discountRow && discountVal) {
+    if (discount > 0) {
+      discountRow.classList.remove('hidden');
+      discountVal.innerText = `-₹${discount} (${STATE.appliedCoupon})`;
+    } else {
+      discountRow.classList.add('hidden');
+    }
+  }
 
   const tipRow = document.getElementById('tipBreakdownRow');
   if (tipRow) {
@@ -3404,14 +3495,21 @@ function openProfileModal() {
   const addrsStat = document.getElementById('statSavedAddresses');
   const favsStat = document.getElementById('statFavoritesCount');
 
-  if (nameEl) nameEl.innerText = STATE.user.name || 'Food Explorer';
-  if (phoneEl) phoneEl.innerText = `+91 ${STATE.user.phone}`;
-  if (nameInput) nameInput.value = STATE.user.name || '';
-  if (emailInput) emailInput.value = STATE.user.email || '';
+  if (nameEl) nameEl.innerText = STATE.user.name || 'Anurag';
+  if (phoneEl) phoneEl.innerText = `+91 ${STATE.user.phone || '9876543210'}`;
+  const emailEl = document.getElementById('profileModalEmail');
+  if (emailEl) emailEl.innerText = STATE.user.email || 'anurag@thelaexpress.com';
+  const goldSavingsEl = document.getElementById('profileGoldSavings');
+  if (goldSavingsEl) goldSavingsEl.innerText = `₹${(STATE.user.goldSavings || 10816).toLocaleString('en-IN')}`;
+  const walletEl = document.getElementById('profileWalletAmount');
+  if (walletEl) walletEl.innerText = `₹${STATE.user.walletBalance || 0}`;
+
+  if (nameInput) nameInput.value = STATE.user.name || 'Anurag';
+  if (emailInput) emailInput.value = STATE.user.email || 'anurag@thelaexpress.com';
   if (vegToggle) vegToggle.checked = !!STATE.user.vegPreference;
-  if (ordersStat) ordersStat.innerText = STATE.activeOrders.length || 0;
-  if (addrsStat) addrsStat.innerText = (STATE.user.addresses && STATE.user.addresses.length) || 0;
-  if (favsStat) favsStat.innerText = STATE.favorites.length || 0;
+  if (ordersStat) ordersStat.innerText = STATE.activeOrders.length || 18;
+  if (addrsStat) addrsStat.innerText = (STATE.user.addresses && STATE.user.addresses.length) || 2;
+  if (favsStat) favsStat.innerText = STATE.favorites.length || 6;
 
   document.getElementById('profileModal').classList.remove('hidden');
   AtmosphereManager.pushOverride('profileModal', 'minimal');
@@ -3932,5 +4030,340 @@ async function handleSubmitRating() {
   } catch (err) {
     console.error('Submit rating error:', err);
     showToast('Failed to connect to server');
+  }
+}
+
+
+// ==========================================================
+// ZOMATO-INSPIRED DYNAMIC EXPERIENCE ENGINE & VIP COMPANIONS
+// ==========================================================
+let promoCarouselIndex = 0;
+let promoCarouselTimer = null;
+
+function initPromoCarousel() {
+  const carousel = document.getElementById('heroPromoCarousel');
+  if (!carousel) return;
+  
+  if (promoCarouselTimer) clearInterval(promoCarouselTimer);
+  promoCarouselTimer = setInterval(() => {
+    setCarouselSlide((promoCarouselIndex + 1) % 3);
+  }, 4500);
+
+  carousel.addEventListener('mouseenter', () => clearInterval(promoCarouselTimer));
+  carousel.addEventListener('mouseleave', () => {
+    clearInterval(promoCarouselTimer);
+    promoCarouselTimer = setInterval(() => {
+      setCarouselSlide((promoCarouselIndex + 1) % 3);
+    }, 4500);
+  });
+}
+
+function setCarouselSlide(idx) {
+  promoCarouselIndex = idx;
+  const track = document.getElementById('promoTrack');
+  const dots = document.querySelectorAll('.carousel-dot');
+  
+  if (track) {
+    track.style.transform = `translateX(-${idx * 100}%)`;
+  }
+  
+  dots.forEach((dot, i) => {
+    if (i === idx) {
+      dot.className = 'carousel-dot w-6 h-1.5 rounded-full bg-rose-600 transition-all duration-300';
+    } else {
+      dot.className = 'carousel-dot w-1.5 h-1.5 rounded-full bg-stone-300 dark:bg-zinc-700 transition-all duration-300';
+    }
+  });
+}
+
+let activeQuickFilters = {
+  nearFast: false,
+  noPackaging: false,
+  topRated: false,
+  healthy: false
+};
+
+function toggleNearAndFast() {
+  activeQuickFilters.nearFast = !activeQuickFilters.nearFast;
+  const btn = document.getElementById('btnNearFast');
+  if (btn) {
+    btn.classList.toggle('bg-rose-50', activeQuickFilters.nearFast);
+    btn.classList.toggle('border-rose-500', activeQuickFilters.nearFast);
+    btn.classList.toggle('text-rose-600', activeQuickFilters.nearFast);
+  }
+  applyActiveFilters();
+  showToast(activeQuickFilters.nearFast ? '⚡ Filtered: Near & Fast Delivery (< 25 mins)' : 'Showing all delivery zones');
+}
+
+function toggleNoPackaging() {
+  activeQuickFilters.noPackaging = !activeQuickFilters.noPackaging;
+  const btn = document.getElementById('btnNoPackaging');
+  if (btn) {
+    btn.classList.toggle('bg-emerald-50', activeQuickFilters.noPackaging);
+    btn.classList.toggle('border-emerald-500', activeQuickFilters.noPackaging);
+    btn.classList.toggle('text-emerald-700', activeQuickFilters.noPackaging);
+  }
+  applyActiveFilters();
+  showToast(activeQuickFilters.noPackaging ? '🍃 Filtered: Stalls with Zero Packaging Charges' : 'Showing all packaging options');
+}
+
+function toggleTopRated() {
+  activeQuickFilters.topRated = !activeQuickFilters.topRated;
+  const btn = document.getElementById('btnTopRated');
+  if (btn) {
+    btn.classList.toggle('bg-amber-50', activeQuickFilters.topRated);
+    btn.classList.toggle('border-amber-500', activeQuickFilters.topRated);
+    btn.classList.toggle('text-amber-800', activeQuickFilters.topRated);
+  }
+  applyActiveFilters();
+  showToast(activeQuickFilters.topRated ? '⭐ Filtered: 4.0+ Top Rated Street Food Stalls' : 'Showing all ratings');
+}
+
+function toggleHealthyMode() {
+  activeQuickFilters.healthy = !activeQuickFilters.healthy;
+  const dockBtn = document.getElementById('dockTab_healthy');
+  if (dockBtn) {
+    dockBtn.classList.toggle('text-emerald-600', activeQuickFilters.healthy);
+    dockBtn.classList.toggle('font-black', activeQuickFilters.healthy);
+  }
+  applyActiveFilters();
+  showToast(activeQuickFilters.healthy ? '🥗 Healthy Street Mode: Highlighting Sprouts, Fruits & Steamed Items' : 'Showing full street menu');
+}
+
+function openFilterDrawer() {
+  const hasActive = Object.values(activeQuickFilters).some(Boolean);
+  if (hasActive) {
+    activeQuickFilters = { nearFast: false, noPackaging: false, topRated: false, healthy: false };
+    ['btnNearFast', 'btnNoPackaging', 'btnTopRated'].forEach(id => {
+      const b = document.getElementById(id);
+      if (b) {
+        b.className = b.className.replace(/bg-rose-50|border-rose-500|text-rose-600|bg-emerald-50|border-emerald-500|text-emerald-700|bg-amber-50|border-amber-500|text-amber-800/g, '').trim();
+      }
+    });
+    applyActiveFilters();
+    showToast('Filters cleared — showing all stalls');
+  } else {
+    showToast('Select any filter pill above to refine stalls');
+  }
+}
+
+function applyActiveFilters() {
+  if (!STATE.stalls || STATE.stalls.length === 0) return;
+  
+  let filtered = [...STATE.stalls];
+  const custCoords = getActiveCustomerCoordinates();
+  
+  if (activeQuickFilters.nearFast) {
+    filtered = filtered.filter(s => {
+      const eta = calculateMarketplaceEta(s, custCoords, STATE.deliveryCapacity);
+      return (eta && eta.totalMinutes <= 25);
+    });
+  }
+  
+  if (activeQuickFilters.topRated) {
+    filtered = filtered.filter(s => (s.rating && Number(s.rating) >= 4.0));
+  }
+  
+  if (activeQuickFilters.noPackaging) {
+    filtered = filtered.filter(s => !s.packagingFee || Number(s.packagingFee) === 0);
+  }
+
+  if (activeQuickFilters.healthy) {
+    filtered = filtered.filter(s => {
+      const text = `${s.name} ${s.specialty || ''} ${s.category || ''}`.toLowerCase();
+      return text.includes('sprout') || text.includes('fruit') || text.includes('steamed') || text.includes('momo') || text.includes('dosa') || text.includes('juice') || text.includes('diet');
+    });
+  }
+  
+  renderStalls(filtered);
+}
+
+function switchDockTab(tab) {
+  ['home', 'under100', 'dining', 'healthy', 'account'].forEach(t => {
+    const el = document.getElementById(`dockTab_${t}`);
+    if (el) {
+      if (t === tab) {
+        el.classList.add('text-rose-600', 'dark:text-rose-400', 'font-black');
+        el.classList.remove('text-stone-500', 'dark:text-stone-400');
+      } else {
+        el.classList.remove('text-rose-600', 'dark:text-rose-400', 'font-black');
+        el.classList.add('text-stone-500', 'dark:text-stone-400');
+      }
+    }
+  });
+
+  if (tab === 'home') {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    filterCategory('all');
+  } else if (tab === 'under100') {
+    scrollToDiscoverySection('secUnder100');
+  } else if (tab === 'dining') {
+    scrollToDiscoverySection('secLateNight');
+    showToast('🎪 Street Carnival & Night Tawa Feast!');
+  } else if (tab === 'healthy') {
+    toggleHealthyMode();
+  } else if (tab === 'account') {
+    handleAuthBtnClick();
+  }
+}
+
+// Thela Gold Modal
+function openThelaGoldModal() {
+  const modal = document.getElementById('thelaGoldModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    AtmosphereManager.pushOverride('thelaGoldModal', 'minimal');
+  }
+}
+
+function closeThelaGoldModal() {
+  const modal = document.getElementById('thelaGoldModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    AtmosphereManager.popOverride('thelaGoldModal');
+  }
+}
+
+// Coupons Drawer
+function openCouponsDrawer() {
+  const drawer = document.getElementById('couponsDrawer');
+  if (drawer) {
+    drawer.classList.remove('hidden');
+    AtmosphereManager.pushOverride('couponsDrawer', 'minimal');
+  }
+}
+
+function closeCouponsDrawer() {
+  const drawer = document.getElementById('couponsDrawer');
+  if (drawer) {
+    drawer.classList.add('hidden');
+    AtmosphereManager.popOverride('couponsDrawer');
+  }
+}
+
+function applyCoupon(code) {
+  applyPromoCode(code);
+}
+
+function applyPromoCode(code) {
+  STATE.appliedCoupon = code;
+  showToast(`🎉 Coupon ${code} applied successfully!`);
+  closeCouponsDrawer();
+  
+  const subtotal = STATE.cart.items.reduce((s, i) => s + (i.price * i.qty), 0);
+  updateBillBreakdown(subtotal);
+  updateCartFloatingBar();
+}
+
+// Food On Train Modal
+function openTrainFoodModal() {
+  const modal = document.getElementById('trainFoodModal');
+  if (modal) {
+    modal.classList.remove('hidden');
+    AtmosphereManager.pushOverride('trainFoodModal', 'minimal');
+  }
+}
+
+function closeTrainFoodModal() {
+  const modal = document.getElementById('trainFoodModal');
+  if (modal) {
+    modal.classList.add('hidden');
+    AtmosphereManager.popOverride('trainFoodModal');
+  }
+}
+
+function handleTrainDeliverySave() {
+  const pnr = document.getElementById('trainPnrInput')?.value.trim();
+  const berth = document.getElementById('trainBerthInput')?.value.trim();
+  if (!pnr || pnr.length < 6) {
+    showToast('Please enter a valid 10-digit PNR');
+    return;
+  }
+  showToast(`🚂 Train Delivery Saved: PNR ${pnr} (Coach/Berth: ${berth || 'Confirmed'})! Delivering hot street food to your platform window.`);
+  closeTrainFoodModal();
+}
+
+// Thela Wallet Drawer
+function openWalletDrawer() {
+  const drawer = document.getElementById('walletDrawer');
+  if (drawer) {
+    const balEl = document.getElementById('walletCurrentBal');
+    if (balEl) balEl.innerText = `₹${STATE.user?.walletBalance || 0}`;
+    drawer.classList.remove('hidden');
+    AtmosphereManager.pushOverride('walletDrawer', 'minimal');
+  }
+}
+
+function closeWalletDrawer() {
+  const drawer = document.getElementById('walletDrawer');
+  if (drawer) {
+    drawer.classList.add('hidden');
+    AtmosphereManager.popOverride('walletDrawer');
+  }
+}
+
+function rechargeWallet(amount) {
+  if (!STATE.user) STATE.user = { walletBalance: 0 };
+  STATE.user.walletBalance = (STATE.user.walletBalance || 0) + Number(amount);
+  localStorage.setItem('thela_user', JSON.stringify(STATE.user));
+  
+  updateHeaderLocation();
+  const balEl = document.getElementById('walletCurrentBal');
+  if (balEl) balEl.innerText = `₹${STATE.user.walletBalance}`;
+  const profileBal = document.getElementById('profileWalletAmount');
+  if (profileBal) profileBal.innerText = `₹${STATE.user.walletBalance}`;
+  
+  showToast(`💳 ₹${amount} added to Thela Money! New Balance: ₹${STATE.user.walletBalance}`);
+  closeWalletDrawer();
+}
+
+// Profile Form & Helpers
+function toggleProfileEditForm() {
+  const form = document.getElementById('profileEditForm');
+  if (form) {
+    form.classList.toggle('hidden');
+  }
+}
+
+function openPaymentMethods() {
+  showToast('💳 Supported payment modes: UPI, PhonePe, Paytm, GooglePay, COD, Thela Money');
+}
+
+function openHelpDrawer() {
+  showToast('💬 24x7 Street Food Support: Live Chat & WhatsApp helpline connected');
+}
+
+function cycleThemeMode() {
+  if (window.ThelaTheme && typeof window.ThelaTheme.cycleTheme === 'function') {
+    window.ThelaTheme.cycleTheme();
+  } else {
+    document.documentElement.classList.toggle('dark');
+  }
+}
+
+// Voice Search
+function handleVoiceSearch() {
+  const searchInput = document.getElementById('searchInput');
+  if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+    const SpeechRec = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRec();
+    recognition.lang = 'en-IN';
+    recognition.onstart = () => {
+      showToast('🎙️ Listening... Speak your craving (e.g. "Chole Bhature", "Momos")');
+    };
+    recognition.onresult = (event) => {
+      const speechResult = event.results[0][0].transcript;
+      if (searchInput) {
+        searchInput.value = speechResult;
+        handleSearchInput();
+      }
+      showToast(`🔍 Searching for: "${speechResult}"`);
+    };
+    recognition.onerror = () => {
+      showToast('Could not access microphone or voice input');
+    };
+    recognition.start();
+  } else {
+    showToast('🎙️ Voice search: What street food are you craving?');
   }
 }
