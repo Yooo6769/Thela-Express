@@ -3368,7 +3368,12 @@ async function handleSendOtp() {
       document.getElementById('authOtpSection').classList.remove('hidden');
       btn.innerText = 'Verify & Continue';
       btn.onclick = handleVerifyOtp;
-      showToast(`Verification code sent to +91 ${phone}`);
+      const receivedOtp = data.otp || data.devOtp || '1234';
+      const otpInput = document.getElementById('authOtpInput');
+      if (otpInput) {
+        otpInput.value = receivedOtp;
+      }
+      showToast(`🔑 Your OTP is: ${receivedOtp} (Auto-filled)`);
     } else {
       alert(data.error);
       btn.innerText = 'Send OTP';
