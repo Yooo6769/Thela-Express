@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.2.3`  
+**Current Production Version**: `v2.2.4`  
 **Current Date**: September 23, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -42,6 +42,7 @@ flowchart LR
     v220 --> v221["v2.2.1<br/>Purge Restaurant Dining & Fake Data; Enforce 100% Street Food Authenticity"]
     v221 --> v222["v2.2.2<br/>Theme Adaptation, Harmonized Atmosphere, Animated Veg Toggle, Dynamic Coupons & Buyable VIP"]
     v222 --> v223["v2.2.3<br/>Explicit Prominent Login Button & Bottom Dock Account Access"]
+    v223 --> v224["v2.2.4<br/>Dark Theme Hover Contrast Fix & Swipe-Accessible Real Food Carousel"]
 ```
 
 ---
@@ -576,6 +577,30 @@ flowchart LR
 
 ---
 
+### `v2.2.4` — Dark Theme Hover Contrast Fix & Swipe-Accessible Real Food Carousel
+- **Release Date**: September 23, 2026
+- **Git Commit**: `v2.2.4` (pending commit)
+- **Key Architectural Accomplishments**:
+  - **Dark Mode Hover/Active White Flash Elimination**:
+    - Replaced 15 invalid Tailwind `stone-850` classes in [public/index.html](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/public/index.html) with valid `dark:hover:bg-stone-800`.
+    - Added comprehensive dark mode overrides in [public/theme.css](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/public/theme.css) covering `.hover:bg-stone-*`, `.hover:bg-gray-*`, `.hover:bg-slate-*`, and active touch states, preventing mobile iOS/Android touch `:hover` states from flashing pure white (#f5f5f4) or obscuring text in the Account Center.
+  - **Real Authentic Street Food Photography in Hero Carousel**:
+    - Purged cartoon SVG food collage doodles from the festive hero carousel slides.
+    - Integrated high-resolution, appetizing food photography with rounded corners, drop shadows, and subtle ambient overlays:
+      - **Slide 1**: Crispy hot street samosas and kachoris (`photo-1601050690597-df0568f70950`).
+      - **Slide 2**: Royal Indian street food platter (`photo-1546833999-b9f581a1996d`) with VIP gold badge.
+      - **Slide 3**: Sizzling butter pav bhaji & kathi rolls (`photo-1606491956689-2ea866880c84`) with midnight carnival badge.
+  - **Fully Accessible & Manual Slide Navigation**:
+    - **Touch Swipe (Mobile)**: Added native `touchstart`, `touchmove`, and `touchend` swipe gesture listeners with horizontal delta thresholding (35px).
+    - **Pointer Drag (Desktop/Trackpad)**: Added smooth pointer dragging support for mouse and trackpad users.
+    - **Arrow Controls**: Added accessible Left (`#carouselPrevBtn`) and Right (`#carouselNextBtn`) navigation buttons for 1-tap manual slide advancement.
+    - **Keyboard Navigation**: Added `ArrowLeft` / `ArrowRight` arrow key support when the carousel is focused.
+    - **Graceful Timer Reset**: Manual user interactions smoothly reset the 5-second auto-slide interval.
+  - **Automated Verification**:
+    - Updated `scratch/test_street_food_ux.js` to 21 automated tests, validating real food photos, manual slide controls, and zero invalid `stone-850` classes. All passing 100%.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
@@ -689,7 +714,7 @@ stateDiagram-v2
 
 | Test Script File | Primary Verification Objective | Number of Tests | Status |
 | :--- | :--- | :---: | :---: |
-| [`test_street_food_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_street_food_ux.js) | Authentic street food UX, theme harmonized atmosphere, zero 1971 fake count, visual veg toggle, buyable VIP, dynamic coupons & adaptive modals | 19 tests | ✅ Passed |
+| [`test_street_food_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_street_food_ux.js) | Authentic street food UX, real food photo carousel, swipe/touch accessibility, theme dark hover protection, zero 1971 fake count, visual veg toggle, buyable VIP, dynamic coupons & adaptive modals | 21 tests | ✅ Passed |
 | [`test_zomato_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_zomato_ux.js) | Zomato-inspired dynamic customer app experience, hero carousel, circular stories, quick filters, bottom dock, VIP Gold profile & wallet engine | 12 tests | ✅ Passed |
 | [`test_store_status_contradiction.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_store_status_contradiction.js) | Server-authoritative store status derivation, anti-bypass invariants, hoisting audit, zero 1.5 km copy | 7 suites | ✅ Passed |
 | [`test_vendor_rider_activation.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_vendor_rider_activation.js) | 7 mandatory activation gates, zero admin bypass, untrusted browser GPS, continuous revalidation, token scoping, rider dispatch gating | 8 suites | ✅ Passed |

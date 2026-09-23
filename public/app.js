@@ -4153,24 +4153,113 @@ async function handleSubmitRating() {
 // ==========================================================
 // ZOMATO-INSPIRED DYNAMIC EXPERIENCE ENGINE & VIP COMPANIONS
 // ==========================================================
+// ==========================================================
+// ZOMATO-STYLE HERO PROMO CAROUSEL (SWIPE, DRAG & KEYBOARD ACCESSIBLE)
+// ==========================================================
 let promoCarouselIndex = 0;
 let promoCarouselTimer = null;
+
+function resetPromoCarouselTimer() {
+  if (promoCarouselTimer) clearInterval(promoCarouselTimer);
+  promoCarouselTimer = setInterval(() => {
+    nextCarouselSlide();
+  }, 5000);
+}
+
+function nextCarouselSlide() {
+  setCarouselSlide((promoCarouselIndex + 1) % 3);
+  resetPromoCarouselTimer();
+}
+
+function prevCarouselSlide() {
+  setCarouselSlide((promoCarouselIndex - 1 + 3) % 3);
+  resetPromoCarouselTimer();
+}
 
 function initPromoCarousel() {
   const carousel = document.getElementById('heroPromoCarousel');
   if (!carousel) return;
   
-  if (promoCarouselTimer) clearInterval(promoCarouselTimer);
-  promoCarouselTimer = setInterval(() => {
-    setCarouselSlide((promoCarouselIndex + 1) % 3);
-  }, 4500);
+  resetPromoCarouselTimer();
 
-  carousel.addEventListener('mouseenter', () => clearInterval(promoCarouselTimer));
+  // Pause on hover
+  carousel.addEventListener('mouseenter', () => {
+    if (promoCarouselTimer) clearInterval(promoCarouselTimer);
+  });
   carousel.addEventListener('mouseleave', () => {
-    clearInterval(promoCarouselTimer);
-    promoCarouselTimer = setInterval(() => {
-      setCarouselSlide((promoCarouselIndex + 1) % 3);
-    }, 4500);
+    resetPromoCarouselTimer();
+  });
+
+  // Touch swipe support (Mobile thumb gestures)
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let touchEndX = 0;
+  let touchEndY = 0;
+  let isTouchSwiping = false;
+
+  carousel.addEventListener('touchstart', (e) => {
+    if (!e.changedTouches || e.changedTouches.length === 0) return;
+    touchStartX = e.changedTouches[0].clientX;
+    touchStartY = e.changedTouches[0].clientY;
+    isTouchSwiping = true;
+  }, { passive: true });
+
+  carousel.addEventListener('touchend', (e) => {
+    if (!isTouchSwiping || !e.changedTouches || e.changedTouches.length === 0) return;
+    isTouchSwiping = false;
+    touchEndX = e.changedTouches[0].clientX;
+    touchEndY = e.changedTouches[0].clientY;
+    
+    const diffX = touchEndX - touchStartX;
+    const diffY = touchEndY - touchStartY;
+    
+    // Only trigger if horizontal swipe is dominant and exceeds 35px threshold
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 35) {
+      if (diffX < 0) {
+        nextCarouselSlide(); // Swiped left -> Next slide
+      } else {
+        prevCarouselSlide(); // Swiped right -> Previous slide
+      }
+    }
+  }, { passive: true });
+
+  // Pointer drag support (Desktop mouse/trackpad dragging)
+  let isPointerDown = false;
+  let pointerStartX = 0;
+
+  carousel.addEventListener('pointerdown', (e) => {
+    // Ignore button clicks
+    if (e.target.closest('button')) return;
+    isPointerDown = true;
+    pointerStartX = e.clientX;
+  });
+
+  carousel.addEventListener('pointerup', (e) => {
+    if (!isPointerDown) return;
+    isPointerDown = false;
+    const diff = e.clientX - pointerStartX;
+    if (Math.abs(diff) > 40) {
+      if (diff < 0) {
+        nextCarouselSlide();
+      } else {
+        prevCarouselSlide();
+      }
+    }
+  });
+
+  carousel.addEventListener('pointercancel', () => {
+    isPointerDown = false;
+  });
+
+  // Keyboard navigation when carousel is focused
+  carousel.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') {
+      e.preventDefault();
+      nextCarouselSlide();
+    } else if (e.key === 'ArrowLeft') {
+      e.preventDefault();
+      prevCarouselSlide();
+    }
   });
 }
 
@@ -4184,10 +4273,13 @@ function setCarouselSlide(idx) {
   }
   
   dots.forEach((dot, i) => {
+    const bar = dot.querySelector('.dot-bar') || dot;
     if (i === idx) {
-      dot.className = 'carousel-dot w-6 h-1.5 rounded-full bg-rose-600 transition-all duration-300';
+      bar.className = 'dot-bar w-6 h-1.5 rounded-full bg-white transition-all duration-300';
+      dot.setAttribute('aria-selected', 'true');
     } else {
-      dot.className = 'carousel-dot w-1.5 h-1.5 rounded-full bg-stone-300 dark:bg-zinc-700 transition-all duration-300';
+      bar.className = 'dot-bar w-2 h-1.5 rounded-full bg-white/50 transition-all duration-300';
+      dot.setAttribute('aria-selected', 'false');
     }
   });
 }

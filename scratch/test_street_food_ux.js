@@ -56,11 +56,29 @@ test('Search row has integrated voice mic & pure veg toggle switch', () => {
 });
 
 console.log('\n--- TEST SUITE 2: Street Food Hero Carousel & Circular Dishes ---');
-test('Festive Hero Carousel exists with 3 slides and pagination dots', () => {
+test('Festive Hero Carousel exists with 3 slides, pagination dots, and accessible manual controls', () => {
   assert(html.includes('id="heroPromoCarousel"'), 'Missing #heroPromoCarousel');
   assert(html.includes('id="promoTrack"'), 'Missing #promoTrack');
   assert(html.includes('id="carouselDots"'), 'Missing #carouselDots');
+  assert(html.includes('id="carouselPrevBtn"'), 'Missing accessible #carouselPrevBtn');
+  assert(html.includes('id="carouselNextBtn"'), 'Missing accessible #carouselNextBtn');
   assert(html.includes('THELA70'), 'Missing 70% OFF promo code');
+});
+
+test('Hero Carousel features real authentic street food photography and zero cartoon vector food', () => {
+  assert(html.includes('Crispy Hot Street Samosas & Chaat'), 'Missing real samosas/chaat photo on slide 1');
+  assert(html.includes('Royal Indian Street Food Platter'), 'Missing real royal platter photo on slide 2');
+  assert(html.includes('Sizzling Butter Pav Bhaji'), 'Missing real pav bhaji photo on slide 3');
+  assert(!html.includes('polygon points="15,75 85,75'), 'Still contains cartoon vector crown in slide 2');
+});
+
+test('Carousel engine in app.js supports mobile touch swipe, pointer drag, arrow buttons, and keyboard navigation', () => {
+  assert(appJs.includes('nextCarouselSlide'), 'Missing nextCarouselSlide in app.js');
+  assert(appJs.includes('prevCarouselSlide'), 'Missing prevCarouselSlide in app.js');
+  assert(appJs.includes('touchstart'), 'Missing touchstart listener on carousel');
+  assert(appJs.includes('touchend'), 'Missing touchend listener on carousel');
+  assert(appJs.includes('pointerdown'), 'Missing pointerdown listener on carousel');
+  assert(appJs.includes('keydown'), 'Missing keydown listener on carousel');
 });
 
 test('Circular Food Category Stories Rail has all 11 street dishes', () => {
@@ -158,9 +176,13 @@ test('Coupons start at 0 available and are earned from orders', () => {
   assert(appJs.includes('STATE.user.earnedCoupons.push(newCoupon)'), 'Payment completion does not award earned coupon');
 });
 
-test('Profile Drawer, Eco Banner, and Modals adapt to active light/dark theme', () => {
+test('Profile Drawer, Eco Banner, and Modals adapt to active light/dark theme with zero stone-850 classes', () => {
   assert(html.includes('bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 w-full sm:max-w-md h-full flex flex-col shadow-2xl'), 'Profile modal missing adaptive light/dark theme');
   assert(html.includes('id="ecoPlanetBanner" class="mt-4 bg-white dark:bg-stone-900'), 'Eco Planet banner not adapted to light theme');
+  assert(!html.includes('stone-850'), 'index.html still contains invalid Tailwind stone-850 classes');
+  const css = fs.readFileSync(path.join(__dirname, '..', 'public', 'theme.css'), 'utf8');
+  assert(css.includes('html.dark .hover\\:bg-stone-100:hover'), 'Missing dark mode hover:bg-stone-100 override in theme.css');
+  assert(css.includes('html.dark .hover\\:bg-stone-100:active'), 'Missing dark mode hover:bg-stone-100 active override in theme.css');
 });
 
 console.log('\n--- TEST SUITE 7: JavaScript Engine Functions & Clean Architecture ---');

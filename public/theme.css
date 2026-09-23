@@ -273,11 +273,33 @@ html.dark .bg-white.rounded-2xl {
   color: var(--thela-text-primary);
 }
 
+/* Bulletproof dark mode hover & active protection (Eliminates white flashes on tap/touch/hover) */
+html.dark .hover\:bg-stone-50:hover,
+html.dark .hover\:bg-stone-100:hover,
+html.dark .hover\:bg-stone-200:hover,
+html.dark .hover\:bg-stone-50:active,
+html.dark .hover\:bg-stone-100:active,
+html.dark .hover\:bg-stone-200:active,
 html.dark .hover\:bg-gray-50:hover,
 html.dark .hover\:bg-gray-100:hover,
+html.dark .hover\:bg-gray-200:hover,
+html.dark .hover\:bg-gray-50:active,
+html.dark .hover\:bg-gray-100:active,
+html.dark .hover\:bg-gray-200:active,
 html.dark .hover\:bg-slate-50:hover,
-html.dark .hover\:bg-slate-100:hover {
+html.dark .hover\:bg-slate-100:hover,
+html.dark .hover\:bg-slate-200:hover,
+html.dark .hover\:bg-slate-50:active,
+html.dark .hover\:bg-slate-100:active,
+html.dark .hover\:bg-slate-200:active,
+html.dark .hover\:bg-zinc-50:hover,
+html.dark .hover\:bg-zinc-100:hover,
+html.dark .hover\:bg-zinc-200:hover,
+html.dark .hover\:bg-neutral-50:hover,
+html.dark .hover\:bg-neutral-100:hover,
+html.dark .hover\:bg-neutral-200:hover {
   background-color: #27272a !important;
+  color: var(--thela-text-primary) !important;
 }
 
 /* Retain Badges & Colored Notification Banners */
