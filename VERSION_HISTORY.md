@@ -504,7 +504,7 @@ flowchart LR
 
 ### `v2.1.4` — Admin HQ Simplification & 1-Click Operations Engine
 - **Release Date**: September 23, 2026
-- **Git Commit**: `TBD` (`feat: simplify admin HQ with 1-click vendor and rider operations (v2.1.4)`)
+- **Git Commit**: `07d60be` (`feat: simplify admin HQ with 1-click vendor and rider operations (v2.1.4)`)
 - **Key Architectural Accomplishments**:
   - **1-Click Direct Vendor & Rider Deletion**:
     - Replaced hidden, off-screen icon buttons with prominent, high-visibility red **Delete** buttons (`bg-red-600 hover:bg-red-500`) directly visible on every stall and rider row.
@@ -523,7 +523,7 @@ flowchart LR
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `v2.1.4` | 2026-09-23 | Admin Operations | Simplify admin HQ with 1-click vendor and rider operations (v2.1.4) |
+| `07d60be` | 2026-09-23 | Admin Operations | Simplify admin HQ with 1-click vendor and rider operations (v2.1.4) |
 | `98bfd95` | 2026-09-23 | UI & Mobile UX | Optimize partner KDS control header layout and touch targets (v2.1.3) |
 | `27c6a60` | 2026-09-21 | Admin Operations | Administrative stall and rider deletion engine with UI controls (v2.1.2) |
 | `9c778dd` | 2026-09-21 | Data Integrity | Eliminate 86/85 placeholder and enforce dynamic Menu Availability (v2.1.1) |
