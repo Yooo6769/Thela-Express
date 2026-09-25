@@ -829,6 +829,9 @@ function getThelaFoodPlaceholder(category = 'streetfood', name = '') {
   } else if (cat.includes('sweet') || cat.includes('jalebi') || cat.includes('mithai') || cat.includes('kulfi')) {
     catLabel = 'Mithai & Sweets';
     iconSvg = '<circle cx="50" cy="50" r="16" fill="none" stroke="#ea580c" stroke-width="3"/><circle cx="50" cy="50" r="10" fill="none" stroke="#f59e0b" stroke-width="2.5"/><circle cx="50" cy="50" r="4" fill="#ea580c"/>';
+  } else if (cat.includes('pizza') || cat.includes('bread') || cat.includes('crust')) {
+    catLabel = 'Street Pizza & Breads';
+    iconSvg = '<path d="M50 20 L80 75 Q50 82 20 75 Z" fill="#fde68a" stroke="#d97706" stroke-width="2"/><circle cx="50" cy="45" r="4" fill="#dc2626"/><circle cx="40" cy="60" r="4" fill="#16a34a"/><circle cx="60" cy="58" r="4" fill="#ea580c"/>';
   } else {
     catLabel = name ? name : 'Street Food';
     iconSvg = '<path d="M20 40 L80 40 L75 28 L25 28 Z" fill="#ea580c"/><rect x="25" y="42" width="50" height="20" rx="3" fill="#78350f"/><circle cx="50" cy="72" r="10" stroke="#78350f" stroke-width="3" fill="none"/>';
@@ -893,7 +896,7 @@ function renderDiscoverySections(stalls) {
       if (key === 'trending') {
         matchingStalls = stalls.filter(s => parseFloat(s.rating) >= 4.6);
       } else if (key === 'popular') {
-        matchingStalls = stalls.filter(s => ['chaat', 'vadapav', 'pavbhaji', 'momos', 'rolls', 'south'].includes(s.category));
+        matchingStalls = stalls.filter(s => ['chaat', 'vadapav', 'pavbhaji', 'momos', 'rolls', 'south', 'pizza'].includes(s.category));
       } else if (key === 'under100') {
         matchingStalls = stalls.filter(s => (s.priceForTwo && s.priceForTwo <= 100) || (s.items && s.items.some(i => i.price <= 100)));
       } else if (key === 'legends') {

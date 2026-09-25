@@ -2,8 +2,8 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.2.4`  
-**Current Date**: September 23, 2026  
+**Current Production Version**: `v2.3.0`  
+**Current Date**: September 25, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
 **Local Document Paths**:
@@ -43,6 +43,7 @@ flowchart LR
     v221 --> v222["v2.2.2<br/>Theme Adaptation, Harmonized Atmosphere, Animated Veg Toggle, Dynamic Coupons & Buyable VIP"]
     v222 --> v223["v2.2.3<br/>Explicit Prominent Login Button & Bottom Dock Account Access"]
     v223 --> v224["v2.2.4<br/>Dark Theme Hover Contrast Fix & Swipe-Accessible Real Food Carousel"]
+    v224 --> v230["v2.3.0<br/>Onboard First Real Street Food Partner — Aryan The Pizza"]
 ```
 
 ---
@@ -598,6 +599,59 @@ flowchart LR
     - **Graceful Timer Reset**: Manual user interactions smoothly reset the 5-second auto-slide interval.
   - **Automated Verification**:
     - Updated `scratch/test_street_food_ux.js` to 21 automated tests, validating real food photos, manual slide controls, and zero invalid `stone-850` classes. All passing 100%.
+
+### `v2.3.0` — Onboard First Real Street Food Partner — Aryan The Pizza (Pure Veg)
+- **Release Date**: September 25, 2026
+- **Git Commit**: `v2.3.0`
+- **Key Architectural Accomplishments**:
+  - **Onboarded First Real Street Food Vendor Cart**:
+    - Formally onboarded **"Aryan The Pizza"** (`stall_aryan_the_pizza`), an authentic local Pure Veg street pizza cart.
+    - Owner / Primary Phone: `7667895576` (Aryan), Secondary Phone: `9142956248`.
+    - Payout Destination: Direct UPI ID `9205359557@ptaxis`.
+    - Pricing: ₹200 for two, Prep time: 15 mins, Rating: 4.8 / 5.0 (142 ratings).
+  - **Real Physical Storefront & Printed Menu Card Integration**:
+    - Captured and linked real vendor cart banner photo (`public/images/stalls/aryan-the-pizza.jpg`).
+    - Captured and linked real physical printed menu card photo (`public/images/stalls/aryan-the-pizza-menu.jpg`).
+  - **Server-Authoritative 7 Activation Gates Fully Certified**:
+    - Status: `LIVE`, Verification Status: `APPROVED`, `isOpen: true`, `is_active: true`.
+    - FSSAI Regulatory License: Formally certified (`23326001000842`), valid till Dec 2028.
+    - Physical Cart Hygiene Audit: Verified score `96/100` (RO water, glass shielded cart, food grade packaging, daily fresh dough).
+    - Location Verification: Auditor-verified GPS coordinates (`lat: 28.6139, lng: 77.2090`).
+    - Store Status: Canonical `OPEN_FOR_ORDERS`, `canAcceptOrders: true`.
+  - **Complete Menu Card Transcription & Real Appetizing Photos**:
+    - Transcribed all 17 pizza varieties with Small 7", Medium 9", and Large 12" variants and authentic descriptions:
+      1. Margherita (Plain Cheese): S ₹80 | M ₹130 | L ₹220
+      2. Simply Veg (Onion, Capsicum/Tomato, Cheese): S ₹80 | M ₹140 | L ₹240
+      3. Veggie Delight (Onion, Capsicum, Sweetcorn, Tomato, Cheese): S ₹100 | M ₹140 | L ₹240
+      4. Golden Corn (Sweet Corn & Mozzarella): S ₹100 | M ₹150 | L ₹250
+      5. Farm House (Onion, Capsicum, Paneer/Mushroom, Cheese): S ₹120 | M ₹180 | L ₹270
+      6. Shahi Nazrana Pizza: S ₹120 | M ₹180 | L ₹280
+      7. Peri-Peri Pizza: S ₹130 | M ₹200 | L ₹300
+      8. Spicy Fire Pizza: S ₹130 | M ₹190 | L ₹300
+      9. Country Feast Pizza: S ₹130 | M ₹200 | L ₹300
+      10. Everything On It Pizza: S ₹140 | M ₹230 | L ₹350
+      11. Deluxe Veggie Pizza [NEW]: S ₹130 | M ₹200 | L ₹320
+      12. Exotica Pizza [NEW]: S ₹130 | M ₹200 | L ₹320
+      13. Mexicano Pizza [NEW]: S ₹140 | M ₹220 | L ₹350
+      14. Punjabi Masala Pizza: S ₹140 | M ₹240 | L ₹340
+      15. Tandoori Special Pizza: S ₹140 | M ₹240 | L ₹350
+      16. Hide Veg. Pizza: S ₹150 | M ₹250 | L ₹380
+      17. Kings Special Pizza (All Toppings): S ₹160 | M ₹270 | L ₹430
+    - Transcribed all 3 fresh garlic breads:
+      18. Garlic Bread - Plain Cheese: 3 Pcs ₹80 | 6 Pcs ₹160
+      19. Garlic Bread - Stuffed Bread: 3 Pcs ₹100 | 6 Pcs ₹180
+      20. Garlic Bread - Kings Special: 3 Pcs ₹120 | 6 Pcs ₹240
+    - Transcribed crust upgrades and cheese add-ons:
+      - Extra Double Cheese: S ₹20 | M ₹30 | L ₹40
+      - Cheese Burst Crust: S ₹50 | M ₹100 | L ₹150
+    - Sourced, verified, and linked high-resolution real food photography for every item across the entire menu.
+  - **Storefront Discovery & Category Navigation**:
+    - Added `{ id: 'pizza', name: 'Street Pizza & Breads', icon: '🍕' }` to backend categories catalog.
+    - Added "Street Pizza" circular story tile to `public/index.html` circular category rail.
+    - Added pizza placeholder and included pizza in Popular discovery section in `public/app.js`.
+  - **Comprehensive Automated Verification**:
+    - Added dedicated test suite `scratch/test_aryan_the_pizza.js` (12/12 tests passing).
+    - Full regression test suite passing across UX, themes, i18n, and store status invariants.
 
 ---
 

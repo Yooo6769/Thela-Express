@@ -675,6 +675,7 @@ class Database {
       { id: 'vadapav', name: 'Vada Pav', icon: '🍔' },
       { id: 'pavbhaji', name: 'Pav Bhaji & Tawa', icon: '🍲' },
       { id: 'momos', name: 'Momos & Dimsums', icon: '🥟' },
+      { id: 'pizza', name: 'Street Pizza & Breads', icon: '🍕' },
       { id: 'rolls', name: 'Kathi Rolls', icon: '🌯' },
       { id: 'south', name: 'Benne Dosa & Idli', icon: '🥞' },
       { id: 'parathas', name: 'Chole Bhature & Parathas', icon: '🫓' },
