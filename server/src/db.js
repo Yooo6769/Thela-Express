@@ -636,7 +636,7 @@ class Database {
   }
 
   // Stalls & Categories - Exposes ONLY stalls that are genuinely LIVE, open, and satisfy all mandatory activation gates
-  getStalls(category, customerLat = null, customerLng = null) {
+  getStalls(category, customerLat = null, customerLng = null, isVip = false) {
     let list = (this.data.stalls || []).filter(s => {
       const storeStatus = this.getStallStoreStatus(s);
       return storeStatus.canAcceptOrders;
@@ -656,17 +656,24 @@ class Database {
 
     return list.map(s => {
       const formatted = this.formatStallForPublic(s);
-      const maxRadius = s.delivery_radius_km || 7.0;
-      formatted.delivery_radius_km = maxRadius;
+      const standardRadius = s.delivery_radius_km || 10.0;
+      const vipRadius = s.vip_delivery_radius_km || 20.0;
+      const maxRadius = isVip ? vipRadius : standardRadius;
+      formatted.delivery_radius_km = standardRadius;
+      formatted.vip_delivery_radius_km = vipRadius;
       if (hasCustLoc && formatted.lat && formatted.lng && !isNaN(formatted.lat) && !isNaN(formatted.lng)) {
         const geoKm = this.computeGeographicDistanceKm(cLat, cLng, formatted.lat, formatted.lng);
         formatted.distance = `${geoKm.toFixed(1)} km`;
         formatted.distanceKm = geoKm;
         formatted.isDeliverable = geoKm <= maxRadius;
+        formatted.isDeliverableStandard = geoKm <= standardRadius;
+        formatted.isDeliverableVip = geoKm <= vipRadius;
       } else {
         formatted.distance = null;
         formatted.distanceKm = null;
         formatted.isDeliverable = false;
+        formatted.isDeliverableStandard = false;
+        formatted.isDeliverableVip = false;
       }
       return formatted;
     });

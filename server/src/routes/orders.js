@@ -58,18 +58,23 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: `Cannot place order: ${acceptanceCheck.reason}` });
   }
 
-  // Authoritative Delivery Radius Gate: Delivery address must be within stall radius (7 km from Mukherjee Nagar)
+  // Authoritative Delivery Radius Gate: Delivery address must be within stall radius (10 km standard, 20 km for VIP members)
   const custLat = parseFloat(req.body.delivery_lat || req.body.customer_lat);
   const custLng = parseFloat(req.body.delivery_lng || req.body.customer_lng);
   if (!isNaN(custLat) && !isNaN(custLng) && stall.lat && stall.lng) {
     const dist = db.computeGeographicDistanceKm(custLat, custLng, stall.lat, stall.lng);
-    const maxRadius = stall.delivery_radius_km || 7.0;
+    const customer = customer_phone ? db.getUserByPhone(customer_phone) : null;
+    const isVip = !!(customer && customer.goldMember);
+    const maxRadius = isVip ? (stall.vip_delivery_radius_km || 20.0) : (stall.delivery_radius_km || 10.0);
     if (dist > maxRadius) {
       return res.status(400).json({
-        error: `Delivery address is outside the vendor's delivery zone. ${stall.name} only delivers within ${maxRadius} km of Mukherjee Nagar 110009 (Your location is ${dist.toFixed(1)} km away).`,
+        error: isVip
+          ? `Delivery address is outside the vendor's VIP delivery zone (${maxRadius} km from GTB Nagar). Your location is ${dist.toFixed(1)} km away.`
+          : `Delivery address is outside the vendor's standard delivery zone (10 km). ${stall.name} delivers within 10 km (or up to 20 km for VIP members). Your location is ${dist.toFixed(1)} km away.`,
         code: 'OUT_OF_DELIVERY_RANGE',
         distanceKm: dist,
-        maxRadiusKm: maxRadius
+        maxRadiusKm: maxRadius,
+        isVip
       });
     }
   }

@@ -584,7 +584,7 @@ const DELHI_PREDEFINED_LOCATIONS = {
   mukherjee_nagar: {
     title: 'Mukherjee Nagar',
     tag: 'Home',
-    address: 'Near Batra Cinema, Commercial Complex, Mukherjee Nagar, Delhi - 110009',
+    address: 'Near GTB Nagar Metro Station, Mukherjee Nagar, Delhi - 110009',
     area: 'Mukherjee Nagar',
     pincode: '110009',
     lat: 28.7095,
@@ -593,7 +593,7 @@ const DELHI_PREDEFINED_LOCATIONS = {
   gtb_nagar: {
     title: 'GTB Nagar / Hudson Lane',
     tag: 'Home',
-    address: 'Hudson Lane, GTB Nagar, North Campus, Delhi - 110009',
+    address: 'Near GTB Nagar Metro Station Gate 1, Hudson Lane, Delhi - 110009',
     area: 'GTB Nagar',
     pincode: '110009',
     lat: 28.7000,
@@ -609,7 +609,7 @@ const DELHI_PREDEFINED_LOCATIONS = {
     lng: 77.1900
   },
   connaught_place: {
-    title: 'Connaught Place',
+    title: 'Connaught Place (CP)',
     tag: 'Work',
     address: 'Inner Circle, Connaught Place, Central Delhi - 110001',
     area: 'Connaught Place',
@@ -625,6 +625,15 @@ const DELHI_PREDEFINED_LOCATIONS = {
     pincode: '201301',
     lat: 28.5700,
     lng: 77.3200
+  },
+  ghaziabad: {
+    title: 'Ghaziabad (RDC)',
+    tag: 'Other',
+    address: 'RDC, Raj Nagar, Ghaziabad, Uttar Pradesh - 201001',
+    area: 'Ghaziabad',
+    pincode: '201001',
+    lat: 28.6692,
+    lng: 77.4538
   }
 };
 
@@ -670,10 +679,14 @@ function setPredefinedLocation(key) {
   loadStalls();
 
   const dist = computeGeographicDistanceKm(preset.lat, preset.lng, 28.7095, 77.2075);
-  if (dist !== null && dist <= 7.0) {
+  const isVip = !!(STATE.user && STATE.user.goldMember);
+  const maxRadius = isVip ? 20.0 : 10.0;
+  if (dist !== null && dist <= maxRadius) {
     showToast(`📍 Location set: ${preset.title} (${dist.toFixed(1)} km away • In Delivery Range ✓)`);
+  } else if (!isVip && dist !== null && dist <= 20.0) {
+    showToast(`👑 Location set: ${preset.title} (${dist.toFixed(1)} km away • Unlock with Thela VIP @ ₹1)`);
   } else {
-    showToast(`📍 Location set: ${preset.title} (${dist !== null ? dist.toFixed(1) : '50+'} km away • Out of Delivery Range)`);
+    showToast(`📍 Location set: ${preset.title} (${dist !== null ? dist.toFixed(1) : '20+'} km away • Outside Delivery Range)`);
   }
 }
 
@@ -762,8 +775,11 @@ function calculateMarketplaceEta(stall, customerCoords = null, capacity = null) 
 
   const distText = distKm !== null ? `${distKm.toFixed(1)} km` : null;
 
-  // Hyper-local delivery radius check (default 7.0 km)
-  const maxRadius = stall.delivery_radius_km || 7.0;
+  // Hyper-local delivery radius check (10 km standard, 20 km for VIP members)
+  const isVip = !!(typeof STATE !== 'undefined' && STATE.user && STATE.user.goldMember);
+  const standardRadius = stall.delivery_radius_km || 10.0;
+  const vipRadius = stall.vip_delivery_radius_km || 20.0;
+  const maxRadius = isVip ? vipRadius : standardRadius;
   const isOutOfRange = distKm !== null && distKm > maxRadius;
 
   // If customer location is missing or distance cannot be computed
@@ -793,6 +809,7 @@ function calculateMarketplaceEta(stall, customerCoords = null, capacity = null) 
   }
 
   if (isOutOfRange) {
+    const isVipEligible = !isVip && distKm <= vipRadius;
     return {
       isAvailable: false,
       isOutOfRange: true,
@@ -800,9 +817,8 @@ function calculateMarketplaceEta(stall, customerCoords = null, capacity = null) 
       maxRadiusKm: maxRadius,
       distanceKm: distKm,
       distanceText: distText,
-      pillText: `Out of range (${distText})`,
-      badgeText: `🚫 Out of range (${distText})`,
-      displayText: `🚫 Out of delivery range (${distText})`
+      pillText: isVipEligible ? `VIP Zone (${distText})` : `Out of range (${distText})`,
+      badgeText: isVipEligible ? `👑 VIP Zone (${distText})` : `🚫 Out of range (${distText})`,
     };
   }
 
@@ -1256,9 +1272,10 @@ async function loadStalls() {
     }
     STATE.stalls = stalls;
 
+    const isVip = !!(STATE.user && STATE.user.goldMember);
     const deliverableStalls = custCoords ? stalls.filter(s => {
       const eta = calculateMarketplaceEta(s, custCoords, STATE.deliveryCapacity);
-      const maxRadius = s.delivery_radius_km || 7.0;
+      const maxRadius = isVip ? (s.vip_delivery_radius_km || 20.0) : (s.delivery_radius_km || 10.0);
       return eta.distanceKm !== null && eta.distanceKm <= maxRadius;
     }) : [];
 
@@ -1278,6 +1295,7 @@ function renderStalls(stalls) {
   const thelasSeparator = document.getElementById('thelasCountSeparator');
   const exploreCountEl = document.getElementById('exploreMoreThelasCount');
   const custCoords = getActiveCustomerCoordinates();
+  const isVip = !!(STATE.user && STATE.user.goldMember);
 
   // STATE 1: LOCATION NOT SET YET (Customer has not added address or allowed GPS)
   if (!custCoords) {
@@ -1293,7 +1311,7 @@ function renderStalls(stalls) {
         <div class="space-y-1.5 max-w-md mx-auto">
           <h3 class="font-black text-lg sm:text-xl text-stone-900 dark:text-stone-100">Set Delivery Location to View Nearby Carts</h3>
           <p class="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-            Street food stalls deliver hot, fresh street bites within hyper-local zones (up to 7 km). Track your GPS or enter your delivery address to see live verified thelas delivering to you.
+            Street food stalls deliver hot, fresh street bites within 10 km (and up to 20 km for VIP members). Pin your location or enter your delivery address to see live verified thelas delivering to you.
           </p>
         </div>
         <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
@@ -1310,7 +1328,7 @@ function renderStalls(stalls) {
           <span class="text-[11px] font-extrabold uppercase tracking-wider text-stone-500 dark:text-stone-400 block mb-2">Popular Delhi Delivery Localities:</span>
           <div class="flex flex-wrap justify-center gap-1.5">
             <button onclick="setPredefinedLocation('mukherjee_nagar')" class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 hover:bg-amber-200 transition">
-              📍 Mukherjee Nagar (110009 • In Range)
+              📍 Mukherjee Nagar (In Range)
             </button>
             <button onclick="setPredefinedLocation('gtb_nagar')" class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-stone-700 dark:text-stone-300 hover:bg-amber-100 transition">
               📍 GTB Nagar (1.1 km • In Range)
@@ -1318,8 +1336,11 @@ function renderStalls(stalls) {
             <button onclick="setPredefinedLocation('model_town')" class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-stone-700 dark:text-stone-300 hover:bg-amber-100 transition">
               📍 Model Town (1.8 km • In Range)
             </button>
-            <button onclick="setPredefinedLocation('connaught_place')" class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 transition">
-              📍 Connaught Place (10.6 km • Out of Range)
+            <button onclick="setPredefinedLocation('connaught_place')" class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-amber-800 dark:text-amber-300 hover:bg-amber-100 transition">
+              👑 Connaught Place (10.6 km • VIP 20km Zone)
+            </button>
+            <button onclick="setPredefinedLocation('ghaziabad')" class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 transition">
+              📍 Ghaziabad (26 km • Out of Range)
             </button>
           </div>
         </div>
@@ -1328,14 +1349,14 @@ function renderStalls(stalls) {
     return;
   }
 
-  // Filter deliverable stalls based on distance <= radius
+  // Filter deliverable stalls based on distance <= radius (10km standard, 20km VIP)
   const deliverableStalls = stalls.filter(stall => {
     const eta = calculateMarketplaceEta(stall, custCoords, STATE.deliveryCapacity);
-    const maxRadius = stall.delivery_radius_km || 7.0;
+    const maxRadius = isVip ? (stall.vip_delivery_radius_km || 20.0) : (stall.delivery_radius_km || 10.0);
     return eta.distanceKm !== null && eta.distanceKm <= maxRadius;
   });
 
-  // STATE 2: LOCATION SET BUT OUT OF DELIVERY RANGE (e.g. > 7km away)
+  // STATE 2: LOCATION SET BUT OUT OF DELIVERY RANGE
   if (deliverableStalls.length === 0) {
     if (countEl) countEl.innerText = '0 carts in range';
     if (thelasSeparator) thelasSeparator.classList.add('hidden');
@@ -1345,6 +1366,28 @@ function renderStalls(stalls) {
     const firstStall = stalls[0];
     const eta = firstStall ? calculateMarketplaceEta(firstStall, custCoords, STATE.deliveryCapacity) : null;
     const distText = eta?.distanceText ? `${eta.distanceText}` : 'too far away';
+    const distKm = eta?.distanceKm;
+
+    let outOfRangeExplanation = '';
+    let vipCtaHtml = '';
+
+    if (!isVip && distKm !== null && distKm <= 20.0) {
+      outOfRangeExplanation = `Our verified street partner <strong class="text-amber-600 font-black">Aryan The Pizza</strong> delivers within 10 km (and up to 20 km for VIP members). Your current location (<strong>${currentLocName}</strong>) is <strong>${distText}</strong> away, which is eligible for Thela VIP extended delivery!`;
+      vipCtaHtml = `
+        <div class="p-3.5 bg-amber-50 dark:bg-amber-950/40 border border-amber-300 dark:border-amber-800 rounded-2xl max-w-md mx-auto space-y-2">
+          <div class="flex items-center justify-center space-x-1.5 text-amber-800 dark:text-amber-300 font-black text-xs">
+            <i class="fa-solid fa-crown text-amber-500"></i>
+            <span>Unlock 20 km Delivery with Thela VIP (@ ₹1)</span>
+          </div>
+          <p class="text-[11px] text-stone-600 dark:text-stone-400">Upgrade to Thela VIP Club for ₹1 to unlock delivery to your location (up to 20 km) plus unlimited free delivery on orders above ₹99.</p>
+          <button onclick="handleJoinVipClick()" class="px-4 py-2 bg-gradient-to-r from-amber-500 to-amber-600 hover:from-amber-400 hover:to-amber-500 text-stone-950 font-black text-xs rounded-xl shadow-xs transition active:scale-95">
+            Join VIP Club & Deliver Here
+          </button>
+        </div>
+      `;
+    } else {
+      outOfRangeExplanation = `Our verified street partner <strong class="text-amber-600 font-black">Aryan The Pizza</strong> (Near GTB Nagar Metro Station) delivers within 10 km (and up to 20 km for VIP members). Your current location (<strong>${currentLocName}</strong>) is <strong>${distText}</strong> away, which is outside the active delivery zone.`;
+    }
 
     container.innerHTML = `
       <div class="col-span-full bg-white dark:bg-stone-900 rounded-3xl border-2 border-dashed border-stone-200 dark:border-stone-800 p-6 sm:p-8 text-center space-y-4 shadow-sm">
@@ -1354,16 +1397,14 @@ function renderStalls(stalls) {
         <div class="space-y-1.5 max-w-md mx-auto">
           <h3 class="font-black text-lg sm:text-xl text-stone-900 dark:text-stone-100">No Carts Delivering to Your Location Yet</h3>
           <p class="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-            Our verified street partner <strong class="text-amber-600 font-black">Aryan The Pizza</strong> is located at <strong>Mukherjee Nagar (110009)</strong> and delivers within a 7 km radius. Your current location (<strong>${currentLocName}</strong>) is <strong>${distText}</strong> away, which is outside delivery range.
+            ${outOfRangeExplanation}
           </p>
         </div>
+        ${vipCtaHtml}
         <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
           <button onclick="openAddressDrawer()" class="px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shadow-md shadow-amber-600/20 flex items-center space-x-2 transition active:scale-95">
             <i class="fa-solid fa-location-dot"></i>
             <span>Change Delivery Address / Location</span>
-          </button>
-          <button onclick="setPredefinedLocation('mukherjee_nagar')" class="px-4 py-2.5 rounded-2xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-900 dark:text-stone-100 font-bold text-xs border border-stone-200 dark:border-stone-700 transition">
-            <span>Switch to Mukherjee Nagar (110009)</span>
           </button>
         </div>
       </div>
@@ -3337,13 +3378,18 @@ async function handlePlaceOrder() {
     return;
   }
 
-  // Enforce delivery radius check
+  // Enforce delivery radius check (10 km standard, 20 km for VIP members)
   const activeStall = (STATE.stalls || []).find(s => s.id === STATE.cart.stallId);
   if (activeStall && custCoords && typeof custCoords.lat === 'number' && typeof custCoords.lng === 'number') {
     const dist = computeGeographicDistanceKm(custCoords.lat, custCoords.lng, activeStall.lat, activeStall.lng);
-    const maxRadius = activeStall.delivery_radius_km || 7.0;
+    const isVip = !!(STATE.user && STATE.user.goldMember);
+    const maxRadius = isVip ? (activeStall.vip_delivery_radius_km || 20.0) : (activeStall.delivery_radius_km || 10.0);
     if (dist > maxRadius) {
-      showToast(`⚠️ Delivery Unavailable: ${activeStall.name} only delivers within ${maxRadius} km of Mukherjee Nagar. Your address is ${dist.toFixed(1)} km away.`);
+      if (!isVip && dist <= 20.0) {
+        showToast(`👑 Location is ${dist.toFixed(1)} km away. Standard delivery is up to 10 km. Join Thela VIP (@ ₹1) to unlock 20 km delivery!`);
+      } else {
+        showToast(`⚠️ Delivery Unavailable: ${activeStall.name} delivers within ${maxRadius} km of GTB Nagar. Your address is ${dist.toFixed(1)} km away.`);
+      }
       return;
     }
   }
@@ -4718,12 +4764,26 @@ function captureCustomerGps(isSilent = false) {
       const lat = parseFloat(pos.coords.latitude.toFixed(6));
       const lng = parseFloat(pos.coords.longitude.toFixed(6));
 
-      // Calculate distance to Mukherjee Nagar hub (28.7095, 77.2075)
+      // Calculate distance to hub (Mukherjee Nagar / GTB Nagar Metro Station: 28.7095, 77.2075)
       const dist = computeGeographicDistanceKm(lat, lng, 28.7095, 77.2075);
-      const isNearby = dist !== null && dist <= 7.0;
-      const areaName = isNearby
-        ? (dist <= 1.5 ? 'Mukherjee Nagar (Live GPS)' : `North Delhi (${dist.toFixed(1)} km)`)
-        : `Far Location (${dist !== null ? dist.toFixed(1) : '50+'} km)`;
+      const isVip = !!(STATE.user && STATE.user.goldMember);
+      const maxRadius = isVip ? 20.0 : 10.0;
+      const isNearby = dist !== null && dist <= maxRadius;
+
+      let areaName = 'Current Location';
+      if (dist !== null) {
+        if (dist <= 1.5) {
+          areaName = 'GTB Nagar / Mukherjee Nagar';
+        } else if (dist <= 5.0) {
+          areaName = 'North Delhi Area';
+        } else if (dist <= 10.0) {
+          areaName = 'Delhi Area';
+        } else if (dist <= 20.0) {
+          areaName = 'Extended NCR Area';
+        } else {
+          areaName = 'NCR Region';
+        }
+      }
 
       STATE.customerLocation = {
         lat,
@@ -4737,9 +4797,9 @@ function captureCustomerGps(isSilent = false) {
         id: 'addr_gps_live',
         tag: 'Live GPS',
         title: areaName,
-        address: `Live GPS Pin (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
+        address: `Pinned via Device GPS (${areaName})`,
         area: areaName,
-        pincode: isNearby ? '110009' : '',
+        pincode: (dist !== null && dist <= 2.0) ? '110009' : '',
         lat,
         lng,
         isDefault: true
@@ -4750,8 +4810,8 @@ function captureCustomerGps(isSilent = false) {
 
       const houseInput = document.getElementById('newAddrHouse');
       const streetInput = document.getElementById('newAddrStreet');
-      if (houseInput) houseInput.value = 'GPS Location';
-      if (streetInput) streetInput.value = `Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)} (${areaName})`;
+      if (houseInput) houseInput.value = 'Current Location';
+      if (streetInput) streetInput.value = areaName;
 
       if (label) label.innerText = 'GPS Locked ✓';
       updateHeaderLocation();
@@ -4761,9 +4821,11 @@ function captureCustomerGps(isSilent = false) {
 
       if (!isSilent) {
         if (isNearby) {
-          showToast(`📍 GPS Located: Within delivery zone (${dist.toFixed(1)} km from hub)!`);
+          showToast(`📍 Location pinned: ${areaName} (${dist.toFixed(1)} km away • In Delivery Range)`);
+        } else if (!isVip && dist !== null && dist <= 20.0) {
+          showToast(`👑 Location pinned: ${dist.toFixed(1)} km away. Unlock with Thela VIP (up to 20 km)!`);
         } else {
-          showToast(`⚠️ GPS Located: ${dist !== null ? dist.toFixed(1) : '50+'} km away. Outside 7 km delivery zone.`);
+          showToast(`⚠️ Location pinned: ${dist !== null ? dist.toFixed(1) : '20+'} km away (Outside 20 km delivery zone).`);
         }
       }
     },
@@ -4820,6 +4882,11 @@ async function handleSaveAddress(event) {
     inferredLng = 77.3200;
     inferredArea = 'Noida Sector 18';
     inferredPincode = '201301';
+  } else if (combinedText.includes('ghaziabad') || combinedText.includes('201001') || combinedText.includes('raj nagar')) {
+    inferredLat = 28.6692;
+    inferredLng = 77.4538;
+    inferredArea = 'Ghaziabad';
+    inferredPincode = '201001';
   } else if (STATE.customerLocation && typeof STATE.customerLocation.lat === 'number') {
     inferredLat = STATE.customerLocation.lat;
     inferredLng = STATE.customerLocation.lng;
@@ -4890,10 +4957,14 @@ async function handleSaveAddress(event) {
     loadStalls();
 
     const dist = computeGeographicDistanceKm(inferredLat, inferredLng, 28.7095, 77.2075);
-    if (dist !== null && dist <= 7.0) {
+    const isVip = !!(STATE.user && STATE.user.goldMember);
+    const maxRadius = isVip ? 20.0 : 10.0;
+    if (dist !== null && dist <= maxRadius) {
       showToast(`✅ Address saved: ${title} (${dist.toFixed(1)} km away • In Delivery Range)`);
+    } else if (!isVip && dist !== null && dist <= 20.0) {
+      showToast(`👑 Address saved: ${title} (${dist.toFixed(1)} km away • Unlock with Thela VIP @ ₹1)`);
     } else {
-      showToast(`⚠️ Address saved: ${title} (${dist !== null ? dist.toFixed(1) : '50+'} km away • Outside 7 km zone)`);
+      showToast(`⚠️ Address saved: ${title} (${dist !== null ? dist.toFixed(1) : '20+'} km away • Outside delivery zone)`);
     }
   } catch (err) {
     console.error('Save address error:', err);

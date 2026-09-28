@@ -2090,7 +2090,7 @@
           </div>
           <div>
             <h2 class="font-extrabold text-base text-stone-900 dark:text-white">Delivery Location & Address</h2>
-            <p class="text-xs text-stone-500 dark:text-stone-400">Street stalls deliver within hyper-local zones (7 km)</p>
+            <p class="text-xs text-stone-500 dark:text-stone-400">Delivery up to 10 km (Up to 20 km for VIP members)</p>
           </div>
         </div>
         <button onclick="closeAddressDrawer()" class="w-8 h-8 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-300 flex items-center justify-center hover:bg-stone-100 dark:hover:bg-stone-700">
@@ -2120,7 +2120,7 @@
                   <span>📍 Mukherjee Nagar</span>
                   <span class="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-black px-1.5 py-0.2 rounded">IN RANGE • ~0.1 km</span>
                 </div>
-                <div class="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5">Commercial Complex, Main Market, Delhi - 110009</div>
+                <div class="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5">Near GTB Nagar Metro Station, Delhi - 110009</div>
               </div>
               <i class="fa-solid fa-chevron-right text-stone-400 text-xs shrink-0 ml-2"></i>
             </button>
@@ -2147,13 +2147,35 @@
               <i class="fa-solid fa-chevron-right text-stone-400 text-xs shrink-0 ml-2"></i>
             </button>
 
-            <button type="button" onclick="setPredefinedLocation('connaught_place')" class="w-full text-left p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-stone-400 transition flex items-center justify-between opacity-80">
+            <button type="button" onclick="setPredefinedLocation('connaught_place')" class="w-full text-left p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-400 transition flex items-center justify-between">
               <div>
-                <div class="font-bold text-xs text-stone-700 dark:text-stone-300 flex items-center space-x-1.5">
+                <div class="font-bold text-xs text-stone-800 dark:text-stone-200 flex items-center space-x-1.5">
                   <span>📍 Connaught Place (CP)</span>
-                  <span class="bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-[9px] font-bold px-1.5 py-0.2 rounded">OUT OF RANGE • ~10.6 km</span>
+                  <span class="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[9px] font-black px-1.5 py-0.2 rounded">VIP 20KM RANGE • ~10.6 km</span>
                 </div>
                 <div class="text-[10px] text-stone-400 mt-0.5">Inner Circle, Central Delhi - 110001</div>
+              </div>
+              <i class="fa-solid fa-crown text-amber-500 text-xs shrink-0 ml-2"></i>
+            </button>
+
+            <button type="button" onclick="setPredefinedLocation('noida_sec18')" class="w-full text-left p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-400 transition flex items-center justify-between">
+              <div>
+                <div class="font-bold text-xs text-stone-800 dark:text-stone-200 flex items-center space-x-1.5">
+                  <span>📍 Noida Sector 18</span>
+                  <span class="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[9px] font-black px-1.5 py-0.2 rounded">VIP 20KM RANGE • ~19 km</span>
+                </div>
+                <div class="text-[10px] text-stone-400 mt-0.5">Atta Market, Sector 18, Noida - 201301</div>
+              </div>
+              <i class="fa-solid fa-crown text-amber-500 text-xs shrink-0 ml-2"></i>
+            </button>
+
+            <button type="button" onclick="setPredefinedLocation('ghaziabad')" class="w-full text-left p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-stone-400 transition flex items-center justify-between opacity-80">
+              <div>
+                <div class="font-bold text-xs text-stone-700 dark:text-stone-300 flex items-center space-x-1.5">
+                  <span>📍 Ghaziabad (RDC)</span>
+                  <span class="bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400 text-[9px] font-bold px-1.5 py-0.2 rounded">OUT OF RANGE • ~26 km</span>
+                </div>
+                <div class="text-[10px] text-stone-400 mt-0.5">Raj Nagar, Ghaziabad - 201001 (Exceeds 20 km)</div>
               </div>
               <i class="fa-solid fa-ban text-stone-400 text-xs shrink-0 ml-2"></i>
             </button>
@@ -2205,7 +2227,7 @@
 
             <div class="space-y-1">
               <label class="font-bold text-stone-700 dark:text-stone-300">Nearby Landmark / Pincode</label>
-              <input type="text" id="newAddrLandmark" placeholder="e.g. Near Batra Cinema, 110009"
+              <input type="text" id="newAddrLandmark" placeholder="e.g. Near GTB Nagar Metro Station, 110009"
                 class="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
             </div>
 

@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.3.6`  
+**Current Production Version**: `v2.3.7`  
 **Current Date**: September 28, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -50,6 +50,7 @@ flowchart LR
     v233 --> v234["v2.3.4<br/>Purge All Test Artifacts & Real Direct UPI Payment Engine"]
     v234 --> v235["v2.3.5<br/>Full Screen Modal, Dark Category Bar, Scroll Containment & Swipe Fix"]
     v235 --> v236["v2.3.6<br/>Mukherjee Nagar 110009 Vendor Location & 7km Delivery Radius Gating"]
+    v236 --> v237["v2.3.7<br/>10km Standard / 20km VIP Delivery Limits, GTB Nagar Metro Landmark & Clean Zero-Coords UX"]
 ```
 
 ---
@@ -812,11 +813,51 @@ flowchart LR
 
 ---
 
+### `v2.3.7` — 10km Standard / 20km VIP Delivery Limits, GTB Nagar Metro Landmark & Clean Zero-Coords UX
+- **Release Date**: September 28, 2026
+- **Git Commit**: `v2.3.7`
+- **Key Architectural Accomplishments**:
+  - **10 km Standard / 20 km VIP Delivery Limits**:
+    - Established clear delivery boundaries tailored to customer tier:
+      - **Standard Customers**: Delivery radius up to **10.0 km**.
+      - **Thela VIP Members**: Extended delivery radius up to **20.0 km** (unlocked for ₹1 via Thela VIP Club).
+    - In `server/src/db.js`, `getStalls(category, lat, lng, isVip)` evaluates `isDeliverableStandard: geoKm <= 10.0` and `isDeliverableVip: geoKm <= 20.0`.
+    - In `server/src/routes/orders.js`, order placement checks the customer's `goldMember` status: enforces `maxRadius = isVip ? 20.0 : 10.0` and returns `OUT_OF_DELIVERY_RANGE` error with informative messaging if exceeded.
+  - **Vendor Station Landmark Updated to GTB Nagar Metro Station**:
+    - Stationed Aryan The Pizza specifically **near GTB Nagar Metro Station** on the Yellow Line:
+      - Landmark: `"Near GTB Nagar Metro Station, Commercial Complex"`.
+      - Full Address: `"Shop 4, Commercial Complex, Near GTB Nagar Metro Station, Mukherjee Nagar, Delhi - 110009"`.
+    - Completely purged all legacy references to "Batra Cinema" from `server/data/thela.db.json`, `scratch/onboard_aryan_the_pizza.js`, `public/index.html` placeholders, and `public/app.js`.
+  - **Zero-Coordinates Clean UX Across Customer App**:
+    - Eradicated all raw coordinates (`Lat ...`, `Lng ...`, decimal degrees) from user-facing inputs, address summaries, and toasts.
+    - When GPS detects the user's location, the address form inputs are populated with natural, human-readable descriptors:
+      - House / Flat input: `'Current Location'` (instead of raw lat/long).
+      - Street / Locality input: Detected area name (e.g. `'GTB Nagar / Mukherjee Nagar'`).
+    - Toast feedback displays clean locality names and rounded distance metrics with zero confusing coordinate strings.
+  - **Removed "Switch to Mukherjee Nagar" Suggestion for Distant Customers**:
+    - Removed the illogical suggestion asking customers located far away (e.g. Noida, Ghaziabad) to switch their address to Mukherjee Nagar.
+    - For customers between 10 km and 20 km (e.g. Connaught Place ~10.6 km, Noida Sector 18 ~19 km), the app displays an upgrade card inviting them to join Thela VIP Club (@ ₹1) to unlock extended 20 km delivery.
+    - For customers beyond 20 km (e.g. Ghaziabad RDC ~26 km), the app displays a clear out-of-range state with a single "Change Delivery Address / Location" action button.
+  - **Updated Neighborhood Presets in Address Drawer**:
+    - Added and updated Delhi NCR neighborhood presets in `#addressDrawer`:
+      - **Mukherjee Nagar** (110009 • In Range • ~0.1 km)
+      - **GTB Nagar / Hudson Lane** (110009 • In Range • ~1.1 km)
+      - **Model Town** (110009 • In Range • ~1.8 km)
+      - **Connaught Place** (110001 • VIP 20km Range • ~10.6 km)
+      - **Noida Sector 18** (201301 • VIP 20km Range • ~19 km)
+      - **Ghaziabad RDC** (201001 • Out of Range > 20 km • ~26 km)
+  - **Comprehensive Automated Verification**:
+    - Updated Test Suite 10 in `scratch/test_aryan_the_pizza.js` (33 tests) to verify 10km standard / 20km VIP limits across all 6 test locations, assert GTB Nagar Metro Station landmark, and verify zero coordinates and zero Mukherjee Nagar switch suggestions.
+    - All 95 platform tests passing 100% across all 4 suites.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `HEAD` | 2026-09-28 | Location & Delivery | Enforce Mukherjee Nagar 110009 vendor location, 7km delivery radius gating, and GPS/address discovery requirement (v2.3.6) |
+| `HEAD` | 2026-09-28 | Location & Delivery | 10km standard / 20km VIP delivery limits, GTB Nagar Metro landmark, and clean zero-coords UX (v2.3.7) |
+| `010f7ae` | 2026-09-28 | Location & Delivery | Enforce Mukherjee Nagar 110009 vendor location, 7km delivery radius gating, and GPS/address discovery requirement (v2.3.6) |
 | `38fc3be` | 2026-09-28 | Mobile UX & Theme | Full screen stall modal, fix dark theme category bar mismatch, eliminate scroll bleed, and correct carousel swipe direction (v2.3.5) |
 | `b524d4f` | 2026-09-28 | Production | Purge all test/sandbox artifacts, wire real UPI direct payment, and bump to v2.3.4 |
 | `c9936d3` | 2026-09-28 | UX & Auth | Clean front dish cards, reactive customizer options, and checkout login required gate (v2.3.3) |
@@ -929,7 +970,7 @@ stateDiagram-v2
 
 | Test Script File | Primary Verification Objective | Number of Tests | Status |
 | :--- | :--- | :---: | :---: |
-| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, Mukherjee Nagar 110009 location, 7km delivery radius gating, full screen modal, dark theme category pills, reactive customizer sheet, checkout login gate, and direct UPI payment | 32 tests | ✅ Passed |
+| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, GTB Nagar Metro landmark, 10km standard / 20km VIP radius gating, full screen modal, dark theme category pills, reactive customizer sheet, checkout login gate, zero-coords UX, and direct UPI payment | 33 tests | ✅ Passed |
 | [`test_street_food_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_street_food_ux.js) | Authentic street food UX, real food photo carousel, swipe/touch accessibility, theme dark hover protection, zero 1971 fake count, visual veg toggle, buyable VIP, dynamic coupons & adaptive modals | 21 tests | ✅ Passed |
 | [`test_zomato_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_zomato_ux.js) | Zomato-inspired dynamic customer app experience, hero carousel, circular stories, quick filters, bottom dock, VIP Gold profile & wallet engine | 12 tests | ✅ Passed |
 | [`test_store_status_contradiction.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_store_status_contradiction.js) | Server-authoritative store status derivation, anti-bypass invariants, hoisting audit, zero 1.5 km copy | 7 suites | ✅ Passed |
