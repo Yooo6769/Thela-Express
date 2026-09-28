@@ -1372,6 +1372,68 @@
   </div>
 
   <!-- ============================================================== -->
+  <!-- MODAL: LOGIN REQUIRED POP-UP (Checkout Authentication Gate)     -->
+  <!-- ============================================================== -->
+  <div id="loginRequiredModal" onclick="if(event.target === this) closeLoginRequiredModal()" 
+    class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all">
+    <div class="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 w-full sm:max-w-md rounded-t-3xl sm:rounded-3xl p-6 sm:p-7 shadow-2xl border border-stone-200 dark:border-stone-800 animate-in slide-in-from-bottom sm:zoom-in-95 duration-200">
+      
+      <!-- Close Button -->
+      <div class="flex justify-end mb-1">
+        <button type="button" onclick="closeLoginRequiredModal()" aria-label="Close" class="w-8 h-8 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-400 hover:text-stone-600 dark:hover:text-stone-200 flex items-center justify-center transition active:scale-90">
+          <i class="fa-solid fa-xmark text-sm"></i>
+        </button>
+      </div>
+
+      <!-- Icon & Headline -->
+      <div class="text-center space-y-2">
+        <div class="w-16 h-16 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 text-white flex items-center justify-center text-2xl shadow-lg shadow-orange-500/30 mx-auto mb-3">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <h3 class="text-xl font-black text-stone-900 dark:text-white tracking-tight">Login Required</h3>
+        <p class="text-xs sm:text-sm text-stone-600 dark:text-stone-300 leading-relaxed max-w-sm mx-auto">
+          You can explore stalls and customize items freely! To place your order and get live delivery tracking, please login or sign up with your phone.
+        </p>
+      </div>
+
+      <!-- Cart Preservation Reassurance Box -->
+      <div class="my-5 p-3.5 rounded-2xl bg-amber-50/80 dark:bg-amber-950/40 border border-amber-200/80 dark:border-amber-800/50 flex items-center justify-between">
+        <div class="flex items-center space-x-3 min-w-0">
+          <div class="w-9 h-9 rounded-xl bg-amber-500 text-white flex items-center justify-center text-sm shrink-0 shadow-xs">
+            <i class="fa-solid fa-cart-shopping"></i>
+          </div>
+          <div class="min-w-0">
+            <div class="text-xs font-black text-stone-900 dark:text-white truncate">
+              Your Cart: <span id="loginRequiredCartCount">0 Items</span>
+            </div>
+            <div class="text-[11px] font-bold text-amber-700 dark:text-amber-400" id="loginRequiredCartTotal">
+              Total: ₹0
+            </div>
+          </div>
+        </div>
+        <span class="text-[10px] font-black text-emerald-700 dark:text-emerald-300 bg-emerald-100 dark:bg-emerald-950/80 border border-emerald-300 dark:border-emerald-800 px-2 py-0.5 rounded-full shrink-0">
+          Saved &amp; Ready ✓
+        </span>
+      </div>
+
+      <!-- Actions -->
+      <div class="space-y-2.5">
+        <button type="button" onclick="proceedFromLoginRequiredToAuth()" 
+          class="w-full bg-gradient-to-r from-orange-600 via-amber-600 to-amber-500 hover:from-orange-500 hover:to-amber-400 text-white font-black py-3.5 px-4 rounded-2xl shadow-lg shadow-orange-600/25 flex items-center justify-center space-x-2 text-sm transition active:scale-98">
+          <i class="fa-solid fa-mobile-screen"></i>
+          <span>Login / Sign Up to Continue</span>
+          <i class="fa-solid fa-arrow-right text-xs ml-1"></i>
+        </button>
+
+        <button type="button" onclick="closeLoginRequiredModal()" 
+          class="w-full py-2.5 rounded-xl font-bold text-xs text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 transition">
+          Continue Exploring Menus
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
   <!-- DRAWER: CART & CHECKOUT                                        -->
   <!-- ============================================================== -->
   <div id="cartDrawer" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end transition-all">

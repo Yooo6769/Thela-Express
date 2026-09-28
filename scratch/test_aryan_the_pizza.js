@@ -234,5 +234,38 @@ test('Pricing engine correctly calculates order with Pizza + Cheese Burst + Extr
   assert.strictEqual(orderCalculation.pricing.customer_total, 253);
 });
 
+console.log('\n--- TEST SUITE 7: Clean Front Cards, Reactive Customizer & Checkout Login Gate ---');
+test('Front dish cards do not render redundant size selector pills or size badges', () => {
+  const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+  assert(!appJsContent.includes('Select Size / Portion:'), 'Front card still contains Select Size / Portion pills label');
+  assert(!appJsContent.includes('Size: ${activeVariant.shortCode'), 'Front card still contains Size: badge');
+});
+
+test('Customizer options use labels, inputs, and scroll preservation for immediate reactivity', () => {
+  const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+  assert(appJsContent.includes('name="customizer_size"'), 'Missing customizer_size input');
+  assert(appJsContent.includes('name="customizer_crust"'), 'Missing customizer_crust input');
+  assert(appJsContent.includes('name="customizer_extra_cheese"'), 'Missing customizer_extra_cheese input');
+  assert(appJsContent.includes('savedScroll'), 'Missing savedScroll preservation in renderCustomizerModalContent');
+});
+
+test('index.html contains #loginRequiredModal with cart preservation reassurance', () => {
+  const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+  assert(htmlContent.includes('id="loginRequiredModal"'), 'Missing #loginRequiredModal in index.html');
+  assert(htmlContent.includes('id="loginRequiredCartCount"'), 'Missing #loginRequiredCartCount');
+  assert(htmlContent.includes('id="loginRequiredCartTotal"'), 'Missing #loginRequiredCartTotal');
+  assert(htmlContent.includes('proceedFromLoginRequiredToAuth'), 'Missing proceedFromLoginRequiredToAuth button');
+});
+
+test('app.js gates checkout with openLoginRequiredModal and preserves cart flow', () => {
+  const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+  assert(appJsContent.includes('function openLoginRequiredModal('), 'Missing openLoginRequiredModal in app.js');
+  assert(appJsContent.includes('function closeLoginRequiredModal('), 'Missing closeLoginRequiredModal in app.js');
+  assert(appJsContent.includes('function proceedFromLoginRequiredToAuth('), 'Missing proceedFromLoginRequiredToAuth in app.js');
+  assert(appJsContent.includes('openLoginRequiredModal()'), 'handlePlaceOrder does not invoke openLoginRequiredModal');
+  assert(appJsContent.includes('STATE.pendingCheckoutAfterLogin'), 'Missing pendingCheckoutAfterLogin flow');
+});
+
 console.log(`\n🎉 ALL ${passCount} ARYAN THE PIZZA INTEGRATION TESTS PASSED COMPLETELY!`);
 console.log('================================================================');
+

@@ -2178,11 +2178,13 @@ function renderCategoryTabsAndMenuItems(items) {
       <div class="space-y-3 divide-y divide-stone-100 dark:divide-stone-800/80">
         ${cat.items.map(dish => {
           const hasVariants = Array.isArray(dish.variants) && dish.variants.length > 0;
-          const activeVariantId = STATE.selectedDishVariant[dish.key] || (hasVariants ? dish.variants[0].id : dish.id);
-          const activeVariant = hasVariants ? (dish.variants.find(v => v.id === activeVariantId) || dish.variants[0]) : dish;
+          const isCustomisable = hasVariants || (dish.category && dish.category.toLowerCase().includes('pizza')) || (dish.name && dish.name.toLowerCase().includes('pizza'));
+          const displayPrice = hasVariants ? (dish.price || Math.min(...dish.variants.map(v => Number(v.price) || 0))) : (dish.price || 0);
           
-          const inCart = STATE.cart.items.find(i => i.item_id === activeVariant.id);
-          const qty = inCart ? inCart.qty : 0;
+          const inCartCount = hasVariants
+            ? dish.variants.reduce((acc, v) => acc + ((STATE.cart.items.find(i => i.item_id === v.id)?.qty) || 0), 0)
+            : ((STATE.cart.items.find(i => i.item_id === dish.id)?.qty) || 0);
+
           const hasRating = dish.ratingCount > 0 || (dish.reviews > 0 && dish.rating);
           const safeName = dish.name.replace(/'/g, "\\'");
           const itemImg = dish.image || getThelaFoodPlaceholder(cat.id, dish.name);
@@ -2224,61 +2226,48 @@ function renderCategoryTabsAndMenuItems(items) {
                   ` : ''}
                 </div>
 
-                <h4 class="font-black text-sm sm:text-base text-stone-900 dark:text-white leading-tight">${dish.name}</h4>
+                <h4 class="font-black text-sm sm:text-base text-stone-900 dark:text-white leading-tight cursor-pointer hover:text-amber-600 transition" onclick="${isCustomisable ? `openDishCustomizer('${dish.key}')` : `addVariantToCart('${dish.id}')`}">${dish.name}</h4>
                 
                 <div class="flex items-center space-x-2">
-                  <span class="text-sm sm:text-base font-black text-stone-900 dark:text-white">₹${activeVariant.price}</span>
-                  ${activeVariant.originalPrice ? `<span class="text-xs text-stone-400 line-through font-semibold">₹${activeVariant.originalPrice}</span>` : ''}
-                  ${hasVariants ? `<span class="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/40">Size: ${activeVariant.shortCode || activeVariant.variantLabel}</span>` : ''}
+                  <span class="text-sm sm:text-base font-black text-stone-900 dark:text-white">₹${displayPrice}</span>
+                  ${dish.originalPrice ? `<span class="text-xs text-stone-400 line-through font-semibold">₹${dish.originalPrice}</span>` : ''}
                 </div>
 
                 <p class="text-xs text-stone-500 dark:text-stone-400 leading-relaxed line-clamp-2">${dish.description || 'Prepared piping hot on order with authentic street seasonings.'}</p>
-
-                <!-- Interactive Size Selector Pills -->
-                ${hasVariants ? `
-                  <div class="pt-1.5">
-                    <span class="text-[10px] font-black text-stone-400 uppercase tracking-wider block mb-1">Select Size / Portion:</span>
-                    <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
-                      ${dish.variants.map(v => {
-                        const isSelected = v.id === activeVariant.id;
-                        return `
-                          <button type="button" onclick="selectDishVariant('${dish.key}', '${v.id}')"
-                            class="px-2.5 py-1 rounded-xl text-[11px] font-black transition border ${isSelected ? 'bg-amber-600 text-white border-amber-600 shadow-xs scale-102 ring-1 ring-amber-600' : 'bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:border-amber-400'}">
-                            ${v.shortCode} • ₹${v.price}
-                          </button>
-                        `;
-                      }).join('')}
-                    </div>
-                  </div>
-                ` : ''}
               </div>
 
               <!-- Item Image & Add / Stepper Button -->
               <div class="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0 rounded-2xl overflow-hidden bg-stone-100 dark:bg-stone-800 flex flex-col justify-end shadow-xs border border-stone-200/60 dark:border-stone-700">
                 <img src="${itemImg}" 
-                  alt="${dish.name}" class="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" onerror="handleFoodImageError(this, '${cat.id}', '${safeName}')">
+                  alt="${dish.name}" class="absolute inset-0 w-full h-full object-cover cursor-pointer" loading="lazy" decoding="async" onerror="handleFoodImageError(this, '${cat.id}', '${safeName}')" onclick="${isCustomisable ? `openDishCustomizer('${dish.key}')` : ''}">
                 <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none"></div>
                 
                 <!-- Add / Stepper Button -->
                 <div class="relative z-10 mx-auto mb-2 w-24">
-                  ${!activeVariant.inStock ? `
+                  ${!dish.inStock ? `
                     <div class="bg-stone-900/90 text-white text-[10px] font-black py-1 px-2 rounded-lg text-center backdrop-blur-xs">
                       SOLD OUT
                     </div>
-                  ` : qty === 0 ? `
-                    <button onclick="${hasVariants ? `openDishCustomizer('${dish.key}', '${activeVariant.id}')` : `addVariantToCart('${activeVariant.id}')`}" 
+                  ` : inCartCount === 0 ? `
+                    <button onclick="${isCustomisable ? `openDishCustomizer('${dish.key}')` : `addVariantToCart('${dish.id}')`}" 
                       class="w-full bg-white dark:bg-stone-800 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-700 rounded-xl py-1 font-black text-xs shadow-md hover:bg-orange-50 dark:hover:bg-stone-700 active:scale-95 transition flex items-center justify-center space-x-1">
                       <span>+ ADD</span>
-                      ${hasVariants ? `<span class="text-[9px] opacity-75">▾</span>` : ''}
+                      ${isCustomisable ? `<span class="text-[9px] opacity-75">▾</span>` : ''}
                     </button>
-                    ${hasVariants ? `<span class="text-[9px] font-bold text-stone-400 dark:text-stone-500 block text-center mt-0.5 tracking-tight">Customisable</span>` : ''}
+                    ${isCustomisable ? `<span class="text-[9px] font-bold text-stone-400 dark:text-stone-500 block text-center mt-0.5 tracking-tight">Customisable</span>` : ''}
+                  ` : isCustomisable ? `
+                    <button onclick="openDishCustomizer('${dish.key}')" 
+                      class="w-full bg-orange-600 text-white rounded-xl py-1 px-1.5 flex items-center justify-center font-black text-xs shadow-md hover:bg-orange-700 active:scale-95 transition space-x-1">
+                      <span>Added (${inCartCount})</span>
+                      <span class="text-[9px] opacity-75">▾</span>
+                    </button>
+                    <span class="text-[9px] font-bold text-stone-400 dark:text-stone-500 block text-center mt-0.5 tracking-tight">Customise</span>
                   ` : `
                     <div class="w-full bg-orange-600 text-white rounded-xl py-1 px-1.5 flex items-center justify-between font-black text-xs shadow-md">
-                      <button onclick="decrementCartItem('${activeVariant.id}')" class="w-5 text-center hover:bg-orange-700 rounded transition">-</button>
-                      <span>${qty}</span>
-                      <button onclick="${hasVariants ? `openDishCustomizer('${dish.key}', '${activeVariant.id}')` : `incrementCartItem('${activeVariant.id}')`}" class="w-5 text-center hover:bg-orange-700 rounded transition">+</button>
+                      <button onclick="decrementCartItem('${dish.id}')" class="w-5 text-center hover:bg-orange-700 rounded transition">-</button>
+                      <span>${inCartCount}</span>
+                      <button onclick="incrementCartItem('${dish.id}')" class="w-5 text-center hover:bg-orange-700 rounded transition">+</button>
                     </div>
-                    ${hasVariants ? `<span class="text-[9px] font-bold text-stone-400 dark:text-stone-500 block text-center mt-0.5 tracking-tight">Customisable</span>` : ''}
                   `}
                 </div>
               </div>
@@ -2425,19 +2414,19 @@ function closeCustomizerModal() {
 function setCustomizerVariant(variantId) {
   if (!STATE.customizerState) return;
   STATE.customizerState.selectedVariantId = variantId;
-  renderCustomizerModalContent();
+  renderCustomizerModalContent(true);
 }
 
 function setCustomizerCrust(crustId) {
   if (!STATE.customizerState) return;
   STATE.customizerState.crust = crustId;
-  updateCustomizerTotals();
+  renderCustomizerModalContent(true);
 }
 
 function toggleCustomizerExtraCheese() {
   if (!STATE.customizerState) return;
   STATE.customizerState.extraCheese = !STATE.customizerState.extraCheese;
-  updateCustomizerTotals();
+  renderCustomizerModalContent(true);
 }
 
 function toggleCustomizerSeasoning(name) {
@@ -2466,7 +2455,7 @@ function decrementCustomizerQty() {
   }
 }
 
-function renderCustomizerModalContent() {
+function renderCustomizerModalContent(preserveScroll = false) {
   if (!STATE.customizerState) return;
   const { dish, selectedVariantId, crust, extraCheese, qty } = STATE.customizerState;
 
@@ -2499,6 +2488,12 @@ function renderCustomizerModalContent() {
   const container = document.getElementById('customizerOptionsContainer');
   if (!container) return;
 
+  const savedScroll = (preserveScroll && container) ? container.scrollTop : 0;
+  const noteInput = document.getElementById('customizerCookingNote');
+  if (noteInput && noteInput.value !== undefined) {
+    STATE.customizerState.cookingNote = noteInput.value;
+  }
+
   const hasVariants = Array.isArray(dish.variants) && dish.variants.length > 0;
 
   let html = '';
@@ -2520,10 +2515,11 @@ function renderCustomizerModalContent() {
             const isSelected = v.id === selectedVariantId;
             const isMedium = (v.name || '').toLowerCase().includes('medium') || (v.variantLabel || '').includes('9');
             return `
-              <div onclick="setCustomizerVariant('${v.id}')"
+              <label onclick="setCustomizerVariant('${v.id}')"
                 class="flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition select-none ${isSelected ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 ring-1 ring-amber-500 shadow-xs' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-300 dark:hover:border-stone-700'}">
+                <input type="radio" name="customizer_size" value="${v.id}" ${isSelected ? 'checked' : ''} class="sr-only">
                 <div class="flex items-center space-x-3">
-                  <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${isSelected ? 'border-amber-600 bg-amber-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
+                  <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition shrink-0 ${isSelected ? 'border-amber-600 bg-amber-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
                     ${isSelected ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : ''}
                   </div>
                   <div>
@@ -2539,7 +2535,7 @@ function renderCustomizerModalContent() {
                 <div class="text-right">
                   <span class="font-black text-sm text-stone-900 dark:text-white">₹${v.price}</span>
                 </div>
-              </div>
+              </label>
             `;
           }).join('')}
         </div>
@@ -2560,10 +2556,11 @@ function renderCustomizerModalContent() {
 
         <div class="space-y-2">
           <!-- Standard Fresh Hand Tossed -->
-          <div onclick="setCustomizerCrust('standard')"
+          <label onclick="setCustomizerCrust('standard')"
             class="flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition select-none ${crust === 'standard' ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 ring-1 ring-amber-500 shadow-xs' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-300 dark:hover:border-stone-700'}">
+            <input type="radio" name="customizer_crust" value="standard" ${crust === 'standard' ? 'checked' : ''} class="sr-only">
             <div class="flex items-center space-x-3">
-              <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${crust === 'standard' ? 'border-amber-600 bg-amber-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
+              <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition shrink-0 ${crust === 'standard' ? 'border-amber-600 bg-amber-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
                 ${crust === 'standard' ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : ''}
               </div>
               <div>
@@ -2574,13 +2571,14 @@ function renderCustomizerModalContent() {
             <div class="text-right">
               <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md">Included (₹0)</span>
             </div>
-          </div>
+          </label>
 
           <!-- Cheese Burst Upgrade -->
-          <div onclick="setCustomizerCrust('cheese_burst')"
+          <label onclick="setCustomizerCrust('cheese_burst')"
             class="flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition select-none ${crust === 'cheese_burst' ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 ring-1 ring-amber-500 shadow-xs' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-300 dark:hover:border-stone-700'}">
+            <input type="radio" name="customizer_crust" value="cheese_burst" ${crust === 'cheese_burst' ? 'checked' : ''} class="sr-only">
             <div class="flex items-center space-x-3">
-              <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${crust === 'cheese_burst' ? 'border-amber-600 bg-amber-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
+              <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition shrink-0 ${crust === 'cheese_burst' ? 'border-amber-600 bg-amber-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
                 ${crust === 'cheese_burst' ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : ''}
               </div>
               <div>
@@ -2594,7 +2592,7 @@ function renderCustomizerModalContent() {
             <div class="text-right">
               <span class="font-black text-xs sm:text-sm text-amber-600 dark:text-amber-400">+₹${addonPricing.cheeseBurstPrice}</span>
             </div>
-          </div>
+          </label>
         </div>
       </div>
 
@@ -2607,10 +2605,11 @@ function renderCustomizerModalContent() {
           </label>
         </div>
 
-        <div onclick="toggleCustomizerExtraCheese()"
+        <label onclick="toggleCustomizerExtraCheese()"
           class="flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition select-none ${extraCheese ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 ring-1 ring-amber-500 shadow-xs' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-300 dark:hover:border-stone-700'}">
+          <input type="checkbox" name="customizer_extra_cheese" ${extraCheese ? 'checked' : ''} class="sr-only">
           <div class="flex items-center space-x-3">
-            <div class="w-5 h-5 rounded-lg border-2 flex items-center justify-center transition ${extraCheese ? 'border-amber-600 bg-amber-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
+            <div class="w-5 h-5 rounded-lg border-2 flex items-center justify-center transition shrink-0 ${extraCheese ? 'border-amber-600 bg-amber-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
               ${extraCheese ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
             </div>
             <div>
@@ -2621,7 +2620,7 @@ function renderCustomizerModalContent() {
           <div class="text-right">
             <span class="font-black text-xs sm:text-sm text-amber-600 dark:text-amber-400">+₹${addonPricing.extraCheesePrice}</span>
           </div>
-        </div>
+        </label>
       </div>
     `;
   }
@@ -2645,6 +2644,9 @@ function renderCustomizerModalContent() {
   `;
 
   container.innerHTML = html;
+  if (savedScroll > 0) {
+    container.scrollTop = savedScroll;
+  }
 
   renderCustomizerSeasoningsSection();
   updateCustomizerTotals();
@@ -2674,8 +2676,9 @@ function renderCustomizerSeasoningsSection() {
       ${seasoningsList.map(s => {
         const isChecked = STATE.customizerState.seasonings.has(s.id);
         return `
-          <div onclick="toggleCustomizerSeasoning('${s.id}')"
-            class="flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition select-none ${isChecked ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-emerald-300 dark:hover:border-stone-700'}">
+          <label onclick="toggleCustomizerSeasoning('${s.id}')"
+            class="flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition select-none ${isChecked ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30 ring-1 ring-emerald-500' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-emerald-300 dark:hover:border-stone-700'}">
+            <input type="checkbox" ${isChecked ? 'checked' : ''} class="sr-only">
             <div class="flex items-center space-x-2.5 min-w-0">
               <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition ${isChecked ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
                 ${isChecked ? '<i class="fa-solid fa-check text-[9px]"></i>' : ''}
@@ -2686,7 +2689,7 @@ function renderCustomizerSeasoningsSection() {
               </div>
             </div>
             <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0 ml-1">Free</span>
-          </div>
+          </label>
         `;
       }).join('')}
     </div>
@@ -3068,10 +3071,9 @@ async function handlePlaceOrder() {
     return;
   }
 
-  // Ensure customer is authenticated with their real name and phone
+  // Ensure customer is authenticated with their real name and phone before placing order
   if (!STATE.user || !STATE.user.phone) {
-    openAuthModal();
-    showToast('Please enter your name & phone number to place order');
+    openLoginRequiredModal();
     return;
   }
 
@@ -3968,6 +3970,44 @@ async function promptDeliveryOtp(orderId) {
 }
 
 // ==========================================================
+// 10.5 LOGIN REQUIRED CHECKOUT GATE MODAL
+// ==========================================================
+function openLoginRequiredModal() {
+  const modal = document.getElementById('loginRequiredModal');
+  if (!modal) {
+    openAuthModal();
+    return;
+  }
+
+  const countEl = document.getElementById('loginRequiredCartCount');
+  const totalEl = document.getElementById('loginRequiredCartTotal');
+  const count = (STATE.cart.items || []).reduce((sum, item) => sum + item.qty, 0);
+  const subtotal = (STATE.cart.items || []).reduce((sum, item) => sum + (item.price * item.qty), 0);
+
+  if (countEl) countEl.innerText = `${count} ${count === 1 ? 'Item' : 'Items'}`;
+  if (totalEl) totalEl.innerText = `Total: ₹${subtotal}`;
+
+  modal.classList.remove('hidden');
+  AtmosphereManager.pushOverride('loginRequiredModal', 'minimal');
+}
+
+function closeLoginRequiredModal() {
+  const modal = document.getElementById('loginRequiredModal');
+  if (modal) modal.classList.add('hidden');
+  AtmosphereManager.popOverride('loginRequiredModal');
+}
+
+function proceedFromLoginRequiredToAuth() {
+  closeLoginRequiredModal();
+  STATE.pendingCheckoutAfterLogin = true;
+  openAuthModal();
+}
+
+window.openLoginRequiredModal = openLoginRequiredModal;
+window.closeLoginRequiredModal = closeLoginRequiredModal;
+window.proceedFromLoginRequiredToAuth = proceedFromLoginRequiredToAuth;
+
+// ==========================================================
 // 11. PHONE NUMBER OTP AUTHENTICATION
 // ==========================================================
 function openAuthModal() {
@@ -4048,6 +4088,18 @@ async function handleVerifyOtp() {
       closeAuthModal();
       showToast(`Welcome, ${data.user.name}!`);
       loadCustomerOrders();
+
+      // If user was prompted to login during checkout, resume checkout seamlessly!
+      if (STATE.pendingCheckoutAfterLogin) {
+        STATE.pendingCheckoutAfterLogin = false;
+        if (STATE.cart.items && STATE.cart.items.length > 0) {
+          openCartDrawer();
+          showToast('✓ Logged in! Continuing checkout...');
+          setTimeout(() => {
+            handlePlaceOrder();
+          }, 350);
+        }
+      }
     } else {
       alert(data.error || 'Invalid OTP');
     }
@@ -4255,7 +4307,7 @@ function handleLogout() {
 // Address Drawer Logic
 function openAddressDrawer() {
   if (!STATE.user || !STATE.user.phone) {
-    openAuthModal();
+    openLoginRequiredModal();
     return;
   }
   renderSavedAddresses();

@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.3.2`  
+**Current Production Version**: `v2.3.3`  
 **Current Date**: September 28, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -46,6 +46,7 @@ flowchart LR
     v224 --> v230["v2.3.0<br/>Onboard First Real Street Food Partner — Aryan The Pizza"]
     v230 --> v231["v2.3.1<br/>Modal Redesign, Lag Fix, Variant Selector & Appetizing Hero Imagery"]
     v231 --> v232["v2.3.2<br/>Street Food Customizer Sheet: Live Size, Crust, Cheese & Seasoning Engine"]
+    v232 --> v233["v2.3.3<br/>Clean Front Cards, Reactive Customizer Bindings & Checkout Login Gate Modal"]
 ```
 
 ---
@@ -701,12 +702,36 @@ flowchart LR
   - **Automated Verification**:
     - Added dedicated Suite 6 to `scratch/test_aryan_the_pizza.js`. All 77 platform tests passing cleanly.
 
+### `v2.3.3` — Clean Front Cards, Reactive Customizer Bindings & Checkout Login Gate Modal
+- **Release Date**: September 28, 2026
+- **Git Commit**: `v2.3.3`
+- **Key Architectural Accomplishments**:
+  - **Clean Front Dish Cards in Stall Menu**:
+    - Completely removed redundant size pills (`S (7") • ₹80 | M (9") • ₹130 | L (12") • ₹220`) and `Size: S (7")` tags from the front dish cards in the stall menu modal per user direction.
+    - Each front card now presents a pristine, uncluttered street food showcase: photo, title, veg badge, rating, description, starting base price (`₹80`), and a prominent `+ ADD (Customisable ▾)` button.
+    - Tapping the dish title, photo, or `+ ADD` button smoothly opens the customizer sheet.
+    - Added reactive `Added (X) ▾` counter badge for customized items already present in the cart.
+  - **100% Reactive Customizer Option Selection & Scroll Preservation**:
+    - Replaced generic `<div>` click targets in `#customizerModal` with semantic `<label>` elements wrapping native `<input type="radio">` and `<input type="checkbox">` elements.
+    - Solved mobile tap highlight stagnation by ensuring immediate visual state toggles: amber rings, filled amber radio dots with inner white markers, checkmarks, and instant unit total updates.
+    - Preserved container scroll position (`container.scrollTop = savedScroll`) across size, crust, and cheese toggles to ensure zero viewport jumping while browsing add-ons.
+    - Fully preserved typed chef cooking instructions across option toggles.
+  - **Checkout Login Required Gate & Seamless Cart Preservation**:
+    - Maintained unrestricted, friction-free app exploration: customers can browse stalls, inspect menus, customize pizzas, and add dishes to their cart without any upfront login requirement.
+    - Built a dedicated, high-converting `#loginRequiredModal` featuring an amber lock badge, clear headline ("Login Required to Place Order"), informative subtext, and a live cart snapshot box ("Your Cart: X Items (₹Y) — Saved & Ready ✓").
+    - Gated `handlePlaceOrder()` in `public/app.js` to pop `#loginRequiredModal` when an unauthenticated customer initiates checkout.
+    - Implemented seamless auth resumption: upon OTP verification, `STATE.pendingCheckoutAfterLogin` automatically re-opens the cart drawer and smoothly advances to order placement/payment with zero cart loss.
+    - Updated `openAddressDrawer()` to also route through `#loginRequiredModal` when unauthenticated.
+  - **Automated Verification**:
+    - Added Test Suite 7 to `scratch/test_aryan_the_pizza.js`. All 81 automated tests pass with 100% green.
+
 ---
 
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
+| `HEAD` | 2026-09-28 | UX & Auth | Clean front dish cards, reactive customizer options, and checkout login required gate (v2.3.3) |
 | `a9146a7` | 2026-09-23 | Authenticity & Privacy | Purge restaurant dining, fake profiles, and fake addresses; enforce authentic street food cart UX (v2.2.1) |
 | `a944fdc` | 2026-09-23 | Customer Experience | Zomato-inspired dynamic customer storefront and VIP center (v2.2.0) |
 | `07d60be` | 2026-09-23 | Admin Operations | Simplify admin HQ with 1-click vendor and rider operations (v2.1.4) |
