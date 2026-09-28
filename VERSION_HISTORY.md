@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.3.5`  
+**Current Production Version**: `v2.3.6`  
 **Current Date**: September 28, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -49,6 +49,7 @@ flowchart LR
     v232 --> v233["v2.3.3<br/>Clean Front Cards, Reactive Customizer Bindings & Checkout Login Gate Modal"]
     v233 --> v234["v2.3.4<br/>Purge All Test Artifacts & Real Direct UPI Payment Engine"]
     v234 --> v235["v2.3.5<br/>Full Screen Modal, Dark Category Bar, Scroll Containment & Swipe Fix"]
+    v235 --> v236["v2.3.6<br/>Mukherjee Nagar 110009 Vendor Location & 7km Delivery Radius Gating"]
 ```
 
 ---
@@ -784,11 +785,39 @@ flowchart LR
 
 ---
 
+### `v2.3.6` — Mukherjee Nagar 110009 Vendor Location, 7km Delivery Radius & Hyper-Local Location Gating
+- **Release Date**: September 28, 2026
+- **Git Commit**: `v2.3.6`
+- **Key Architectural Accomplishments**:
+  - **Mukherjee Nagar 110009 Real Vendor Location Configuration**:
+    - Stationed Aryan The Pizza at `Shop 4, Commercial Complex, Main Market, Mukherjee Nagar, Delhi - 110009` (Landmark: Near Batra Cinema, Commercial Complex, Area: Mukherjee Nagar, Pincode: 110009, Coordinates: `lat: 28.7095, lng: 77.2075`).
+    - Configured strict street thela hyper-local delivery boundary: `delivery_radius_km: 7.0` (eliminating impossible 50 km delivery claims).
+  - **Hyper-Local Location Discovery Gating**:
+    - Gated storefront vendor visibility on customer delivery location: customers must set their delivery address or have GPS track their location before nearby carts are rendered.
+    - **State 1 (No Location Set)**: Renders an inviting discovery prompt card ("Set Delivery Location to View Nearby Carts") with 1-tap live GPS and address drawer options. Aryan The Pizza is hidden until location is verified.
+    - **State 2 (In Delivery Range $\le$ 7 km)**: Displays Aryan The Pizza with live distance (e.g. "0.1 km away", "1.1 km away • 15–20 min") and `⚡ DELIVERING TO YOU` badge.
+    - **State 3 (Out of Delivery Range > 7 km, e.g. 50 km away, Connaught Place 10.6 km, Noida 19 km)**: Displays clear out-of-range empty state: "No Carts Delivering to This Location Yet • Aryan The Pizza delivers within 7 km of Mukherjee Nagar", with 1-tap options to switch to Mukherjee Nagar or change delivery location.
+  - **Friction-Free Guest Address & Location Exploration**:
+    - Unblocked `#addressDrawer` for guest customers so users can freely explore the app, choose delivery neighborhoods, or use live GPS without upfront login (login is strictly gated at checkout).
+    - Guest addresses persist seamlessly in `localStorage` (`thela_active_address`, `thela_customer_location`).
+  - **Quick Select Delivery Area Presets & Live Distance Calculations**:
+    - Integrated 5 instant Delhi neighborhood presets in `#addressDrawer`: Mukherjee Nagar (110009 • In Range), GTB Nagar / Hudson Lane (110009 • In Range), Model Town (110009 • In Range), Connaught Place (110001 • Out of Range), Noida Sector 18 (201301 • Out of Range).
+    - Added `computeGeographicDistanceKm` in `public/app.js` and live Haversine distance feedback.
+  - **Server-Authoritative Delivery Radius Enforcement**:
+    - Enhanced `GET /api/stalls` in `server/src/db.js` to compute `isDeliverable = geoKm <= (s.delivery_radius_km || 7.0)`.
+    - Added hard server gate in `server/src/routes/orders.js`: rejects order placement with HTTP 400 and `OUT_OF_DELIVERY_RANGE` error code if customer coordinates exceed `delivery_radius_km`.
+  - **Comprehensive Automated Verification**:
+    - Added Test Suite 10 to `scratch/test_aryan_the_pizza.js`.
+    - Full platform test suite now verifies 94/94 automated tests across 4 comprehensive suites with 100% pass rate.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `HEAD` | 2026-09-28 | Mobile UX & Theme | Full screen stall modal, fix dark theme category bar mismatch, eliminate scroll bleed, and correct carousel swipe direction (v2.3.5) |
+| `HEAD` | 2026-09-28 | Location & Delivery | Enforce Mukherjee Nagar 110009 vendor location, 7km delivery radius gating, and GPS/address discovery requirement (v2.3.6) |
+| `38fc3be` | 2026-09-28 | Mobile UX & Theme | Full screen stall modal, fix dark theme category bar mismatch, eliminate scroll bleed, and correct carousel swipe direction (v2.3.5) |
 | `b524d4f` | 2026-09-28 | Production | Purge all test/sandbox artifacts, wire real UPI direct payment, and bump to v2.3.4 |
 | `c9936d3` | 2026-09-28 | UX & Auth | Clean front dish cards, reactive customizer options, and checkout login required gate (v2.3.3) |
 | `a9146a7` | 2026-09-23 | Authenticity & Privacy | Purge restaurant dining, fake profiles, and fake addresses; enforce authentic street food cart UX (v2.2.1) |
@@ -900,7 +929,7 @@ stateDiagram-v2
 
 | Test Script File | Primary Verification Objective | Number of Tests | Status |
 | :--- | :--- | :---: | :---: |
-| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, verified FSSAI/Hygiene, full screen stall modal, dark theme category pills, reactive customizer sheet, checkout login gate, and direct UPI payment | 28 tests | ✅ Passed |
+| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, Mukherjee Nagar 110009 location, 7km delivery radius gating, full screen modal, dark theme category pills, reactive customizer sheet, checkout login gate, and direct UPI payment | 32 tests | ✅ Passed |
 | [`test_street_food_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_street_food_ux.js) | Authentic street food UX, real food photo carousel, swipe/touch accessibility, theme dark hover protection, zero 1971 fake count, visual veg toggle, buyable VIP, dynamic coupons & adaptive modals | 21 tests | ✅ Passed |
 | [`test_zomato_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_zomato_ux.js) | Zomato-inspired dynamic customer app experience, hero carousel, circular stories, quick filters, bottom dock, VIP Gold profile & wallet engine | 12 tests | ✅ Passed |
 | [`test_store_status_contradiction.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_store_status_contradiction.js) | Server-authoritative store status derivation, anti-bypass invariants, hoisting audit, zero 1.5 km copy | 7 suites | ✅ Passed |

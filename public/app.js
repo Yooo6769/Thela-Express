@@ -78,6 +78,7 @@ document.addEventListener('DOMContentLoaded', () => {
   AtmosphereManager.init();
   initPromoCarousel();
   loadStoredUser();
+  initCustomerLocation();
   initWebSocket();
   loadCategories();
   loadStalls();
@@ -291,6 +292,30 @@ function handleAuthBtnClick() {
   }
 }
 
+function initCustomerLocation() {
+  try {
+    const storedLoc = localStorage.getItem('thela_customer_location');
+    if (storedLoc) {
+      STATE.customerLocation = JSON.parse(storedLoc);
+    }
+    const storedAddr = localStorage.getItem('thela_active_address');
+    if (storedAddr) {
+      STATE.activeAddress = JSON.parse(storedAddr);
+    }
+  } catch (e) {}
+
+  updateHeaderLocation();
+
+  // If no location has ever been set, try non-blocking automatic GPS if permission was already granted
+  if (!STATE.customerLocation && !STATE.activeAddress && navigator.geolocation && navigator.permissions) {
+    navigator.permissions.query({ name: 'geolocation' }).then(res => {
+      if (res.state === 'granted') {
+        captureCustomerGps(true);
+      }
+    }).catch(() => {});
+  }
+}
+
 function updateHeaderLocation() {
   const locEl = document.getElementById('headerLocation');
   const tagEl = document.getElementById('headerLocationTag');
@@ -303,9 +328,13 @@ function updateHeaderLocation() {
 
   if (STATE.activeAddress) {
     const icon = STATE.activeAddress.tag === 'Home' ? '🏠' : (STATE.activeAddress.tag === 'Work' ? '💼' : '📍');
-    if (tagEl) tagEl.innerText = STATE.activeAddress.tag || 'Home';
+    if (tagEl) tagEl.innerText = STATE.activeAddress.tag || 'Location';
     if (addrEl) addrEl.innerText = STATE.activeAddress.title || STATE.activeAddress.address || 'Select Address';
-    if (locEl) locEl.innerText = `${icon} ${STATE.activeAddress.tag}: ${STATE.activeAddress.title || STATE.activeAddress.address}`;
+    if (locEl) locEl.innerText = `${icon} ${STATE.activeAddress.title || STATE.activeAddress.address}`;
+  } else if (STATE.customerLocation) {
+    if (tagEl) tagEl.innerText = 'GPS';
+    if (addrEl) addrEl.innerText = STATE.customerLocation.area || 'Current Location';
+    if (locEl) locEl.innerText = `📍 ${STATE.customerLocation.area || 'Current Location'}`;
   } else {
     if (tagEl) tagEl.innerText = (typeof t === 'function' ? t('select_location', 'Location') : 'Location');
     if (addrEl) addrEl.innerText = (typeof t === 'function' ? t('select_location', 'Select Delivery Location') : 'Select Delivery Location');
@@ -551,6 +580,103 @@ function switchView(viewName) {
 // 5. CUSTOMER VIEW LOGIC (Craving Hub, Discovery & Catalog)
 // ==========================================================
 
+const DELHI_PREDEFINED_LOCATIONS = {
+  mukherjee_nagar: {
+    title: 'Mukherjee Nagar',
+    tag: 'Home',
+    address: 'Near Batra Cinema, Commercial Complex, Mukherjee Nagar, Delhi - 110009',
+    area: 'Mukherjee Nagar',
+    pincode: '110009',
+    lat: 28.7095,
+    lng: 77.2075
+  },
+  gtb_nagar: {
+    title: 'GTB Nagar / Hudson Lane',
+    tag: 'Home',
+    address: 'Hudson Lane, GTB Nagar, North Campus, Delhi - 110009',
+    area: 'GTB Nagar',
+    pincode: '110009',
+    lat: 28.7000,
+    lng: 77.2070
+  },
+  model_town: {
+    title: 'Model Town',
+    tag: 'Home',
+    address: 'Main Market, Model Town II, Delhi - 110009',
+    area: 'Model Town',
+    pincode: '110009',
+    lat: 28.7150,
+    lng: 77.1900
+  },
+  connaught_place: {
+    title: 'Connaught Place',
+    tag: 'Work',
+    address: 'Inner Circle, Connaught Place, Central Delhi - 110001',
+    area: 'Connaught Place',
+    pincode: '110001',
+    lat: 28.6139,
+    lng: 77.2090
+  },
+  noida_sec18: {
+    title: 'Noida Sector 18',
+    tag: 'Other',
+    address: 'Atta Market, Sector 18, Noida, Uttar Pradesh - 201301',
+    area: 'Sector 18',
+    pincode: '201301',
+    lat: 28.5700,
+    lng: 77.3200
+  }
+};
+
+function setPredefinedLocation(key) {
+  const preset = DELHI_PREDEFINED_LOCATIONS[key];
+  if (!preset) return;
+
+  STATE.activeAddress = {
+    id: 'addr_preset_' + key,
+    tag: preset.tag,
+    title: preset.title,
+    address: preset.address,
+    area: preset.area,
+    pincode: preset.pincode,
+    lat: preset.lat,
+    lng: preset.lng,
+    isDefault: true
+  };
+  STATE.customerLocation = {
+    lat: preset.lat,
+    lng: preset.lng,
+    source: 'preset',
+    area: preset.area
+  };
+
+  localStorage.setItem('thela_active_address', JSON.stringify(STATE.activeAddress));
+  localStorage.setItem('thela_customer_location', JSON.stringify(STATE.customerLocation));
+
+  if (STATE.user && STATE.user.phone) {
+    if (!STATE.user.addresses) STATE.user.addresses = [];
+    const idx = STATE.user.addresses.findIndex(a => a.id === STATE.activeAddress.id);
+    if (idx >= 0) {
+      STATE.user.addresses[idx] = STATE.activeAddress;
+    } else {
+      STATE.user.addresses.push(STATE.activeAddress);
+    }
+    localStorage.setItem('thela_user', JSON.stringify(STATE.user));
+  }
+
+  updateHeaderLocation();
+  updateCartAddressDisplay();
+  closeAddressDrawer();
+  loadStalls();
+
+  const dist = computeGeographicDistanceKm(preset.lat, preset.lng, 28.7095, 77.2075);
+  if (dist !== null && dist <= 7.0) {
+    showToast(`📍 Location set: ${preset.title} (${dist.toFixed(1)} km away • In Delivery Range ✓)`);
+  } else {
+    showToast(`📍 Location set: ${preset.title} (${dist !== null ? dist.toFixed(1) : '50+'} km away • Out of Delivery Range)`);
+  }
+}
+
 function computeGeographicDistanceKm(lat1, lon1, lat2, lon2) {
   const p1 = parseFloat(lat1);
   const l1 = parseFloat(lon1);
@@ -636,11 +762,16 @@ function calculateMarketplaceEta(stall, customerCoords = null, capacity = null) 
 
   const distText = distKm !== null ? `${distKm.toFixed(1)} km` : null;
 
+  // Hyper-local delivery radius check (default 7.0 km)
+  const maxRadius = stall.delivery_radius_km || 7.0;
+  const isOutOfRange = distKm !== null && distKm > maxRadius;
+
   // If customer location is missing or distance cannot be computed
   if (distKm === null) {
     if (!cust) {
       return {
         isAvailable: false,
+        isOutOfRange: false,
         reason: 'location_required',
         pillText: 'ETA available after location',
         badgeText: '🛵 ETA available after location',
@@ -651,12 +782,27 @@ function calculateMarketplaceEta(stall, customerCoords = null, capacity = null) 
     }
     return {
       isAvailable: false,
+      isOutOfRange: false,
       reason: 'vendor_location_missing',
       pillText: 'ETA unavailable',
       badgeText: '🛵 ETA unavailable',
       displayText: '🛵 ETA unavailable',
       distanceKm: null,
       distanceText: null
+    };
+  }
+
+  if (isOutOfRange) {
+    return {
+      isAvailable: false,
+      isOutOfRange: true,
+      reason: 'out_of_delivery_radius',
+      maxRadiusKm: maxRadius,
+      distanceKm: distKm,
+      distanceText: distText,
+      pillText: `Out of range (${distText})`,
+      badgeText: `🚫 Out of range (${distText})`,
+      displayText: `🚫 Out of delivery range (${distText})`
     };
   }
 
@@ -1109,7 +1255,14 @@ async function loadStalls() {
       stalls = stalls.filter(s => STATE.favorites.includes(s.id));
     }
     STATE.stalls = stalls;
-    renderDiscoverySections(STATE.stalls);
+
+    const deliverableStalls = custCoords ? stalls.filter(s => {
+      const eta = calculateMarketplaceEta(s, custCoords, STATE.deliveryCapacity);
+      const maxRadius = s.delivery_radius_km || 7.0;
+      return eta.distanceKm !== null && eta.distanceKm <= maxRadius;
+    }) : [];
+
+    renderDiscoverySections(deliverableStalls);
     renderStalls(STATE.stalls);
     updateVendorStallDropdown();
   } catch (err) {
@@ -1122,52 +1275,113 @@ function renderStalls(stalls) {
   const countEl = document.getElementById('stallsCount');
   const tr = (k, fb) => (typeof t === 'function' ? t(k, fb) : fb);
 
-  if (countEl) {
-    countEl.innerText = stalls.length > 0 ? `${stalls.length} verified carts` : '0 active stalls';
-  }
-
   const thelasSeparator = document.getElementById('thelasCountSeparator');
   const exploreCountEl = document.getElementById('exploreMoreThelasCount');
-  if (thelasSeparator) {
-    if (stalls && stalls.length > 0) {
-      thelasSeparator.classList.remove('hidden');
-      if (exploreCountEl) exploreCountEl.innerText = `${stalls.length} STREET FOOD THELAS DELIVERING TO YOU`;
-    } else {
-      thelasSeparator.classList.add('hidden');
-      if (exploreCountEl) exploreCountEl.innerText = '0 STREET FOOD THELAS DELIVERING TO YOU';
-    }
-  }
+  const custCoords = getActiveCustomerCoordinates();
 
-  if (stalls.length === 0) {
-    if (STATE.selectedCategory === 'favorites') {
-      container.innerHTML = `
-        <div class="col-span-full py-12 text-center text-stone-500 bg-white rounded-3xl border border-stone-200 p-6">
-          <i class="fa-regular fa-heart text-3xl text-stone-300 mb-2"></i>
-          <p class="font-bold text-sm text-stone-800">${tr('no_favorites_title', 'No favorite stalls saved yet')}</p>
-          <p class="text-xs text-stone-400 mt-1">${tr('no_favorites_desc', 'Tap the heart icon on any stall to add it here')}</p>
+  // STATE 1: LOCATION NOT SET YET (Customer has not added address or allowed GPS)
+  if (!custCoords) {
+    if (countEl) countEl.innerText = 'Location required';
+    if (thelasSeparator) thelasSeparator.classList.add('hidden');
+    if (exploreCountEl) exploreCountEl.innerText = 'SET LOCATION TO DISCOVER NEARBY STREET THELAS';
+
+    container.innerHTML = `
+      <div class="col-span-full bg-gradient-to-br from-amber-500/10 via-orange-500/5 to-transparent dark:from-amber-950/30 dark:via-stone-900 border-2 border-dashed border-amber-300 dark:border-amber-800/60 rounded-3xl p-6 sm:p-8 text-center space-y-4 shadow-xs">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-tr from-amber-500 to-orange-500 text-white flex items-center justify-center text-3xl shadow-lg shadow-amber-500/20">
+          <i class="fa-solid fa-location-dot"></i>
         </div>
-      `;
-    } else {
-      container.innerHTML = `
-        <div class="col-span-full py-12 text-center bg-white dark:bg-zinc-900 rounded-3xl border-2 border-dashed border-stone-200 dark:border-zinc-800 p-6 space-y-3">
-          <div class="w-14 h-14 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center text-2xl shadow-xs">
-            <i class="fa-solid fa-utensils"></i>
-          </div>
-          <div>
-            <h3 class="font-black text-base text-stone-900 dark:text-stone-100">${tr('customer_no_stalls_title', 'No Street Stalls Live Right Now')}</h3>
-            <p class="text-xs text-stone-500 dark:text-stone-400 mt-1 max-w-md mx-auto">
-              ${tr('customer_no_stalls_desc', 'Local street food stalls and carts in your neighborhood are currently prepping fresh ingredients or resting. Please check back shortly!')}
-            </p>
+        <div class="space-y-1.5 max-w-md mx-auto">
+          <h3 class="font-black text-lg sm:text-xl text-stone-900 dark:text-stone-100">Set Delivery Location to View Nearby Carts</h3>
+          <p class="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+            Street food stalls deliver hot, fresh street bites within hyper-local zones (up to 7 km). Track your GPS or enter your delivery address to see live verified thelas delivering to you.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+          <button onclick="captureCustomerGps()" class="px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shadow-md shadow-amber-600/20 flex items-center space-x-2 transition active:scale-95">
+            <i class="fa-solid fa-location-crosshairs"></i>
+            <span>Use Current GPS Location</span>
+          </button>
+          <button onclick="openAddressDrawer()" class="px-4 py-2.5 rounded-2xl bg-white dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-900 dark:text-stone-100 border border-stone-200 dark:border-stone-700 font-bold text-xs shadow-xs flex items-center space-x-2 transition">
+            <i class="fa-solid fa-house-chimney"></i>
+            <span>Select Delivery Address</span>
+          </button>
+        </div>
+        <div class="pt-3 border-t border-amber-200/60 dark:border-stone-800 max-w-lg mx-auto">
+          <span class="text-[11px] font-extrabold uppercase tracking-wider text-stone-500 dark:text-stone-400 block mb-2">Popular Delhi Delivery Localities:</span>
+          <div class="flex flex-wrap justify-center gap-1.5">
+            <button onclick="setPredefinedLocation('mukherjee_nagar')" class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-100 dark:bg-amber-900/40 text-amber-900 dark:text-amber-200 hover:bg-amber-200 transition">
+              📍 Mukherjee Nagar (110009 • In Range)
+            </button>
+            <button onclick="setPredefinedLocation('gtb_nagar')" class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-stone-700 dark:text-stone-300 hover:bg-amber-100 transition">
+              📍 GTB Nagar (1.1 km • In Range)
+            </button>
+            <button onclick="setPredefinedLocation('model_town')" class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-amber-50 dark:bg-amber-950/40 text-stone-700 dark:text-stone-300 hover:bg-amber-100 transition">
+              📍 Model Town (1.8 km • In Range)
+            </button>
+            <button onclick="setPredefinedLocation('connaught_place')" class="text-[11px] font-bold px-2.5 py-1 rounded-xl bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400 hover:bg-stone-200 transition">
+              📍 Connaught Place (10.6 km • Out of Range)
+            </button>
           </div>
         </div>
-      `;
-    }
+      </div>
+    `;
     return;
   }
 
-  const custCoords = getActiveCustomerCoordinates();
+  // Filter deliverable stalls based on distance <= radius
+  const deliverableStalls = stalls.filter(stall => {
+    const eta = calculateMarketplaceEta(stall, custCoords, STATE.deliveryCapacity);
+    const maxRadius = stall.delivery_radius_km || 7.0;
+    return eta.distanceKm !== null && eta.distanceKm <= maxRadius;
+  });
 
-  container.innerHTML = stalls.map(stall => {
+  // STATE 2: LOCATION SET BUT OUT OF DELIVERY RANGE (e.g. > 7km away)
+  if (deliverableStalls.length === 0) {
+    if (countEl) countEl.innerText = '0 carts in range';
+    if (thelasSeparator) thelasSeparator.classList.add('hidden');
+    if (exploreCountEl) exploreCountEl.innerText = '0 STREET FOOD THELAS DELIVERING TO YOU';
+
+    const currentLocName = STATE.activeAddress?.title || STATE.activeAddress?.address || (STATE.customerLocation?.area || 'your current location');
+    const firstStall = stalls[0];
+    const eta = firstStall ? calculateMarketplaceEta(firstStall, custCoords, STATE.deliveryCapacity) : null;
+    const distText = eta?.distanceText ? `${eta.distanceText}` : 'too far away';
+
+    container.innerHTML = `
+      <div class="col-span-full bg-white dark:bg-stone-900 rounded-3xl border-2 border-dashed border-stone-200 dark:border-stone-800 p-6 sm:p-8 text-center space-y-4 shadow-sm">
+        <div class="w-16 h-16 mx-auto rounded-2xl bg-amber-50 dark:bg-amber-950/40 text-amber-600 flex items-center justify-center text-3xl shadow-xs">
+          <i class="fa-solid fa-route"></i>
+        </div>
+        <div class="space-y-1.5 max-w-md mx-auto">
+          <h3 class="font-black text-lg sm:text-xl text-stone-900 dark:text-stone-100">No Carts Delivering to Your Location Yet</h3>
+          <p class="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
+            Our verified street partner <strong class="text-amber-600 font-black">Aryan The Pizza</strong> is located at <strong>Mukherjee Nagar (110009)</strong> and delivers within a 7 km radius. Your current location (<strong>${currentLocName}</strong>) is <strong>${distText}</strong> away, which is outside delivery range.
+          </p>
+        </div>
+        <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
+          <button onclick="openAddressDrawer()" class="px-4 py-2.5 rounded-2xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs shadow-md shadow-amber-600/20 flex items-center space-x-2 transition active:scale-95">
+            <i class="fa-solid fa-location-dot"></i>
+            <span>Change Delivery Address / Location</span>
+          </button>
+          <button onclick="setPredefinedLocation('mukherjee_nagar')" class="px-4 py-2.5 rounded-2xl bg-stone-100 dark:bg-stone-800 hover:bg-stone-200 dark:hover:bg-stone-700 text-stone-900 dark:text-stone-100 font-bold text-xs border border-stone-200 dark:border-stone-700 transition">
+            <span>Switch to Mukherjee Nagar (110009)</span>
+          </button>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  // STATE 3: DELIVERABLE STALLS IN RANGE -> RENDER CARDS
+  if (countEl) {
+    countEl.innerText = `${deliverableStalls.length} verified cart${deliverableStalls.length > 1 ? 's' : ''} near you`;
+  }
+
+  if (thelasSeparator) {
+    thelasSeparator.classList.remove('hidden');
+    if (exploreCountEl) exploreCountEl.innerText = `${deliverableStalls.length} STREET FOOD THELA${deliverableStalls.length > 1 ? 'S' : ''} DELIVERING TO YOU`;
+  }
+
+  container.innerHTML = deliverableStalls.map(stall => {
     const isFav = STATE.favorites.includes(stall.id);
     const eta = calculateMarketplaceEta(stall, custCoords, STATE.deliveryCapacity);
     const distText = eta.distanceText ? `${eta.distanceText} away` : null;
@@ -3115,6 +3329,25 @@ async function handlePlaceOrder() {
     return;
   }
 
+  // Ensure delivery location / address is established
+  const custCoords = getActiveCustomerCoordinates();
+  if (!STATE.activeAddress && !custCoords) {
+    openAddressDrawer();
+    showToast('Please set your delivery address or area first');
+    return;
+  }
+
+  // Enforce delivery radius check
+  const activeStall = (STATE.stalls || []).find(s => s.id === STATE.cart.stallId);
+  if (activeStall && custCoords && typeof custCoords.lat === 'number' && typeof custCoords.lng === 'number') {
+    const dist = computeGeographicDistanceKm(custCoords.lat, custCoords.lng, activeStall.lat, activeStall.lng);
+    const maxRadius = activeStall.delivery_radius_km || 7.0;
+    if (dist > maxRadius) {
+      showToast(`⚠️ Delivery Unavailable: ${activeStall.name} only delivers within ${maxRadius} km of Mukherjee Nagar. Your address is ${dist.toFixed(1)} km away.`);
+      return;
+    }
+  }
+
   const btn = document.getElementById('placeOrderBtn');
   btn.disabled = true;
   btn.innerHTML = `<i class="fa-solid fa-spinner animate-spin mr-2"></i>Placing Order...`;
@@ -3148,6 +3381,8 @@ async function handlePlaceOrder() {
         grand_total: grandTotal,
         delivery_address: deliveryAddress,
         delivery_instruction: instruction,
+        delivery_lat: custCoords?.lat,
+        delivery_lng: custCoords?.lng,
         payment_method: 'UPI'
       })
     });
@@ -4387,10 +4622,7 @@ function handleLogout() {
 
 // Address Drawer Logic
 function openAddressDrawer() {
-  if (!STATE.user || !STATE.user.phone) {
-    openLoginRequiredModal();
-    return;
-  }
+  // Allow all customers (including guests) to set their delivery location / address
   renderSavedAddresses();
   document.getElementById('addressDrawer').classList.remove('hidden');
   AtmosphereManager.pushOverride('addressDrawer', 'minimal');
@@ -4405,13 +4637,17 @@ function renderSavedAddresses() {
   const container = document.getElementById('savedAddressesContainer');
   if (!container) return;
 
-  const addresses = (STATE.user && STATE.user.addresses) || [];
+  // Combine user saved addresses or active guest address
+  const addresses = (STATE.user && STATE.user.addresses && STATE.user.addresses.length > 0)
+    ? STATE.user.addresses
+    : (STATE.activeAddress ? [STATE.activeAddress] : []);
+
   if (addresses.length === 0) {
     container.innerHTML = `
-      <div class="py-6 text-center text-gray-400 bg-gray-50 rounded-2xl border border-dashed border-gray-200">
-        <i class="fa-solid fa-map-pin text-2xl text-gray-300 mb-1"></i>
-        <p class="text-xs font-bold text-gray-600">No saved addresses yet</p>
-        <p class="text-[10px] text-gray-400">Add your Home or Office address below for 1-tap delivery</p>
+      <div class="py-6 text-center text-stone-400 bg-stone-50 dark:bg-stone-800/50 rounded-2xl border border-dashed border-stone-200 dark:border-stone-800">
+        <i class="fa-solid fa-map-pin text-2xl text-stone-300 dark:text-stone-600 mb-1"></i>
+        <p class="text-xs font-bold text-stone-600 dark:text-stone-300">No saved addresses yet</p>
+        <p class="text-[10px] text-stone-400 dark:text-stone-500">Pick a quick preset above or type your address below</p>
       </div>
     `;
     return;
@@ -4419,34 +4655,35 @@ function renderSavedAddresses() {
 
   container.innerHTML = addresses.map(addr => {
     const isSelected = STATE.activeAddress && (STATE.activeAddress.id === addr.id);
-    const tagIcon = addr.tag === 'Home' ? '🏠' : (addr.tag === 'Work' ? '💼' : '📍');
+    const tagIcon = addr.tag === 'Home' ? '🏠' : (addr.tag === 'Work' ? '💼' : (addr.tag === 'Live GPS' ? '📍' : '🏷️'));
 
     return `
       <div onclick="selectDeliveryAddress('${addr.id}')"
         class="p-3.5 rounded-2xl border-2 transition cursor-pointer flex items-start justify-between ${
           isSelected 
-            ? 'border-orange-500 bg-orange-50/50 shadow-sm' 
-            : 'border-gray-200 bg-white hover:border-gray-300'
+            ? 'border-amber-500 bg-amber-50/50 dark:bg-amber-950/20 shadow-xs' 
+            : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-stone-300 dark:hover:border-stone-700'
         }">
         <div class="flex items-start space-x-3 flex-1">
-          <div class="w-8 h-8 rounded-xl bg-orange-100 text-orange-700 flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">
+          <div class="w-8 h-8 rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400 flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">
             ${tagIcon}
           </div>
           <div>
             <div class="flex items-center space-x-2">
-              <h4 class="text-xs font-black text-gray-900">${addr.tag}: ${addr.title}</h4>
-              ${addr.isDefault ? '<span class="bg-orange-100 text-orange-700 text-[9px] font-black px-1.5 py-0.5 rounded">PRIMARY</span>' : ''}
+              <h4 class="text-xs font-black text-stone-900 dark:text-stone-100">${addr.tag || 'Address'}: ${addr.title || addr.area || 'Delivery Point'}</h4>
+              ${isSelected ? '<span class="bg-amber-100 dark:bg-amber-900/60 text-amber-800 dark:text-amber-300 text-[9px] font-black px-1.5 py-0.5 rounded">ACTIVE</span>' : ''}
             </div>
-            <p class="text-[11px] text-gray-500 mt-0.5 line-clamp-2">${addr.address}</p>
+            <p class="text-[11px] text-stone-500 dark:text-stone-400 mt-0.5 line-clamp-2">${addr.address}</p>
           </div>
         </div>
 
         <div class="flex items-center space-x-2 shrink-0 ml-2">
-          ${isSelected ? '<span class="text-orange-600 text-sm"><i class="fa-solid fa-circle-check"></i></span>' : ''}
+          ${isSelected ? '<span class="text-amber-600 dark:text-amber-400 text-sm"><i class="fa-solid fa-circle-check"></i></span>' : ''}
+          ${(STATE.user && STATE.user.phone && !addr.id.startsWith('addr_preset_')) ? `
           <button onclick="event.stopPropagation(); handleDeleteAddress('${addr.id}')" 
-            class="text-gray-300 hover:text-red-500 p-1 transition" title="Delete Address">
+            class="text-stone-300 hover:text-red-500 p-1 transition" title="Delete Address">
             <i class="fa-regular fa-trash-can text-xs"></i>
-          </button>
+          </button>` : ''}
         </div>
       </div>
     `;
@@ -4459,18 +4696,18 @@ function setNewAddrTag(tag) {
     const btn = document.getElementById(`tagBtn${t}`);
     if (btn) {
       if (t === tag) {
-        btn.className = 'tag-pill px-3 py-1.5 rounded-xl border-2 border-orange-600 bg-orange-50 text-orange-700 font-bold flex items-center space-x-1';
+        btn.className = 'tag-pill px-3 py-1.5 rounded-xl border-2 border-amber-600 bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 font-bold flex items-center space-x-1';
       } else {
-        btn.className = 'tag-pill px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold flex items-center space-x-1';
+        btn.className = 'tag-pill px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-bold flex items-center space-x-1';
       }
     }
   });
 }
 
-function captureCustomerGps() {
+function captureCustomerGps(isSilent = false) {
   const label = document.getElementById('gpsDetectLabel');
   if (!navigator.geolocation) {
-    showToast('GPS geolocation is not supported on this device');
+    if (!isSilent) showToast('GPS geolocation is not supported on this device');
     return;
   }
 
@@ -4478,21 +4715,64 @@ function captureCustomerGps() {
 
   navigator.geolocation.getCurrentPosition(
     (pos) => {
-      const lat = pos.coords.latitude.toFixed(4);
-      const lon = pos.coords.longitude.toFixed(4);
-      
+      const lat = parseFloat(pos.coords.latitude.toFixed(6));
+      const lng = parseFloat(pos.coords.longitude.toFixed(6));
+
+      // Calculate distance to Mukherjee Nagar hub (28.7095, 77.2075)
+      const dist = computeGeographicDistanceKm(lat, lng, 28.7095, 77.2075);
+      const isNearby = dist !== null && dist <= 7.0;
+      const areaName = isNearby
+        ? (dist <= 1.5 ? 'Mukherjee Nagar (Live GPS)' : `North Delhi (${dist.toFixed(1)} km)`)
+        : `Far Location (${dist !== null ? dist.toFixed(1) : '50+'} km)`;
+
+      STATE.customerLocation = {
+        lat,
+        lng,
+        source: 'gps',
+        area: areaName,
+        distanceKm: dist
+      };
+
+      STATE.activeAddress = {
+        id: 'addr_gps_live',
+        tag: 'Live GPS',
+        title: areaName,
+        address: `Live GPS Pin (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
+        area: areaName,
+        pincode: isNearby ? '110009' : '',
+        lat,
+        lng,
+        isDefault: true
+      };
+
+      localStorage.setItem('thela_customer_location', JSON.stringify(STATE.customerLocation));
+      localStorage.setItem('thela_active_address', JSON.stringify(STATE.activeAddress));
+
       const houseInput = document.getElementById('newAddrHouse');
       const streetInput = document.getElementById('newAddrStreet');
-      if (houseInput) houseInput.value = 'GPS Detected Point';
-      if (streetInput) streetInput.value = `Near Lat ${lat}, Long ${lon}`;
+      if (houseInput) houseInput.value = 'GPS Location';
+      if (streetInput) streetInput.value = `Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)} (${areaName})`;
 
       if (label) label.innerText = 'GPS Locked ✓';
-      showToast(`📍 GPS pinned at ${lat}, ${lon}`);
+      updateHeaderLocation();
+      updateCartAddressDisplay();
+      renderSavedAddresses();
+      loadStalls();
+
+      if (!isSilent) {
+        if (isNearby) {
+          showToast(`📍 GPS Located: Within delivery zone (${dist.toFixed(1)} km from hub)!`);
+        } else {
+          showToast(`⚠️ GPS Located: ${dist !== null ? dist.toFixed(1) : '50+'} km away. Outside 7 km delivery zone.`);
+        }
+      }
     },
     (err) => {
       console.warn('GPS error:', err);
       if (label) label.innerText = 'Use Live GPS';
-      showToast('Could not access GPS. Please enter your address manually.');
+      if (!isSilent) {
+        showToast('Could not access GPS. Please choose or enter your address manually.');
+      }
     },
     { enableHighAccuracy: true, timeout: 8000 }
   );
@@ -4500,7 +4780,6 @@ function captureCustomerGps() {
 
 async function handleSaveAddress(event) {
   if (event) event.preventDefault();
-  if (!STATE.user || !STATE.user.phone) return;
 
   const house = document.getElementById('newAddrHouse')?.value.trim();
   const street = document.getElementById('newAddrStreet')?.value.trim();
@@ -4516,6 +4795,49 @@ async function handleSaveAddress(event) {
   const address = landmark ? `${street}, Landmark: ${landmark}` : street;
   const tag = STATE.newAddrTag || 'Home';
 
+  // Infer coordinates based on text or current location
+  const combinedText = (house + ' ' + street + ' ' + landmark).toLowerCase();
+  let inferredLat = 28.7095;
+  let inferredLng = 77.2075;
+  let inferredArea = 'Mukherjee Nagar';
+  let inferredPincode = '110009';
+
+  if (combinedText.includes('gtb') || combinedText.includes('hudson') || combinedText.includes('kingsway')) {
+    inferredLat = 28.7000;
+    inferredLng = 77.2070;
+    inferredArea = 'GTB Nagar';
+  } else if (combinedText.includes('model town')) {
+    inferredLat = 28.7150;
+    inferredLng = 77.1900;
+    inferredArea = 'Model Town';
+  } else if (combinedText.includes('connaught') || combinedText.includes('cp') || combinedText.includes('110001')) {
+    inferredLat = 28.6139;
+    inferredLng = 77.2090;
+    inferredArea = 'Connaught Place';
+    inferredPincode = '110001';
+  } else if (combinedText.includes('noida') || combinedText.includes('201301')) {
+    inferredLat = 28.5700;
+    inferredLng = 77.3200;
+    inferredArea = 'Noida Sector 18';
+    inferredPincode = '201301';
+  } else if (STATE.customerLocation && typeof STATE.customerLocation.lat === 'number') {
+    inferredLat = STATE.customerLocation.lat;
+    inferredLng = STATE.customerLocation.lng;
+    inferredArea = STATE.customerLocation.area || 'Custom Location';
+  }
+
+  const newAddressObj = {
+    id: 'addr_' + Date.now(),
+    tag,
+    title,
+    address,
+    area: inferredArea,
+    pincode: inferredPincode,
+    lat: inferredLat,
+    lng: inferredLng,
+    isDefault: true
+  };
+
   const btn = document.getElementById('saveAddressBtn');
   if (btn) {
     btn.disabled = true;
@@ -4523,37 +4845,55 @@ async function handleSaveAddress(event) {
   }
 
   try {
-    const res = await fetch(`/api/users/${STATE.user.phone}/addresses`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ tag, title, address, isDefault })
-    });
+    if (STATE.user && STATE.user.phone) {
+      const res = await fetch(`/api/users/${STATE.user.phone}/addresses`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ tag, title, address, isDefault, lat: inferredLat, lng: inferredLng, pincode: inferredPincode })
+      });
 
-    const data = await res.json();
-    if (data.success && data.addresses) {
-      STATE.user.addresses = data.addresses;
-      if (data.address) {
-        STATE.activeAddress = data.address;
-      } else if (isDefault || !STATE.activeAddress) {
-        STATE.activeAddress = data.addresses[data.addresses.length - 1];
+      const data = await res.json();
+      if (data.success && data.addresses) {
+        STATE.user.addresses = data.addresses;
+        STATE.activeAddress = data.address || data.addresses[data.addresses.length - 1];
+        localStorage.setItem('thela_user', JSON.stringify(STATE.user));
+      } else {
+        STATE.activeAddress = newAddressObj;
       }
-      localStorage.setItem('thela_user', JSON.stringify(STATE.user));
-
-      // Reset form
-      const houseInput = document.getElementById('newAddrHouse');
-      const streetInput = document.getElementById('newAddrStreet');
-      const landmarkInput = document.getElementById('newAddrLandmark');
-      if (houseInput) houseInput.value = '';
-      if (streetInput) streetInput.value = '';
-      if (landmarkInput) landmarkInput.value = '';
-
-      renderSavedAddresses();
-      updateHeaderLocation();
-      updateCartAddressDisplay();
-      closeAddressDrawer();
-      showToast('✅ Delivery address saved!');
     } else {
-      showToast(data.error || 'Failed to save address');
+      // Guest customer sets address
+      STATE.activeAddress = newAddressObj;
+    }
+
+    STATE.customerLocation = {
+      lat: inferredLat,
+      lng: inferredLng,
+      source: 'address',
+      area: inferredArea
+    };
+
+    localStorage.setItem('thela_active_address', JSON.stringify(STATE.activeAddress));
+    localStorage.setItem('thela_customer_location', JSON.stringify(STATE.customerLocation));
+
+    // Reset form
+    const houseInput = document.getElementById('newAddrHouse');
+    const streetInput = document.getElementById('newAddrStreet');
+    const landmarkInput = document.getElementById('newAddrLandmark');
+    if (houseInput) houseInput.value = '';
+    if (streetInput) streetInput.value = '';
+    if (landmarkInput) landmarkInput.value = '';
+
+    renderSavedAddresses();
+    updateHeaderLocation();
+    updateCartAddressDisplay();
+    closeAddressDrawer();
+    loadStalls();
+
+    const dist = computeGeographicDistanceKm(inferredLat, inferredLng, 28.7095, 77.2075);
+    if (dist !== null && dist <= 7.0) {
+      showToast(`✅ Address saved: ${title} (${dist.toFixed(1)} km away • In Delivery Range)`);
+    } else {
+      showToast(`⚠️ Address saved: ${title} (${dist !== null ? dist.toFixed(1) : '50+'} km away • Outside 7 km zone)`);
     }
   } catch (err) {
     console.error('Save address error:', err);
@@ -4590,13 +4930,37 @@ async function handleDeleteAddress(addrId) {
 }
 
 function selectDeliveryAddress(addrId) {
-  const addr = STATE.user?.addresses?.find(a => a.id === addrId);
+  if (addrId && addrId.startsWith('addr_preset_')) {
+    const key = addrId.replace('addr_preset_', '');
+    setPredefinedLocation(key);
+    return;
+  }
+
+  let addr = null;
+  if (STATE.user?.addresses) {
+    addr = STATE.user.addresses.find(a => a.id === addrId);
+  }
+  if (!addr && STATE.activeAddress && STATE.activeAddress.id === addrId) {
+    addr = STATE.activeAddress;
+  }
+
   if (addr) {
     STATE.activeAddress = addr;
+    if (addr.lat && addr.lng) {
+      STATE.customerLocation = {
+        lat: addr.lat,
+        lng: addr.lng,
+        source: 'address',
+        area: addr.area || addr.title || addr.tag
+      };
+      localStorage.setItem('thela_customer_location', JSON.stringify(STATE.customerLocation));
+    }
+    localStorage.setItem('thela_active_address', JSON.stringify(STATE.activeAddress));
     updateHeaderLocation();
     updateCartAddressDisplay();
     closeAddressDrawer();
-    showToast(`📍 Delivering to ${addr.tag}: ${addr.title}`);
+    loadStalls();
+    showToast(`📍 Delivering to ${addr.tag || 'Address'}: ${addr.title || addr.address}`);
   }
 }
 

@@ -346,7 +346,73 @@ test('Hero promo carousel swipe accurately navigates left on swipe left and prev
   assert(appJsContent.includes('nextCarouselSlide(); // Swiped right -> Right slide'), 'Swipe right does not navigate right');
 });
 
+console.log('\n--- TEST SUITE 10: Mukherjee Nagar 110009 Hyper-Local Location Gating & 7km Delivery Radius ---');
+test('Aryan The Pizza is stationed at Mukherjee Nagar 110009 with 7km delivery radius', () => {
+  const stall = db.getStallById('stall_aryan_the_pizza');
+  assert(stall, 'Stall not found');
+  assert(stall.address.includes('Mukherjee Nagar'), `Address must contain Mukherjee Nagar, got: ${stall.address}`);
+  assert(stall.address.includes('110009'), `Address must contain 110009, got: ${stall.address}`);
+  assert.strictEqual(stall.area, 'Mukherjee Nagar');
+  assert.strictEqual(stall.pincode, '110009');
+  assert.strictEqual(stall.lat, 28.7095);
+  assert.strictEqual(stall.lng, 77.2075);
+  assert.strictEqual(stall.delivery_radius_km, 7.0);
+});
+
+test('db.getStalls computes hyper-local deliverability correctly (In-Range <= 7km, Out-of-Range > 7km)', () => {
+  // 1. Mukherjee Nagar (0.0 km) -> Deliverable
+  const mnStalls = db.getStalls(null, 28.7095, 77.2075);
+  const mnStall = mnStalls.find(s => s.id === 'stall_aryan_the_pizza');
+  assert(mnStall, 'Stall missing for Mukherjee Nagar');
+  assert.strictEqual(mnStall.isDeliverable, true, 'Mukherjee Nagar must be deliverable');
+  assert(mnStall.distanceKm <= 0.1, `Mukherjee Nagar distance should be ~0 km, got ${mnStall.distanceKm}`);
+
+  // 2. GTB Nagar / Hudson Lane (1.1 km) -> Deliverable
+  const gtbStalls = db.getStalls(null, 28.7000, 77.2070);
+  const gtbStall = gtbStalls.find(s => s.id === 'stall_aryan_the_pizza');
+  assert(gtbStall, 'Stall missing for GTB Nagar');
+  assert.strictEqual(gtbStall.isDeliverable, true, 'GTB Nagar must be deliverable');
+  assert(gtbStall.distanceKm >= 0.9 && gtbStall.distanceKm <= 1.5, `GTB Nagar distance should be ~1.1 km, got ${gtbStall.distanceKm}`);
+
+  // 3. Connaught Place (10.6 km) -> Out of Delivery Range
+  const cpStalls = db.getStalls(null, 28.6139, 77.2090);
+  const cpStall = cpStalls.find(s => s.id === 'stall_aryan_the_pizza');
+  assert(cpStall, 'Stall missing for CP');
+  assert.strictEqual(cpStall.isDeliverable, false, 'Connaught Place (10.6 km) must be out of range');
+  assert(cpStall.distanceKm > 10.0, `CP distance should be > 10 km, got ${cpStall.distanceKm}`);
+
+  // 4. Far Away Location (50 km away) -> Out of Delivery Range
+  const farStalls = db.getStalls(null, 28.2580, 77.2075);
+  const farStall = farStalls.find(s => s.id === 'stall_aryan_the_pizza');
+  assert(farStall, 'Stall missing for 50km distance');
+  assert.strictEqual(farStall.isDeliverable, false, '50km location must be out of range');
+  assert(farStall.distanceKm >= 45.0, `50km location distance should be >= 45 km, got ${farStall.distanceKm}`);
+});
+
+test('Server order route enforces 7km delivery radius gating and rejects out-of-range orders', () => {
+  const ordersRouteContent = fs.readFileSync(path.join(__dirname, '..', 'server', 'src', 'routes', 'orders.js'), 'utf8');
+  assert(ordersRouteContent.includes('OUT_OF_DELIVERY_RANGE'), 'Missing OUT_OF_DELIVERY_RANGE error check in orders route');
+  assert(ordersRouteContent.includes('delivery_radius_km || 7.0'), 'Missing delivery_radius_km gate in orders route');
+});
+
+test('Frontend app.js supports predefined Delhi neighborhoods, guest address setup, and location gating state', () => {
+  const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+  assert(appJsContent.includes('DELHI_PREDEFINED_LOCATIONS'), 'Missing DELHI_PREDEFINED_LOCATIONS in app.js');
+  assert(appJsContent.includes('mukherjee_nagar:'), 'Missing mukherjee_nagar preset');
+  assert(appJsContent.includes('gtb_nagar:'), 'Missing gtb_nagar preset');
+  assert(appJsContent.includes('model_town:'), 'Missing model_town preset');
+  assert(appJsContent.includes('connaught_place:'), 'Missing connaught_place preset');
+  assert(appJsContent.includes('noida_sec18:'), 'Missing noida_sec18 preset');
+  assert(appJsContent.includes('function setPredefinedLocation('), 'Missing setPredefinedLocation in app.js');
+  assert(appJsContent.includes('function computeGeographicDistanceKm('), 'Missing computeGeographicDistanceKm in app.js');
+  assert(appJsContent.includes('function captureCustomerGps('), 'Missing captureCustomerGps in app.js');
+  assert(appJsContent.includes('function openAddressDrawer()'), 'Missing openAddressDrawer in app.js');
+  assert(!appJsContent.includes('function openAddressDrawer() {\n  if (!STATE.user || !STATE.user.phone) {\n    openLoginRequiredModal();'), 'openAddressDrawer must not block guest users from setting location');
+  assert(appJsContent.includes('renderDiscoverySections'), 'Missing renderDiscoverySections in app.js');
+});
+
 console.log(`\n🎉 ALL ${passCount} ARYAN THE PIZZA INTEGRATION TESTS PASSED COMPLETELY!`);
 console.log('================================================================');
+
 
 

@@ -2081,84 +2081,140 @@
   <!-- DRAWER: SAVED ADDRESS BOOK & ADD NEW ADDRESS                   -->
   <!-- ============================================================== -->
   <div id="addressDrawer" class="hidden fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex justify-end transition-all">
-    <div class="bg-white w-full sm:max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
+    <div class="bg-white dark:bg-stone-900 text-stone-900 dark:text-stone-100 w-full sm:max-w-md h-full flex flex-col shadow-2xl animate-in slide-in-from-right duration-200">
       <!-- Address Header -->
-      <div class="p-4 border-b border-gray-200 flex items-center justify-between bg-gray-50">
+      <div class="p-4 border-b border-stone-200 dark:border-stone-800 flex items-center justify-between bg-stone-50 dark:bg-stone-950">
         <div class="flex items-center space-x-2">
-          <div class="w-8 h-8 rounded-lg bg-orange-100 text-orange-600 flex items-center justify-center font-bold">
+          <div class="w-8 h-8 rounded-lg bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold">
             <i class="fa-solid fa-location-dot"></i>
           </div>
           <div>
-            <h2 class="font-extrabold text-base text-gray-900">Delivery Addresses</h2>
-            <p class="text-xs text-gray-500">Select where you want your food delivered</p>
+            <h2 class="font-extrabold text-base text-stone-900 dark:text-white">Delivery Location & Address</h2>
+            <p class="text-xs text-stone-500 dark:text-stone-400">Street stalls deliver within hyper-local zones (7 km)</p>
           </div>
         </div>
-        <button onclick="closeAddressDrawer()" class="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-500 flex items-center justify-center hover:bg-gray-100">
+        <button onclick="closeAddressDrawer()" class="w-8 h-8 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-300 flex items-center justify-center hover:bg-stone-100 dark:hover:bg-stone-700">
           <i class="fa-solid fa-xmark"></i>
         </button>
       </div>
 
       <!-- Address Content -->
       <div class="flex-1 overflow-y-auto p-4 space-y-4">
-        <!-- Saved Addresses List -->
-        <div>
-          <div class="text-xs font-black text-gray-700 uppercase tracking-wider mb-2">Saved Locations</div>
+        <!-- Quick Select Delivery Area Presets -->
+        <div class="bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-2xl p-3.5 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center space-x-1.5">
+              <i class="fa-solid fa-map-location-dot text-amber-600 text-xs"></i>
+              <span class="text-xs font-black text-stone-900 dark:text-white uppercase tracking-wider">Quick Select Area</span>
+            </div>
+            <button type="button" onclick="captureCustomerGps()" class="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline flex items-center space-x-1">
+              <i class="fa-solid fa-location-crosshairs"></i>
+              <span id="gpsDetectLabel">Use Live GPS</span>
+            </button>
+          </div>
+          <p class="text-[11px] text-stone-600 dark:text-stone-400">Tap your neighborhood to instantly verify delivery distance:</p>
+          <div class="grid grid-cols-1 gap-2 pt-1" id="quickDeliveryAreasList">
+            <button type="button" onclick="setPredefinedLocation('mukherjee_nagar')" class="w-full text-left p-2.5 rounded-xl border border-amber-300 dark:border-amber-700/60 bg-white dark:bg-stone-900 hover:border-amber-500 transition flex items-center justify-between">
+              <div>
+                <div class="font-extrabold text-xs text-stone-900 dark:text-white flex items-center space-x-1.5">
+                  <span>📍 Mukherjee Nagar</span>
+                  <span class="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-black px-1.5 py-0.2 rounded">IN RANGE • ~0.1 km</span>
+                </div>
+                <div class="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5">Commercial Complex, Main Market, Delhi - 110009</div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-stone-400 text-xs shrink-0 ml-2"></i>
+            </button>
+
+            <button type="button" onclick="setPredefinedLocation('gtb_nagar')" class="w-full text-left p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-400 transition flex items-center justify-between">
+              <div>
+                <div class="font-extrabold text-xs text-stone-900 dark:text-white flex items-center space-x-1.5">
+                  <span>📍 GTB Nagar / Hudson Lane</span>
+                  <span class="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-black px-1.5 py-0.2 rounded">IN RANGE • ~1.1 km</span>
+                </div>
+                <div class="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5">North Campus, Delhi - 110009</div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-stone-400 text-xs shrink-0 ml-2"></i>
+            </button>
+
+            <button type="button" onclick="setPredefinedLocation('model_town')" class="w-full text-left p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-400 transition flex items-center justify-between">
+              <div>
+                <div class="font-extrabold text-xs text-stone-900 dark:text-white flex items-center space-x-1.5">
+                  <span>📍 Model Town</span>
+                  <span class="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-black px-1.5 py-0.2 rounded">IN RANGE • ~1.8 km</span>
+                </div>
+                <div class="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5">Model Town II, Delhi - 110009</div>
+              </div>
+              <i class="fa-solid fa-chevron-right text-stone-400 text-xs shrink-0 ml-2"></i>
+            </button>
+
+            <button type="button" onclick="setPredefinedLocation('connaught_place')" class="w-full text-left p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-stone-400 transition flex items-center justify-between opacity-80">
+              <div>
+                <div class="font-bold text-xs text-stone-700 dark:text-stone-300 flex items-center space-x-1.5">
+                  <span>📍 Connaught Place (CP)</span>
+                  <span class="bg-stone-200 dark:bg-stone-800 text-stone-700 dark:text-stone-300 text-[9px] font-bold px-1.5 py-0.2 rounded">OUT OF RANGE • ~10.6 km</span>
+                </div>
+                <div class="text-[10px] text-stone-400 mt-0.5">Inner Circle, Central Delhi - 110001</div>
+              </div>
+              <i class="fa-solid fa-ban text-stone-400 text-xs shrink-0 ml-2"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Saved Addresses List (if user has any saved) -->
+        <div id="savedAddressesSection" class="space-y-2">
+          <div class="text-xs font-black text-stone-700 dark:text-stone-300 uppercase tracking-wider">Your Saved Addresses</div>
           <div id="savedAddressesContainer" class="space-y-2.5">
             <!-- Rendered dynamically -->
           </div>
         </div>
 
-        <!-- Add New Address Collapsible Form -->
-        <div class="bg-gray-50 border border-gray-200 rounded-2xl p-4 space-y-3">
+        <!-- Add New Custom Address Form -->
+        <div class="bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 rounded-2xl p-4 space-y-3">
           <div class="flex items-center justify-between">
-            <h3 class="text-xs font-black text-gray-900 uppercase tracking-wider">+ Add New Address</h3>
-            <button type="button" onclick="captureCustomerGps()" class="text-[11px] font-bold text-orange-600 hover:text-orange-700 flex items-center space-x-1">
-              <i class="fa-solid fa-location-crosshairs"></i>
-              <span id="gpsDetectLabel">Use Live GPS</span>
-            </button>
+            <h3 class="text-xs font-black text-stone-900 dark:text-white uppercase tracking-wider">+ Enter Custom Address</h3>
           </div>
 
           <form id="newAddressForm" onsubmit="handleSaveAddress(event)" class="space-y-2.5 text-xs">
             <!-- Tag Selector Pills -->
             <div class="space-y-1">
-              <label class="font-bold text-gray-700">Save Address As</label>
+              <label class="font-bold text-stone-700 dark:text-stone-300">Save As</label>
               <div class="flex items-center space-x-2" id="newAddrTagGroup">
-                <button type="button" onclick="setNewAddrTag('Home')" id="tagBtnHome" class="tag-pill px-3 py-1.5 rounded-xl border border-orange-600 bg-orange-50 text-orange-700 font-bold flex items-center space-x-1">
+                <button type="button" onclick="setNewAddrTag('Home')" id="tagBtnHome" class="tag-pill px-3 py-1.5 rounded-xl border border-amber-600 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold flex items-center space-x-1">
                   <i class="fa-solid fa-house"></i><span>Home</span>
                 </button>
-                <button type="button" onclick="setNewAddrTag('Work')" id="tagBtnWork" class="tag-pill px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold flex items-center space-x-1">
+                <button type="button" onclick="setNewAddrTag('Work')" id="tagBtnWork" class="tag-pill px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-bold flex items-center space-x-1">
                   <i class="fa-solid fa-briefcase"></i><span>Work</span>
                 </button>
-                <button type="button" onclick="setNewAddrTag('Other')" id="tagBtnOther" class="tag-pill px-3 py-1.5 rounded-xl border border-gray-200 bg-white text-gray-700 font-bold flex items-center space-x-1">
+                <button type="button" onclick="setNewAddrTag('Other')" id="tagBtnOther" class="tag-pill px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-bold flex items-center space-x-1">
                   <i class="fa-solid fa-location-dot"></i><span>Other</span>
                 </button>
               </div>
             </div>
 
             <div class="space-y-1">
-              <label class="font-bold text-gray-700">Flat / House No. / Floor *</label>
-              <input type="text" id="newAddrHouse" placeholder="e.g. Flat 302, 3rd Floor" required
-                class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <label class="font-bold text-stone-700 dark:text-stone-300">Flat / House No. / Building *</label>
+              <input type="text" id="newAddrHouse" placeholder="e.g. Flat 204, Block B" required
+                class="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
             </div>
 
             <div class="space-y-1">
-              <label class="font-bold text-gray-700">Street / Area / Colony *</label>
-              <input type="text" id="newAddrStreet" placeholder="e.g. Main Street, Near City Market" required
-                class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <label class="font-bold text-stone-700 dark:text-stone-300">Street / Colony / Locality *</label>
+              <input type="text" id="newAddrStreet" placeholder="e.g. Main Market, Mukherjee Nagar" required
+                class="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
             </div>
 
             <div class="space-y-1">
-              <label class="font-bold text-gray-700">Nearby Landmark (Optional)</label>
-              <input type="text" id="newAddrLandmark" placeholder="e.g. Opp Metro Pillar 42"
-                class="w-full bg-white border border-gray-200 rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-orange-500">
+              <label class="font-bold text-stone-700 dark:text-stone-300">Nearby Landmark / Pincode</label>
+              <input type="text" id="newAddrLandmark" placeholder="e.g. Near Batra Cinema, 110009"
+                class="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
             </div>
 
             <label class="flex items-center space-x-2 pt-1 cursor-pointer">
-              <input type="checkbox" id="newAddrDefaultToggle" checked class="w-4 h-4 accent-orange-600 rounded">
-              <span class="text-[11px] font-bold text-gray-700">Set as primary delivery address</span>
+              <input type="checkbox" id="newAddrDefaultToggle" checked class="w-4 h-4 accent-amber-600 rounded">
+              <span class="text-[11px] font-bold text-stone-700 dark:text-stone-300">Set as current delivery address</span>
             </label>
 
-            <button type="submit" id="saveAddressBtn" class="w-full bg-orange-600 hover:bg-orange-700 text-white rounded-xl py-2.5 font-black text-xs transition shadow-md">
+            <button type="submit" id="saveAddressBtn" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl py-2.5 font-black text-xs transition shadow-md">
               Save & Deliver Here
             </button>
           </form>

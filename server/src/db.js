@@ -656,13 +656,17 @@ class Database {
 
     return list.map(s => {
       const formatted = this.formatStallForPublic(s);
+      const maxRadius = s.delivery_radius_km || 7.0;
+      formatted.delivery_radius_km = maxRadius;
       if (hasCustLoc && formatted.lat && formatted.lng && !isNaN(formatted.lat) && !isNaN(formatted.lng)) {
         const geoKm = this.computeGeographicDistanceKm(cLat, cLng, formatted.lat, formatted.lng);
         formatted.distance = `${geoKm.toFixed(1)} km`;
         formatted.distanceKm = geoKm;
+        formatted.isDeliverable = geoKm <= maxRadius;
       } else {
         formatted.distance = null;
         formatted.distanceKm = null;
+        formatted.isDeliverable = false;
       }
       return formatted;
     });

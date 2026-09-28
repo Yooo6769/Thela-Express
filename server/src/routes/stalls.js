@@ -38,11 +38,15 @@ router.get('/capacity', (req, res) => {
 
 // GET /api/stalls (Returns ONLY stalls that are LIVE and compliant with mandatory gates)
 router.get('/', (req, res) => {
-  const { category, search, vegOnly, lat, lng } = req.query;
+  const { category, search, vegOnly, lat, lng, nearbyOnly } = req.query;
   let stalls = db.getStalls(category, lat, lng);
 
   if (vegOnly === 'true') {
     stalls = stalls.filter(s => s.isVeg);
+  }
+
+  if (nearbyOnly === 'true' && lat && lng) {
+    stalls = stalls.filter(s => s.isDeliverable);
   }
 
   if (search && search.trim()) {
