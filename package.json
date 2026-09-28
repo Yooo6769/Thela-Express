@@ -1,10 +1,11 @@
 {
   "name": "thela-express",
-  "version": "2.3.0",
+  "version": "2.3.1",
   "description": "Hyper-local Quick Commerce Platform for Indian Street Food Stalls",
   "main": "server/src/server.js",
   "scripts": {
     "start": "node server/src/server.js",
+    "test": "node scratch/test_aryan_the_pizza.js && node scratch/test_street_food_ux.js && node scratch/test_order_lifecycle.js && node scratch/test_payments_ledger.js",
     "build": "cd server && npm install"
   },
   "dependencies": {

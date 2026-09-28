@@ -47,11 +47,12 @@ test('Stall has verified owner phone 7667895576, secondary phone 9142956248, and
   assert.strictEqual(stall.upi_id, '9205359557@ptaxis', 'UPI ID must be 9205359557@ptaxis');
 });
 
-test('Stall has real storefront photo and physical menu card photo linked', () => {
+test('Stall has enhanced appetizing hero photo and raw menu/cart photos are purged', () => {
   const stall = db.getStallById('stall_aryan_the_pizza');
-  assert(stall.imageUrl.includes('aryan-the-pizza.jpg'), 'Missing storefront banner image');
-  assert(stall.menuCardUrl.includes('aryan-the-pizza-menu.jpg'), 'Missing physical menu card image');
-  assert(Array.isArray(stall.streetPhotos) && stall.streetPhotos.length >= 2, 'Missing street photos array');
+  assert(stall.imageUrl.includes('aryan-the-pizza.jpg'), 'Missing enhanced storefront banner image');
+  assert(stall.bannerUrl.includes('aryan-pizza-hero.jpg'), 'Missing enhanced modal hero banner');
+  assert.strictEqual(stall.menuCardUrl, null, 'Raw printed menu card photo must be purged from customer view');
+  assert(Array.isArray(stall.streetPhotos) && stall.streetPhotos.length === 0, 'Street photos must be empty');
 });
 
 console.log('\n--- TEST SUITE 2: Server-Authoritative 7 Activation Gates ---');

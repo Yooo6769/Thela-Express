@@ -1990,6 +1990,82 @@ function closeTrustModal() {
   AtmosphereManager.popOverride('trustModal');
 }
 
+// Extract and group dishes into unified cards with size variants
+function groupMenuDishes(rawItems) {
+  const dishGroups = new Map();
+  
+  rawItems.forEach(item => {
+    // Extract base dish name: e.g. "Margherita Pizza (Small 7")" -> base: "Margherita Pizza", variant: "Small 7""
+    const match = item.name.match(/^(.*?)\s*\((Small|Medium|Large|3 Pcs|6 Pcs)[^\)]*\)$/i);
+    const baseName = match ? match[1].trim() : item.name;
+    const variantLabel = match ? match[2].trim() : null;
+    
+    const key = `${item.stall_id || 'dish'}_${baseName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
+    if (!dishGroups.has(key)) {
+      dishGroups.set(key, {
+        key,
+        id: item.id,
+        stall_id: item.stall_id,
+        name: baseName,
+        category: item.category,
+        description: item.description,
+        isVeg: item.isVeg,
+        bestseller: item.bestseller,
+        isPopular: item.isPopular,
+        isSpecial: item.isSpecial,
+        image: item.image,
+        rating: item.rating,
+        reviews: item.reviews,
+        price: item.price,
+        originalPrice: item.originalPrice,
+        inStock: item.inStock,
+        variants: []
+      });
+    }
+    
+    const group = dishGroups.get(key);
+    if (item.bestseller) group.bestseller = true;
+    if (item.isPopular) group.isPopular = true;
+    if (item.isSpecial) group.isSpecial = true;
+    if (Number(item.price) < Number(group.price)) {
+      group.price = item.price;
+    }
+    
+    if (variantLabel) {
+      let shortCode = variantLabel;
+      if (variantLabel.toLowerCase().includes('small')) shortCode = 'S (7")';
+      else if (variantLabel.toLowerCase().includes('medium')) shortCode = 'M (9")';
+      else if (variantLabel.toLowerCase().includes('large')) shortCode = 'L (12")';
+      else if (variantLabel.includes('3')) shortCode = '3 Pcs';
+      else if (variantLabel.includes('6')) shortCode = '6 Pcs';
+
+      group.variants.push({
+        id: item.id,
+        name: item.name,
+        variantLabel,
+        shortCode,
+        price: item.price,
+        originalPrice: item.originalPrice,
+        inStock: item.inStock
+      });
+    }
+  });
+
+  return Array.from(dishGroups.values());
+}
+
+function selectDishVariant(dishKey, variantId) {
+  STATE.selectedDishVariant = STATE.selectedDishVariant || {};
+  STATE.selectedDishVariant[dishKey] = variantId;
+  renderMenuItems(STATE.currentMenu);
+}
+
+function addVariantToCart(variantId) {
+  const item = STATE.currentMenu.find(i => i.id === variantId);
+  if (!item) return;
+  addItemToCart(item, {});
+}
+
 function renderCategoryTabsAndMenuItems(items) {
   const tabsContainer = document.getElementById('modalCategoryTabs');
   const itemsContainer = document.getElementById('modalMenuItems');
@@ -2007,28 +2083,34 @@ function renderCategoryTabsAndMenuItems(items) {
     return;
   }
 
-  // 1. Group items into categories with Popular first
+  // 1. Group raw items into unified dishes
+  const groupedDishes = groupMenuDishes(items);
+
+  // 2. Group into categories with curated Popular first (max 4 distinct signatures)
   const categoriesMap = new Map();
-  const popularItems = items.filter(i => i.bestseller || i.isPopular || i.isSpecial);
-  if (popularItems.length > 0) {
+  const popularDishes = groupedDishes.filter(i => i.bestseller || i.isPopular || i.isSpecial).slice(0, 4);
+  if (popularDishes.length > 0) {
     categoriesMap.set('popular', {
       id: 'popular',
       name: (typeof t === 'function' ? t('menu_category_popular', '⭐ Popular Signatures') : '⭐ Popular Signatures'),
-      items: popularItems
+      items: popularDishes
     });
   }
 
   // Group remaining items
-  items.forEach(item => {
+  groupedDishes.forEach(dish => {
     let catKey = 'dishes';
     let catName = 'Street Bites';
 
-    if (item.category && item.category.trim()) {
-      catKey = item.category.toLowerCase().replace(/[^a-z0-9]/g, '');
-      catName = item.category.trim();
+    if (dish.category && dish.category.trim()) {
+      catKey = dish.category.toLowerCase().replace(/[^a-z0-9]/g, '');
+      catName = dish.category.trim();
     } else {
-      const name = item.name.toLowerCase();
-      if (name.includes('momo') || name.includes('dimsum')) {
+      const name = dish.name.toLowerCase();
+      if (name.includes('pizza')) {
+        catKey = 'pizza';
+        catName = 'Street Pizzas';
+      } else if (name.includes('momo') || name.includes('dimsum')) {
         catKey = 'momos';
         catName = 'Momos & Dimsums';
       } else if (name.includes('roll') || name.includes('frankie')) {
@@ -2058,53 +2140,58 @@ function renderCategoryTabsAndMenuItems(items) {
     if (!categoriesMap.has(catKey)) {
       categoriesMap.set(catKey, { id: catKey, name: catName, items: [] });
     }
-    categoriesMap.get(catKey).items.push(item);
+    categoriesMap.get(catKey).items.push(dish);
   });
 
   const categories = Array.from(categoriesMap.values());
 
-  // 2. Render Sticky Category Navigation Tabs
+  // 3. Render Sticky Category Navigation Tabs
   if (tabsContainer) {
     tabsContainer.innerHTML = categories.map((cat, idx) => `
       <button onclick="scrollToMenuCategory('${cat.id}')" 
-        class="menu-cat-tab-btn px-3 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition border ${idx === 0 ? 'bg-amber-600 text-white border-amber-600 shadow-xs' : 'bg-stone-100 text-stone-700 border-stone-200 hover:bg-stone-200'}">
+        class="menu-cat-tab-btn px-3.5 py-1.5 rounded-full text-xs font-black whitespace-nowrap transition border ${idx === 0 ? 'bg-amber-600 text-white border-amber-600 shadow-xs' : 'bg-stone-100 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:bg-stone-200'}">
         ${cat.name} (${cat.items.length})
       </button>
     `).join('');
   }
 
-  // 3. Render Categorized Sections and Food Cards with 3-tier visual hierarchy
+  STATE.selectedDishVariant = STATE.selectedDishVariant || {};
+
+  // 4. Render Categorized Sections and Redesigned Food Cards
   itemsContainer.innerHTML = categories.map(cat => `
     <div id="cat_section_${cat.id}" class="menu-cat-section space-y-3 pt-2 first:pt-0">
-      <div class="flex items-center justify-between border-b border-stone-100 pb-2">
-        <h3 class="font-black text-stone-900 text-sm tracking-tight flex items-center space-x-2">
+      <div class="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-2">
+        <h3 class="font-black text-stone-900 dark:text-white text-sm tracking-tight flex items-center space-x-2">
           <span>${cat.name}</span>
         </h3>
-        <span class="text-[10px] font-bold text-stone-400 bg-stone-100 px-2.5 py-0.5 rounded-full">${cat.items.length} items</span>
+        <span class="text-[10px] font-bold text-stone-500 dark:text-stone-400 bg-stone-100 dark:bg-stone-800 px-2.5 py-0.5 rounded-full">${cat.items.length} items</span>
       </div>
       
-      <div class="space-y-4 divide-y divide-stone-100">
-        ${cat.items.map(item => {
-          const inCart = STATE.cart.items.find(i => i.item_id === item.id);
-          const qty = inCart ? inCart.qty : 0;
-          const hasRating = item.ratingCount > 0 || (item.reviews > 0 && item.rating);
-          const safeName = item.name.replace(/'/g, "\\'");
-          const itemImg = item.image || getThelaFoodPlaceholder(cat.id, item.name);
+      <div class="space-y-3 divide-y divide-stone-100 dark:divide-stone-800/80">
+        ${cat.items.map(dish => {
+          const hasVariants = Array.isArray(dish.variants) && dish.variants.length > 0;
+          const activeVariantId = STATE.selectedDishVariant[dish.key] || (hasVariants ? dish.variants[0].id : dish.id);
+          const activeVariant = hasVariants ? (dish.variants.find(v => v.id === activeVariantId) || dish.variants[0]) : dish;
           
-          // 3-Tier Hierarchy styling
-          let cardStyle = 'hover:bg-stone-50/50 p-2.5 rounded-2xl transition border border-transparent';
-          if (item.isSpecial) {
-            cardStyle = 'bg-gradient-to-r from-amber-50/60 via-amber-50/20 to-white border-2 border-amber-300/80 p-3 rounded-2xl shadow-xs transition';
-          } else if (item.bestseller) {
-            cardStyle = 'bg-stone-50/30 hover:bg-stone-50 p-2.5 rounded-2xl border border-amber-100 transition';
+          const inCart = STATE.cart.items.find(i => i.item_id === activeVariant.id);
+          const qty = inCart ? inCart.qty : 0;
+          const hasRating = dish.ratingCount > 0 || (dish.reviews > 0 && dish.rating);
+          const safeName = dish.name.replace(/'/g, "\\'");
+          const itemImg = dish.image || getThelaFoodPlaceholder(cat.id, dish.name);
+
+          let cardStyle = 'hover:bg-stone-50/70 dark:hover:bg-stone-800/50 p-3 rounded-2xl transition border border-stone-200/60 dark:border-stone-800 bg-white dark:bg-stone-900 shadow-2xs';
+          if (dish.isSpecial) {
+            cardStyle = 'bg-gradient-to-r from-amber-50/70 via-amber-50/20 to-white dark:from-amber-950/30 dark:via-stone-900 dark:to-stone-900 border-2 border-amber-300/80 dark:border-amber-700/60 p-3 rounded-2xl shadow-xs transition';
+          } else if (dish.bestseller) {
+            cardStyle = 'bg-stone-50/40 hover:bg-stone-50 dark:bg-stone-900 dark:hover:bg-stone-850 p-3 rounded-2xl border border-amber-200/70 dark:border-amber-800/50 shadow-2xs transition';
           }
 
           return `
             <div class="pt-3.5 first:pt-0 flex items-start justify-between gap-3 sm:gap-4 ${cardStyle}">
-              <!-- Item Details -->
-              <div class="flex-1 space-y-1 min-w-0">
+              <!-- Dish Details -->
+              <div class="flex-1 space-y-1.5 min-w-0">
                 <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
-                  ${item.isVeg ? `
+                  ${dish.isVeg ? `
                     <span class="w-3.5 h-3.5 rounded border-2 border-green-600 flex items-center justify-center p-0.5 shrink-0" title="Pure Veg">
                       <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
                     </span>
@@ -2113,61 +2200,73 @@ function renderCategoryTabsAndMenuItems(items) {
                       <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
                     </span>
                   `}
-                  ${item.isSpecial ? `
+                  ${dish.isSpecial ? `
                     <span class="text-[9px] font-black bg-amber-500 text-white px-2 py-0.5 rounded shadow-xs flex items-center">
                       <i class="fa-solid fa-crown mr-1 text-[8px]"></i>SIGNATURE
                     </span>
-                  ` : item.bestseller ? `
+                  ` : dish.bestseller ? `
                     <span class="text-[9px] font-black bg-amber-100 text-amber-800 border border-amber-200/80 px-1.5 py-0.5 rounded flex items-center">
                       <i class="fa-solid fa-star text-amber-600 mr-1 text-[8px]"></i>BESTSELLER
                     </span>
                   ` : ''}
                   ${hasRating ? `
                     <span class="text-[10px] font-extrabold text-amber-800 bg-amber-50 border border-amber-200/60 px-1.5 py-0.2 rounded flex items-center">
-                      <i class="fa-solid fa-star text-amber-500 mr-1 text-[9px]"></i>${item.rating}
+                      <i class="fa-solid fa-star text-amber-500 mr-1 text-[9px]"></i>${dish.rating}
                     </span>
                   ` : ''}
                 </div>
 
-                <h4 class="font-extrabold text-sm sm:text-base text-stone-900 leading-tight">${item.name}</h4>
+                <h4 class="font-black text-sm sm:text-base text-stone-900 dark:text-white leading-tight">${dish.name}</h4>
                 
                 <div class="flex items-center space-x-2">
-                  <span class="text-sm sm:text-base font-black text-stone-900">₹${item.price}</span>
-                  ${item.originalPrice ? `<span class="text-xs text-stone-400 line-through font-semibold">₹${item.originalPrice}</span>` : ''}
+                  <span class="text-sm sm:text-base font-black text-stone-900 dark:text-white">₹${activeVariant.price}</span>
+                  ${activeVariant.originalPrice ? `<span class="text-xs text-stone-400 line-through font-semibold">₹${activeVariant.originalPrice}</span>` : ''}
+                  ${hasVariants ? `<span class="text-[10px] font-bold text-amber-700 dark:text-amber-400 bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/40">Size: ${activeVariant.shortCode || activeVariant.variantLabel}</span>` : ''}
                 </div>
 
-                <p class="text-xs text-stone-500 leading-relaxed line-clamp-2">${item.description || 'Prepared piping hot on order with authentic street seasonings.'}</p>
+                <p class="text-xs text-stone-500 dark:text-stone-400 leading-relaxed line-clamp-2">${dish.description || 'Prepared piping hot on order with authentic street seasonings.'}</p>
 
-                ${item.customizations && item.customizations.length > 0 ? `
-                  <span class="text-[10px] font-bold text-orange-600 inline-flex items-center space-x-1 mt-1">
-                    <i class="fa-solid fa-sliders text-[9px]"></i>
-                    <span data-i18n="customizable_tag">Customizable options</span>
-                  </span>
+                <!-- Interactive Size Selector Pills -->
+                ${hasVariants ? `
+                  <div class="pt-1.5">
+                    <span class="text-[10px] font-black text-stone-400 uppercase tracking-wider block mb-1">Select Size / Portion:</span>
+                    <div class="flex items-center space-x-1.5 flex-wrap gap-y-1">
+                      ${dish.variants.map(v => {
+                        const isSelected = v.id === activeVariant.id;
+                        return `
+                          <button type="button" onclick="selectDishVariant('${dish.key}', '${v.id}')"
+                            class="px-2.5 py-1 rounded-xl text-[11px] font-black transition border ${isSelected ? 'bg-amber-600 text-white border-amber-600 shadow-xs scale-102 ring-1 ring-amber-600' : 'bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700 hover:border-amber-400'}">
+                            ${v.shortCode} • ₹${v.price}
+                          </button>
+                        `;
+                      }).join('')}
+                    </div>
+                  </div>
                 ` : ''}
               </div>
 
-              <!-- Item Image & Add / Stepper Button (Enlarged 32x32 thumbnail) -->
-              <div class="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0 rounded-2xl overflow-hidden bg-stone-100 flex flex-col justify-end shadow-xs border border-stone-200/60">
+              <!-- Item Image & Add / Stepper Button -->
+              <div class="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0 rounded-2xl overflow-hidden bg-stone-100 dark:bg-stone-800 flex flex-col justify-end shadow-xs border border-stone-200/60 dark:border-stone-700">
                 <img src="${itemImg}" 
-                  alt="${item.name}" class="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" onerror="handleFoodImageError(this, '${cat.id}', '${safeName}')">
-                <div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent pointer-events-none"></div>
+                  alt="${dish.name}" class="absolute inset-0 w-full h-full object-cover" loading="lazy" decoding="async" onerror="handleFoodImageError(this, '${cat.id}', '${safeName}')">
+                <div class="absolute inset-0 bg-gradient-to-t from-black/50 via-transparent to-transparent pointer-events-none"></div>
                 
                 <!-- Add / Stepper Button -->
                 <div class="relative z-10 mx-auto mb-2 w-24">
-                  ${!item.inStock ? `
+                  ${!activeVariant.inStock ? `
                     <div class="bg-stone-900/90 text-white text-[10px] font-black py-1 px-2 rounded-lg text-center backdrop-blur-xs">
                       SOLD OUT
                     </div>
                   ` : qty === 0 ? `
-                    <button onclick="handleAddItemClick('${item.id}')" 
-                      class="w-full bg-white text-orange-600 border border-orange-200 rounded-xl py-1 font-black text-xs shadow-md hover:bg-orange-50 active:scale-95 transition">
+                    <button onclick="addVariantToCart('${activeVariant.id}')" 
+                      class="w-full bg-white dark:bg-stone-800 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-700 rounded-xl py-1 font-black text-xs shadow-md hover:bg-orange-50 dark:hover:bg-stone-700 active:scale-95 transition">
                       + ADD
                     </button>
                   ` : `
                     <div class="w-full bg-orange-600 text-white rounded-xl py-1 px-1.5 flex items-center justify-between font-black text-xs shadow-md">
-                      <button onclick="decrementCartItem('${item.id}')" class="w-5 text-center hover:bg-orange-700 rounded transition">-</button>
+                      <button onclick="decrementCartItem('${activeVariant.id}')" class="w-5 text-center hover:bg-orange-700 rounded transition">-</button>
                       <span>${qty}</span>
-                      <button onclick="incrementCartItem('${item.id}')" class="w-5 text-center hover:bg-orange-700 rounded transition">+</button>
+                      <button onclick="incrementCartItem('${activeVariant.id}')" class="w-5 text-center hover:bg-orange-700 rounded transition">+</button>
                     </div>
                   `}
                 </div>

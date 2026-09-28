@@ -62,12 +62,9 @@
       "priceForTwo": "200",
       "discount": "10% OFF",
       "imageUrl": "/images/stalls/aryan-the-pizza.jpg",
-      "bannerUrl": "/images/stalls/aryan-the-pizza.jpg",
-      "menuCardUrl": "/images/stalls/aryan-the-pizza-menu.jpg",
-      "streetPhotos": [
-        "/images/stalls/aryan-the-pizza.jpg",
-        "/images/stalls/aryan-the-pizza-menu.jpg"
-      ],
+      "bannerUrl": "/images/stalls/aryan-pizza-hero.jpg",
+      "menuCardUrl": null,
+      "streetPhotos": [],
       "famousDishes": [
         "Kings Special Pizza",
         "Tandoori Special Pizza",

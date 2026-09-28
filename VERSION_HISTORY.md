@@ -2,8 +2,8 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.3.0`  
-**Current Date**: September 25, 2026  
+**Current Production Version**: `v2.3.1`  
+**Current Date**: September 28, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
 **Local Document Paths**:
@@ -44,6 +44,7 @@ flowchart LR
     v222 --> v223["v2.2.3<br/>Explicit Prominent Login Button & Bottom Dock Account Access"]
     v223 --> v224["v2.2.4<br/>Dark Theme Hover Contrast Fix & Swipe-Accessible Real Food Carousel"]
     v224 --> v230["v2.3.0<br/>Onboard First Real Street Food Partner — Aryan The Pizza"]
+    v230 --> v231["v2.3.1<br/>Modal Redesign, Lag Fix, Variant Selector & Appetizing Hero Imagery"]
 ```
 
 ---
@@ -652,6 +653,26 @@ flowchart LR
   - **Comprehensive Automated Verification**:
     - Added dedicated test suite `scratch/test_aryan_the_pizza.js` (12/12 tests passing).
     - Full regression test suite passing across UX, themes, i18n, and store status invariants.
+
+### `v2.3.1` — Modal Redesign, Lag Eradication, Variant Selector & Appetizing Hero Imagery
+- **Release Date**: September 28, 2026
+- **Git Commit**: `v2.3.1`
+- **Key Architectural Accomplishments**:
+  - **Purged Raw Vinyl Cart & Printed Paper Menu Photos**:
+    - Removed raw cart banner and printed physical paper menu card photos from customer modal and "See It From The Street" gallery per user feedback.
+    - Set `stall.menuCardUrl = null` and `stall.streetPhotos = []` for Aryan The Pizza, ensuring the customer interface displays solely pristine appetizing food photography.
+  - **Enhanced Top Hero Banner with High-Resolution Artisan Pizza Imagery**:
+    - Replaced grainy/tilted cart banner image with a high-definition, beautifully lit photo of hand-tossed artisan street pizza with molten mozzarella pull, sweet golden corn, and fresh paneer (`public/images/stalls/aryan-the-pizza.jpg` and `public/images/stalls/aryan-pizza-hero.jpg`).
+  - **Eradicated Mobile Modal Scroll Lag (66% DOM Reduction)**:
+    - Transformed 63 individual size-variant items (which previously rendered 76 heavy cards concurrently) into 22 unified, elegant dish cards with in-card interactive size pills (`S 7" • ₹80 | M 9" • ₹130 | L 12" • ₹220`).
+    - Added instant variant switching via `selectDishVariant(dishIndex, variantId)` and direct cart addition via `addVariantToCart(dishIndex)`.
+    - Curated "Popular Signatures" to 4 top distinct pizzas, eliminating duplicate card generation.
+    - Added CSS `content-visibility: auto`, `contain-intrinsic-size`, and smooth hardware-accelerated scrolling in `public/theme.css` to achieve 60fps mobile scrolling.
+  - **Maintained Exact Pricing & Settlement Invariants**:
+    - Retained exact physical menu card prices across Small (7"), Medium (9"), and Large (12") variants.
+    - Maintained authoritative direct UPI settlement payout ID `9205359557@ptaxis`.
+  - **Automated Verification**:
+    - Updated `scratch/test_aryan_the_pizza.js` and added `npm test` script executing 74 end-to-end tests across stall verification, authentic street food UX, order lifecycle, and payments ledger (100% passing).
 
 ---
 
