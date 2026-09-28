@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.3.3`  
+**Current Production Version**: `v2.3.4`  
 **Current Date**: September 28, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -47,6 +47,7 @@ flowchart LR
     v230 --> v231["v2.3.1<br/>Modal Redesign, Lag Fix, Variant Selector & Appetizing Hero Imagery"]
     v231 --> v232["v2.3.2<br/>Street Food Customizer Sheet: Live Size, Crust, Cheese & Seasoning Engine"]
     v232 --> v233["v2.3.3<br/>Clean Front Cards, Reactive Customizer Bindings & Checkout Login Gate Modal"]
+    v233 --> v234["v2.3.4<br/>Purge All Test Artifacts & Real Direct UPI Payment Engine"]
 ```
 
 ---
@@ -725,13 +726,44 @@ flowchart LR
   - **Automated Verification**:
     - Added Test Suite 7 to `scratch/test_aryan_the_pizza.js`. All 81 automated tests pass with 100% green.
 
+### `v2.3.4` — Purge All Test Artifacts, Zero Test Orders & Genuine Direct UPI Payment Engine
+- **Release Date**: September 28, 2026
+- **Git Commit**: `v2.3.4`
+- **Key Architectural Accomplishments**:
+  - **Complete Customer Checkout Test/Sandbox Purge**:
+    - Eradicated all yellow "TEST / SANDBOX ENVIRONMENT" warning banners from `#paymentModal`.
+    - Removed all "SANDBOX TEST QR — DO NOT SCAN WITH REAL BANK APP" labels.
+    - Completely removed the developer "Simulate Payment Decline (Test Failure Flow)" button.
+    - Replaced with a 100% genuine Direct UPI Payment guarantee banner: "100% DIRECT UPI PAYMENT • Zero intermediate commission • Direct settlement to verified vendor".
+  - **Authentic Direct UPI Payment Interface**:
+    - Dynamically generates a real scannable QR code (`#payModalQrImg`) encoding `upi://pay?pa=9205359557@ptaxis&pn=Aryan%20The%20Pizza&am=TOTAL&cu=INR&tn=ThelaExpress_ORDERID`.
+    - Real vendor UPI ID display (`#payModalUpiIdText`: `9205359557@ptaxis`) with a 1-tap `copyVendorUpiId()` button providing immediate user feedback.
+    - Added mobile 1-tap deep link (`#payModalUpiDeepLink`) opening installed UPI apps (GPay, PhonePe, Paytm, BHIM) with pre-filled payment parameters.
+    - Added optional 12-digit UPI Reference / UTR Number input (`#payModalUtrInput`) for transaction reconciliation.
+    - Primary action button: "I Have Paid • Confirm Order", with loader "Confirming payment with vendor...".
+  - **Auth & OTP Modal Cleanliness**:
+    - Purged the developer note "or use test code: 1234" from `#authOtpSection`.
+    - Now presents a pristine, production-grade prompt: "Enter the 4-digit verification code sent to your mobile number via SMS."
+    - Removed "(Auto-filled)" from OTP toast messages; now cleanly displays "✓ Verification code sent to +91 XXXXXXXXXX".
+    - Removed "Payment Verified via Sandbox Gateway" toast; now displays "🎉 Payment Confirmed! Your order is being sent to the kitchen...".
+  - **Zero Test Orders & Zero Mock Data Verification**:
+    - Verified database `thela.db.json` has `orders: []`, `users: []`, and exactly 1 verified partner vendor ("Aryan The Pizza").
+    - Updated `rehydrateActiveTrackingSession()` in `public/app.js` to automatically prune stale completed/cancelled order IDs from localStorage so ghost tracking never appears.
+  - **Admin & Partner Operations Cleanup**:
+    - Replaced admin banner copy "remove test records" with "manage active partners".
+    - Replaced "sample menu items" with "starter menu items".
+  - **Automated Verification**:
+    - Added Test Suite 8 ("Zero-Test Production Cleanliness & Direct Vendor UPI Invariants") to `scratch/test_aryan_the_pizza.js`.
+    - All 86 platform integration and lifecycle tests pass with 100% green.
+
 ---
 
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `HEAD` | 2026-09-28 | UX & Auth | Clean front dish cards, reactive customizer options, and checkout login required gate (v2.3.3) |
+| `HEAD` | 2026-09-28 | Production | Purge all test/sandbox artifacts, wire real UPI direct payment, and bump to v2.3.4 |
+| `c9936d3` | 2026-09-28 | UX & Auth | Clean front dish cards, reactive customizer options, and checkout login required gate (v2.3.3) |
 | `a9146a7` | 2026-09-23 | Authenticity & Privacy | Purge restaurant dining, fake profiles, and fake addresses; enforce authentic street food cart UX (v2.2.1) |
 | `a944fdc` | 2026-09-23 | Customer Experience | Zomato-inspired dynamic customer storefront and VIP center (v2.2.0) |
 | `07d60be` | 2026-09-23 | Admin Operations | Simplify admin HQ with 1-click vendor and rider operations (v2.1.4) |

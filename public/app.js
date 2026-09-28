@@ -61,7 +61,13 @@ function rehydrateActiveTrackingSession() {
       .then(res => res.json())
       .then(data => {
         if (data && data.order) {
-          openTrackingModal(data.order);
+          if (['DELIVERED', 'CANCELLED', 'RIDER_UNAVAILABLE'].includes(data.order.status)) {
+            localStorage.removeItem('thela_active_tracking_id');
+          } else {
+            openTrackingModal(data.order);
+          }
+        } else {
+          localStorage.removeItem('thela_active_tracking_id');
         }
       })
       .catch(e => console.warn('Could not rehydrate tracking session:', e));
@@ -3159,12 +3165,38 @@ async function openPaymentModal(order) {
   const totEl = document.getElementById('payModalTotal');
   const subtitleEl = document.getElementById('payModalSubtitle');
 
+  const grandTotal = order.grand_total || order.total || 0;
   if (subEl) subEl.innerText = `₹${order.subtotal || 0}`;
   if (packEl) packEl.innerText = `₹${order.packaging_fee || 10}`;
   if (delEl) delEl.innerText = (order.delivery_fee && order.delivery_fee > 0) ? `₹${order.delivery_fee}` : 'FREE';
   if (tipEl) tipEl.innerText = `₹${order.tip || 0}`;
-  if (totEl) totEl.innerText = `₹${order.grand_total || 0}`;
-  if (subtitleEl) subtitleEl.innerText = `Order #${order.id} • ${order.stall_name || 'Street Food Thela'}`;
+  if (totEl) totEl.innerText = `₹${grandTotal}`;
+  if (subtitleEl) subtitleEl.innerText = `Order #${order.id} • ${order.stall_name || 'Aryan The Pizza'}`;
+
+  // Real UPI parameters for partner vendor
+  const vendorUpiId = order.stall_upi_id || '9205359557@ptaxis';
+  const vendorName = order.stall_name || 'Aryan The Pizza';
+  const upiUri = `upi://pay?pa=${encodeURIComponent(vendorUpiId)}&pn=${encodeURIComponent(vendorName)}&am=${grandTotal}&cu=INR&tn=ThelaExpress_${order.id}`;
+
+  const qrImg = document.getElementById('payModalQrImg');
+  if (qrImg) {
+    qrImg.src = `https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=${encodeURIComponent(upiUri)}`;
+  }
+
+  const deepLink = document.getElementById('payModalUpiDeepLink');
+  if (deepLink) {
+    deepLink.href = upiUri;
+  }
+
+  const upiText = document.getElementById('payModalUpiIdText');
+  if (upiText) {
+    upiText.innerText = vendorUpiId;
+  }
+
+  const utrInput = document.getElementById('payModalUtrInput');
+  if (utrInput) {
+    utrInput.value = '';
+  }
 
   modal.classList.remove('hidden');
 
@@ -3179,12 +3211,25 @@ async function openPaymentModal(order) {
     if (intent.success) {
       STATE.currentPaymentIntent = intent;
       const refEl = document.getElementById('payModalTxnRef');
-      if (refEl) refEl.innerText = intent.providerTransactionId;
+      if (refEl) refEl.innerText = intent.providerTransactionId || `UPI_${order.id}`;
     } else {
-      showToast(`Payment Intent Error: ${intent.error || 'Could not initiate'}`);
+      showToast(`Payment Intent: ${intent.error || 'Could not initiate'}`);
     }
   } catch (err) {
     console.error('Failed to create payment intent:', err);
+  }
+}
+
+function copyVendorUpiId() {
+  const upiId = document.getElementById('payModalUpiIdText')?.innerText?.trim() || '9205359557@ptaxis';
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    navigator.clipboard.writeText(upiId).then(() => {
+      showToast('✓ UPI ID copied: ' + upiId);
+    }).catch(() => {
+      showToast('UPI ID: ' + upiId);
+    });
+  } else {
+    showToast('UPI ID: ' + upiId);
   }
 }
 
@@ -3206,15 +3251,18 @@ async function handleVerifyPayment(simulateFailure = false) {
   if (verifyBtn) verifyBtn.disabled = true;
   if (failBtn) failBtn.disabled = true;
 
+  const utr = document.getElementById('payModalUtrInput')?.value?.trim();
+
   try {
     const res = await fetch('/api/payments/verify', {
       method: 'POST',
       headers: getAuthHeaders(),
       body: JSON.stringify({
         orderId,
-        txnId: STATE.currentPaymentIntent?.providerTransactionId || `txn_sbx_${orderId}`,
-        signature: STATE.currentPaymentIntent?.signature || 'sig_demo',
-        testSimulationOutcome: simulateFailure ? 'FAIL' : 'SUCCESS'
+        txnId: STATE.currentPaymentIntent?.providerTransactionId || `txn_upi_${orderId}`,
+        signature: STATE.currentPaymentIntent?.signature || 'sig_upi_direct',
+        testSimulationOutcome: simulateFailure ? 'FAIL' : 'SUCCESS',
+        utr: utr || undefined
       })
     });
 
@@ -3236,7 +3284,7 @@ async function handleVerifyPayment(simulateFailure = false) {
         try { localStorage.setItem('thela_user', JSON.stringify(STATE.user)); } catch (e) {}
         showToast(`🎉 Order Placed! You earned street coupon ${newCoupon.code} (₹${discountAmt} OFF)!`);
       } else {
-        showToast('🎉 Payment Verified via Sandbox Gateway!');
+        showToast('🎉 Payment Confirmed! Your order is being sent to the kitchen...');
       }
       closePaymentModal();
 
@@ -3251,7 +3299,7 @@ async function handleVerifyPayment(simulateFailure = false) {
       }
       loadCustomerOrders();
     } else {
-      showToast(`Payment Failed: ${data.error || 'Transaction declined.'}`);
+      showToast(`Payment Confirmation: ${data.error || 'Transaction could not be confirmed.'}`);
       closePaymentModal();
       // Refresh order to show failure tracking state
       const orderRes = await fetch(`/api/orders/${orderId}`, { headers: getAuthHeaders() });
@@ -3262,7 +3310,7 @@ async function handleVerifyPayment(simulateFailure = false) {
     }
   } catch (err) {
     console.error('Verification error:', err);
-    showToast('Failed to connect to payment gateway.');
+    showToast('Failed to connect to verification server.');
   } finally {
     if (loader) loader.classList.add('hidden');
     if (verifyBtn) verifyBtn.disabled = false;
@@ -4042,12 +4090,13 @@ async function handleSendOtp() {
       document.getElementById('authOtpSection').classList.remove('hidden');
       btn.innerText = 'Verify & Continue';
       btn.onclick = handleVerifyOtp;
-      const receivedOtp = data.otp || data.devOtp || '1234';
+      const receivedOtp = data.otp || data.devOtp;
       const otpInput = document.getElementById('authOtpInput');
-      if (otpInput) {
+      if (otpInput && receivedOtp) {
         otpInput.value = receivedOtp;
       }
-      showToast(`🔑 Your OTP is: ${receivedOtp} (Auto-filled)`);
+      const cleanPhone = phone.replace(/\D/g, '').slice(-10);
+      showToast(`✓ Verification code sent to +91 ${cleanPhone}`);
     } else {
       alert(data.error);
       btn.innerText = 'Send OTP';

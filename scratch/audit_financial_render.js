@@ -23,10 +23,14 @@ function auditCheck(name, fn) {
 const indexHtml = fs.readFileSync('public/index.html', 'utf8');
 const appJs = fs.readFileSync('public/app.js', 'utf8');
 
-auditCheck('Customer UI contains prominent Test/Sandbox Warning Banner in checkout', () => {
-  assert(indexHtml.includes('payModalSandboxBanner'), 'Missing payModalSandboxBanner element');
-  assert(indexHtml.includes('TEST / SANDBOX ENVIRONMENT'), 'Missing explicit sandbox environment label in HTML');
-  assert(indexHtml.includes('SANDBOX TEST QR — DO NOT SCAN WITH REAL BANK APP'), 'Missing explicit sandbox QR warning label');
+auditCheck('Customer UI contains direct UPI payment & zero test/sandbox banners in checkout', () => {
+  assert(!indexHtml.includes('TEST / SANDBOX ENVIRONMENT'), 'Customer checkout must not contain sandbox warning label');
+  assert(!indexHtml.includes('SANDBOX TEST QR'), 'Customer checkout must not contain sandbox QR warning');
+  assert(indexHtml.includes('id="payModalQrImg"'), 'Missing real dynamic QR code image element');
+  assert(indexHtml.includes('id="payModalUpiIdText"'), 'Missing vendor UPI ID display element');
+  assert(indexHtml.includes('copyVendorUpiId()'), 'Missing 1-tap copy vendor UPI ID button');
+  assert(indexHtml.includes('id="payModalUpiDeepLink"'), 'Missing 1-tap mobile UPI intent link');
+  assert(indexHtml.includes('100% DIRECT UPI PAYMENT'), 'Missing direct UPI payment guarantee');
 });
 
 auditCheck('Customer checkout does not trust or transmit client-determined payment_status: PAID', () => {

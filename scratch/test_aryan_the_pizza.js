@@ -266,6 +266,49 @@ test('app.js gates checkout with openLoginRequiredModal and preserves cart flow'
   assert(appJsContent.includes('STATE.pendingCheckoutAfterLogin'), 'Missing pendingCheckoutAfterLogin flow');
 });
 
+console.log('\n--- TEST SUITE 8: Zero-Test Production Cleanliness & Direct Vendor UPI Invariants ---');
+test('Customer payment modal is 100% genuine with real vendor UPI and zero test/sandbox banners', () => {
+  const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+  assert(!htmlContent.includes('TEST / SANDBOX ENVIRONMENT'), 'Found sandbox banner in index.html');
+  assert(!htmlContent.includes('SANDBOX TEST QR'), 'Found sandbox QR warning in index.html');
+  assert(!htmlContent.includes('Simulate Payment Decline'), 'Found simulate decline button in index.html');
+  assert(htmlContent.includes('id="payModalQrImg"'), 'Missing real dynamic QR code element in index.html');
+  assert(htmlContent.includes('id="payModalUpiIdText"'), 'Missing vendor UPI ID element in index.html');
+  assert(htmlContent.includes('id="payModalUpiDeepLink"'), 'Missing mobile UPI intent link in index.html');
+  assert(htmlContent.includes('id="payModalUtrInput"'), 'Missing UTR input in index.html');
+  assert(htmlContent.includes('copyVendorUpiId()'), 'Missing copyVendorUpiId action in index.html');
+});
+
+test('Auth modal contains genuine SMS prompt with zero test code 1234 references', () => {
+  const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+  assert(!htmlContent.includes('use test code: 1234'), 'Auth modal still has test code 1234 reference');
+  assert(!htmlContent.includes('test code: <strong'), 'Auth modal still mentions test code');
+});
+
+test('app.js generates real Aryan The Pizza UPI payment URI and clean toasts', () => {
+  const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+  assert(appJsContent.includes('order.stall_upi_id || \'9205359557@ptaxis\''), 'Missing real vendor UPI ID fallback');
+  assert(appJsContent.includes('copyVendorUpiId'), 'Missing copyVendorUpiId function');
+  assert(appJsContent.includes('payModalQrImg'), 'app.js does not configure payModalQrImg');
+  assert(appJsContent.includes('payModalUpiDeepLink'), 'app.js does not configure payModalUpiDeepLink');
+  assert(!appJsContent.includes('Payment Verified via Sandbox Gateway'), 'Found Sandbox Gateway toast in app.js');
+  assert(!appJsContent.includes('(Auto-filled)'), 'Found (Auto-filled) toast in app.js');
+});
+
+test('Database contains zero mock orders, zero mock users, and 1 verified real partner stall', () => {
+  assert.strictEqual(db.getOrders().length, 0, 'Database must have 0 orders');
+  assert.strictEqual(db.getStalls().length, 1, 'Database must have exactly 1 stall (Aryan The Pizza)');
+  const aryanStall = db.getStallById('stall_aryan_the_pizza');
+  assert(aryanStall, 'Aryan The Pizza stall must exist');
+  assert.strictEqual(aryanStall.upi_id, '9205359557@ptaxis');
+});
+
+test('Admin UI is purged of test record references', () => {
+  const adminHtml = fs.readFileSync(path.join(__dirname, '..', 'public', 'admin.html'), 'utf8');
+  assert(!adminHtml.includes('remove test records'), 'admin.html still contains remove test records');
+  assert(!adminHtml.includes('sample menu items'), 'admin.html still contains sample menu items');
+});
+
 console.log(`\n🎉 ALL ${passCount} ARYAN THE PIZZA INTEGRATION TESTS PASSED COMPLETELY!`);
 console.log('================================================================');
 
