@@ -671,8 +671,10 @@ flowchart LR
   - **Maintained Exact Pricing & Settlement Invariants**:
     - Retained exact physical menu card prices across Small (7"), Medium (9"), and Large (12") variants.
     - Maintained authoritative direct UPI settlement payout ID `9205359557@ptaxis`.
+  - **Thela VIP Club Membership Price Reduced to ₹1**:
+    - Reduced buyable VIP membership cost from ₹99 to ₹1 across customer profile badge, modal CTA button, purchase confirmation prompt, and wallet balance deduction logic.
   - **Automated Verification**:
-    - Updated `scratch/test_aryan_the_pizza.js` and added `npm test` script executing 74 end-to-end tests across stall verification, authentic street food UX, order lifecycle, and payments ledger (100% passing).
+    - Updated `scratch/test_aryan_the_pizza.js` and `scratch/test_street_food_ux.js`, and added `npm test` script executing 74 end-to-end tests across stall verification, authentic street food UX, order lifecycle, and payments ledger (100% passing).
 
 ---
 

@@ -162,8 +162,8 @@ test('Visual VEG toggle physically translates thumb and alters track color in ap
   assert(appJs.includes('thumb.classList.remove(\'translate-x-0\')'), 'Missing translate-x-0 removal in toggleVegFilter');
 });
 
-test('VIP Membership is buyable (@ ₹99) and not granted by default', () => {
-  assert(html.includes('Buy @ ₹99'), 'Missing Buy @ ₹99 prompt on VIP card');
+test('VIP Membership is buyable (@ ₹1) and not granted by default', () => {
+  assert(html.includes('Buy @ ₹1'), 'Missing Buy @ ₹1 prompt on VIP card');
   assert(html.includes('id="profileVipCard"'), 'Missing #profileVipCard');
   assert(appJs.includes('function buyThelaGoldMembership()'), 'Missing buyThelaGoldMembership function in app.js');
   assert(appJs.includes('STATE.user.goldMember = true'), 'buyThelaGoldMembership does not activate goldMember');

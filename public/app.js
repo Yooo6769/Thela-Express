@@ -3708,7 +3708,7 @@ function openProfileModal() {
   } else {
     if (goldTitle) goldTitle.innerText = 'Thela VIP Club';
     if (goldSub) goldSub.innerText = 'Unlimited Free Delivery on orders above ₹99';
-    if (goldSavingsEl) goldSavingsEl.innerText = 'Buy @ ₹99';
+    if (goldSavingsEl) goldSavingsEl.innerText = 'Buy @ ₹1';
     if (goldBadge) {
       goldBadge.className = 'flex items-center space-x-1 bg-amber-500 hover:bg-amber-400 text-stone-950 px-2.5 py-1 rounded-full text-xs font-black shadow-xs cursor-pointer';
     }
@@ -4604,7 +4604,7 @@ function openThelaGoldModal() {
       if (modalSavings) modalSavings.innerText = '₹0';
       if (modalBadge) modalBadge.innerText = 'Join Club';
       if (modalActionBtn) {
-        modalActionBtn.innerText = 'Buy VIP Membership @ ₹99';
+        modalActionBtn.innerText = 'Buy VIP Membership @ ₹1';
         modalActionBtn.onclick = buyThelaGoldMembership;
       }
     }
@@ -4627,11 +4627,11 @@ function buyThelaGoldMembership() {
     return;
   }
 
-  const proceed = confirm('👑 Buy Thela VIP Club Membership for ₹99?\n\n• Unlimited FREE Delivery on all street orders > ₹99\n• Zero Packaging Fee\n• 3-Month Validity');
+  const proceed = confirm('👑 Buy Thela VIP Club Membership for ₹1?\n\n• Unlimited FREE Delivery on all street orders > ₹99\n• Zero Packaging Fee\n• 3-Month Validity');
   if (!proceed) return;
 
-  if (STATE.user.walletBalance && STATE.user.walletBalance >= 99) {
-    STATE.user.walletBalance -= 99;
+  if (STATE.user.walletBalance && STATE.user.walletBalance >= 1) {
+    STATE.user.walletBalance -= 1;
   }
   STATE.user.goldMember = true;
   STATE.user.goldSavings = (STATE.user.goldSavings || 0) + 40;
