@@ -492,7 +492,7 @@
     </div>
 
     <!-- Zomato-Style Festive Promotional Hero Carousel (Real Photos + Touch/Swipe Accessible) -->
-    <div id="heroPromoCarousel" role="region" aria-roledescription="carousel" aria-label="Festive Street Food Promotions" tabindex="0" class="relative rounded-3xl overflow-hidden shadow-md select-none group focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-grab active:cursor-grabbing">
+    <div id="heroPromoCarousel" role="region" aria-roledescription="carousel" aria-label="Festive Street Food Promotions" tabindex="0" class="relative rounded-3xl overflow-hidden shadow-md select-none group focus:outline-none focus:ring-2 focus:ring-amber-500/50 cursor-grab active:cursor-grabbing" style="touch-action: pan-y;">
       <!-- Carousel Track -->
       <div id="promoTrack" class="flex transition-transform duration-500 ease-out w-full">
         <!-- Slide 1: 70% OFF Street Feast (Real Street Samosas & Chaat Photo) -->
@@ -1131,18 +1131,18 @@
   <!-- ============================================================== -->
   <!-- MODAL: STALL MENU & INDIVIDUAL VENDOR EXPERIENCE (IMPROVEMENT #3) -->
   <!-- ============================================================== -->
-  <div id="stallModal" class="hidden fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4 transition-all">
-    <div class="bg-white w-full sm:max-w-2xl max-h-[94vh] sm:rounded-3xl rounded-t-3xl flex flex-col overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom duration-200">
+  <div id="stallModal" class="hidden fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-0 sm:p-4 transition-all" style="overscroll-behavior: contain;">
+    <div class="bg-white dark:bg-stone-950 text-stone-900 dark:text-stone-100 w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-2xl rounded-none sm:rounded-3xl flex flex-col overflow-hidden shadow-2xl animate-in fade-in slide-in-from-bottom duration-200 border-0 sm:border border-stone-200 dark:border-stone-800" style="overscroll-behavior: contain;">
       
       <!-- Top Hero Media Container -->
-      <div class="relative w-full">
+      <div class="relative w-full shrink-0">
         <div id="modalHeroMediaContainer" class="relative h-56 sm:h-64 w-full overflow-hidden bg-stone-900 select-none">
           <img id="modalStallImage" src="" alt="Stall Banner" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105">
           <video id="modalStallVideo" class="hidden absolute inset-0 w-full h-full object-cover" loop muted playsinline autoplay></video>
           <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-black/20"></div>
 
           <!-- Top Action Bar (Close, Favorite, Share) -->
-          <div class="absolute top-3 left-3 right-3 flex items-center justify-between z-10">
+          <div class="absolute left-3 right-3 flex items-center justify-between z-10" style="top: max(12px, env(safe-area-inset-top, 12px));">
             <!-- Live Open / Closed Badge -->
             <span id="modalStallBadge" class="bg-emerald-600/90 backdrop-blur-md text-white text-[11px] font-black px-2.5 py-1 rounded-full uppercase tracking-wider shadow-sm flex items-center space-x-1.5">
               <span class="w-1.5 h-1.5 rounded-full bg-white animate-pulse"></span>
@@ -1177,58 +1177,58 @@
       </div>
 
       <!-- Scrollable Modal Body -->
-      <div id="modalScrollBody" class="flex-1 overflow-y-auto divide-y divide-stone-100 hide-scrollbar">
+      <div id="modalScrollBody" class="flex-1 overflow-y-auto divide-y divide-stone-100 dark:divide-stone-800/80 hide-scrollbar" style="overscroll-behavior: contain; -webkit-overflow-scrolling: touch;">
         
         <!-- Vitals & Metrics Bar -->
-        <div class="p-4 bg-white space-y-3">
+        <div class="p-4 bg-white dark:bg-stone-900 space-y-3">
           <div class="flex flex-wrap items-center justify-between gap-2 text-xs">
             <!-- Rating / Reviews (Strictly genuine) -->
             <div id="modalRatingBlock" class="flex items-center space-x-1.5">
-              <div class="flex items-center space-x-1 bg-amber-50 border border-amber-200 text-amber-900 font-extrabold px-2 py-1 rounded-xl">
+              <div class="flex items-center space-x-1 bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-300 font-extrabold px-2 py-1 rounded-xl">
                 <i class="fa-solid fa-star text-amber-500 text-xs"></i>
                 <span id="modalRatingScore">4.8</span>
               </div>
-              <span id="modalReviewsCount" class="text-stone-500 font-bold text-[11px]">(24 ratings)</span>
+              <span id="modalReviewsCount" class="text-stone-500 dark:text-stone-400 font-bold text-[11px]">(24 ratings)</span>
             </div>
 
             <!-- Orders Count (Strictly genuine from backend) -->
-            <div id="modalOrdersBlock" class="hidden flex items-center space-x-1 bg-orange-50 border border-orange-200/80 text-orange-900 font-extrabold px-2 py-1 rounded-xl text-[11px]">
+            <div id="modalOrdersBlock" class="hidden flex items-center space-x-1 bg-orange-50 dark:bg-orange-950/40 border border-orange-200/80 dark:border-orange-800 text-orange-900 dark:text-orange-300 font-extrabold px-2 py-1 rounded-xl text-[11px]">
               <i class="fa-solid fa-bag-shopping text-orange-600"></i>
               <span id="modalOrdersCount">50+ orders delivered</span>
             </div>
 
             <!-- Distance -->
-            <div id="modalDistBlock" class="hidden flex items-center space-x-1 text-stone-600 font-bold bg-stone-100 px-2 py-1 rounded-xl text-[11px]">
+            <div id="modalDistBlock" class="hidden flex items-center space-x-1 text-stone-600 dark:text-stone-300 font-bold bg-stone-100 dark:bg-stone-800 px-2 py-1 rounded-xl text-[11px]">
               <i class="fa-solid fa-location-dot text-amber-600"></i>
               <span id="modalStallDistance"></span>
             </div>
 
             <!-- Dynamically Calculated Delivery Time -->
-            <div id="modalEtaBlock" class="hidden flex items-center space-x-1 text-stone-800 font-black bg-stone-100 px-2.5 py-1 rounded-xl text-[11px]">
+            <div id="modalEtaBlock" class="hidden flex items-center space-x-1 text-stone-800 dark:text-stone-200 font-black bg-stone-100 dark:bg-stone-800 px-2.5 py-1 rounded-xl text-[11px]">
               <i class="fa-regular fa-clock text-amber-600"></i>
               <span id="modalStallEta"></span>
             </div>
           </div>
 
           <!-- Stall Address & Timing -->
-          <div class="flex items-center justify-between text-xs text-stone-500 pt-1 border-t border-stone-100">
+          <div class="flex items-center justify-between text-xs text-stone-500 dark:text-stone-400 pt-1 border-t border-stone-100 dark:border-stone-800">
             <div class="flex items-center space-x-1.5 truncate max-w-[80%]">
               <i class="fa-solid fa-map-pin text-stone-400 text-[11px]"></i>
-              <span id="modalStallAddress" class="truncate font-medium text-stone-700"></span>
+              <span id="modalStallAddress" class="truncate font-medium text-stone-700 dark:text-stone-300"></span>
             </div>
-            <span id="modalStallPriceForTwo" class="hidden font-bold text-stone-800 text-[11px] shrink-0"></span>
+            <span id="modalStallPriceForTwo" class="hidden font-bold text-stone-800 dark:text-stone-200 text-[11px] shrink-0"></span>
           </div>
         </div>
 
         <!-- Famous For Section (Signature / Popular Dishes) -->
-        <div id="modalFamousForSection" class="p-4 bg-amber-50/40 space-y-3">
+        <div id="modalFamousForSection" class="p-4 bg-amber-50/40 dark:bg-amber-950/20 space-y-3">
           <div class="flex items-center space-x-2">
             <span class="w-6 h-6 rounded-lg bg-amber-600 text-white flex items-center justify-center text-xs shadow-xs font-bold">
               <i class="fa-solid fa-crown"></i>
             </span>
             <div>
-              <h3 class="font-black text-sm text-stone-900 tracking-tight" data-i18n="famous_for_title">Famous For</h3>
-              <p class="text-[11px] text-stone-500 font-medium" data-i18n="famous_for_sub">Signature street bites customers love</p>
+              <h3 class="font-black text-sm text-stone-900 dark:text-white tracking-tight" data-i18n="famous_for_title">Famous For</h3>
+              <p class="text-[11px] text-stone-500 dark:text-stone-400 font-medium" data-i18n="famous_for_sub">Signature street bites customers love</p>
             </div>
           </div>
           <div id="modalFamousForContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
@@ -1237,33 +1237,33 @@
         </div>
 
         <!-- Local Story Section (Rendered only if verified history exists) -->
-        <div id="modalLocalStorySection" class="hidden p-4 bg-stone-50 space-y-2.5">
+        <div id="modalLocalStorySection" class="hidden p-4 bg-stone-50 dark:bg-stone-900 space-y-2.5">
           <div class="flex items-center justify-between">
             <div class="flex items-center space-x-2">
-              <span class="w-6 h-6 rounded-lg bg-stone-800 text-amber-400 flex items-center justify-center text-xs shadow-xs">
+              <span class="w-6 h-6 rounded-lg bg-stone-800 dark:bg-stone-700 text-amber-400 flex items-center justify-center text-xs shadow-xs">
                 <i class="fa-solid fa-book-open"></i>
               </span>
-              <h3 class="font-black text-xs text-stone-900 uppercase tracking-wider" data-i18n="local_story_title">Local Heritage Story</h3>
+              <h3 class="font-black text-xs text-stone-900 dark:text-white uppercase tracking-wider" data-i18n="local_story_title">Local Heritage Story</h3>
             </div>
-            <span class="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded-full flex items-center">
+            <span class="text-[10px] font-black uppercase tracking-wider bg-emerald-100 dark:bg-emerald-950/80 text-emerald-800 dark:text-emerald-300 border border-transparent dark:border-emerald-700/50 px-2 py-0.5 rounded-full flex items-center">
               <i class="fa-solid fa-certificate text-[9px] mr-1"></i>Verified History
             </span>
           </div>
-          <p id="modalLocalStoryText" class="text-xs text-stone-700 leading-relaxed italic bg-white p-3 rounded-2xl border border-stone-200/70 shadow-2xs"></p>
+          <p id="modalLocalStoryText" class="text-xs text-stone-700 dark:text-stone-300 leading-relaxed italic bg-white dark:bg-stone-950 p-3 rounded-2xl border border-stone-200/70 dark:border-stone-800 shadow-2xs"></p>
         </div>
 
         <!-- Compact Trust & Verification Section -->
-        <div id="modalTrustSection" class="p-4 bg-white space-y-3">
+        <div id="modalTrustSection" class="p-4 bg-white dark:bg-stone-900 space-y-3">
           <div class="flex items-center justify-between">
             <div>
-              <h3 class="font-black text-xs text-stone-900 uppercase tracking-wider flex items-center space-x-1.5" data-i18n="trust_compact_title">
+              <h3 class="font-black text-xs text-stone-900 dark:text-white uppercase tracking-wider flex items-center space-x-1.5" data-i18n="trust_compact_title">
                 <i class="fa-solid fa-shield-halved text-emerald-600"></i>
                 <span>Trust & Verification Checks</span>
               </h3>
-              <p class="text-[11px] text-stone-500 font-medium" data-i18n="trust_compact_sub">Direct on-ground checks completed by ThelaExpress</p>
+              <p class="text-[11px] text-stone-500 dark:text-stone-400 font-medium" data-i18n="trust_compact_sub">Direct on-ground checks completed by ThelaExpress</p>
             </div>
             <button onclick="if (STATE.currentStall) openTrustModal(STATE.currentStall.id);" 
-              class="text-[11px] font-extrabold text-amber-700 hover:text-amber-800 hover:underline flex items-center space-x-1 shrink-0">
+              class="text-[11px] font-extrabold text-amber-700 dark:text-amber-400 hover:text-amber-800 dark:hover:text-amber-300 hover:underline flex items-center space-x-1 shrink-0">
               <span data-i18n="view_trust_details_btn">View Verification Details ➔</span>
             </button>
           </div>
@@ -1273,14 +1273,14 @@
         </div>
 
         <!-- See It From The Street (Photo Gallery - Rendered if photos exist) -->
-        <div id="modalStreetPhotosSection" class="hidden p-4 bg-stone-50 space-y-3">
+        <div id="modalStreetPhotosSection" class="hidden p-4 bg-stone-50 dark:bg-stone-900 space-y-3">
           <div class="flex items-center space-x-2">
             <span class="w-6 h-6 rounded-lg bg-orange-600 text-white flex items-center justify-center text-xs shadow-xs">
               <i class="fa-solid fa-camera"></i>
             </span>
             <div>
-              <h3 class="font-black text-xs text-stone-900 uppercase tracking-wider" data-i18n="see_street_title">See It From The Street</h3>
-              <p class="text-[11px] text-stone-500 font-medium" data-i18n="see_street_sub">Authentic photos of stall & preparation</p>
+              <h3 class="font-black text-xs text-stone-900 dark:text-white uppercase tracking-wider" data-i18n="see_street_title">See It From The Street</h3>
+              <p class="text-[11px] text-stone-500 dark:text-stone-400 font-medium" data-i18n="see_street_sub">Authentic photos of stall & preparation</p>
             </div>
           </div>
           <div id="modalStreetPhotosGallery" class="flex items-center space-x-3 overflow-x-auto hide-scrollbar pb-1">
@@ -1289,18 +1289,18 @@
         </div>
 
         <!-- Sticky Menu Category Navigation Pills -->
-        <div class="sticky top-0 z-20 bg-white/95 backdrop-blur-md border-y border-stone-200 px-4 py-2 flex items-center space-x-2 overflow-x-auto hide-scrollbar" id="modalCategoryTabs">
+        <div class="sticky top-0 z-20 bg-white/95 dark:bg-stone-950/95 backdrop-blur-md border-y border-stone-200 dark:border-stone-800 px-4 py-2.5 flex items-center space-x-2 overflow-x-auto hide-scrollbar" id="modalCategoryTabs">
           <!-- Dynamic category pills: Popular, etc. -->
         </div>
 
         <!-- Menu Items Categorized List -->
-        <div id="modalMenuItems" class="p-4 space-y-6">
+        <div id="modalMenuItems" class="p-4 space-y-6 bg-white dark:bg-stone-950">
           <!-- Categorized food cards rendered dynamically -->
         </div>
       </div>
 
       <!-- Bottom Floating Sticky Cart Bar (Persistent when items in cart) -->
-      <div id="modalCartBar" class="hidden border-t border-stone-200 bg-white p-3 shadow-xl select-none z-30">
+      <div id="modalCartBar" class="hidden border-t border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 p-3 shadow-xl select-none z-30" style="padding-bottom: max(12px, env(safe-area-inset-bottom, 12px));">
         <button onclick="openCartDrawer()" class="w-full bg-gradient-to-r from-amber-600 via-orange-600 to-amber-700 text-white rounded-2xl py-3 px-4 flex items-center justify-between font-bold text-sm hover:from-amber-700 hover:to-orange-700 shadow-md shadow-orange-600/20 transition active:scale-[0.99]">
           <div class="flex items-center space-x-2.5">
             <span id="modalCartCount" class="bg-white/20 px-2 py-0.5 rounded-lg text-xs font-black">0 ITEMS</span>

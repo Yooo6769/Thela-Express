@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.3.4`  
+**Current Production Version**: `v2.3.5`  
 **Current Date**: September 28, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -48,6 +48,7 @@ flowchart LR
     v231 --> v232["v2.3.2<br/>Street Food Customizer Sheet: Live Size, Crust, Cheese & Seasoning Engine"]
     v232 --> v233["v2.3.3<br/>Clean Front Cards, Reactive Customizer Bindings & Checkout Login Gate Modal"]
     v233 --> v234["v2.3.4<br/>Purge All Test Artifacts & Real Direct UPI Payment Engine"]
+    v234 --> v235["v2.3.5<br/>Full Screen Modal, Dark Category Bar, Scroll Containment & Swipe Fix"]
 ```
 
 ---
@@ -758,11 +759,37 @@ flowchart LR
 
 ---
 
+### `v2.3.5` — Full Screen Stall Modal, Dark Theme Category Bar, Anti-Scroll Bleed & Carousel Swipe Alignment
+- **Release Date**: September 28, 2026
+- **Git Commit**: `v2.3.5`
+- **Key Architectural Accomplishments**:
+  - **Full Screen Stall Modal on Mobile Viewports**:
+    - Converted `#stallModal` from a partial viewport card (`max-h-[94vh]`) with top peek-through into a true 100% edge-to-edge full-screen modal on mobile devices (`w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-2xl rounded-none sm:rounded-3xl border-0 sm:border`).
+    - Added device safe-area inset adaptation (`style="top: max(12px, env(safe-area-inset-top, 12px));"`) ensuring action buttons (Close, Favorite, Share) align beneath mobile notch cutouts.
+    - Preserved responsive floating centered sheet presentation on desktop/tablet (`sm:max-w-2xl sm:rounded-3xl`).
+  - **Dark Mode Theme Mismatch Elimination on Category Navigation Pills**:
+    - Resolved the glaring white bar on the sticky category navigation rail (`#modalCategoryTabs`) by introducing dark mode classes: `bg-white/95 dark:bg-stone-950/95 border-y border-stone-200 dark:border-stone-800`.
+    - Harmonized all stall modal sub-elements to the active dark palette: `#modalMenuItems` (`dark:bg-stone-950`), vitals bar (`dark:bg-stone-900`), famous dishes (`dark:bg-amber-950/20`), heritage story (`dark:bg-stone-900`), trust & verification checks (`dark:bg-stone-900`), and the sticky `#modalCartBar` (`dark:bg-stone-900 dark:border-stone-800`).
+    - Added dark classes to dynamically injected trust badges (`dark:bg-emerald-950/40`, `dark:bg-amber-950/40`, etc.) and signature dishes in `public/app.js`.
+  - **Anti-Scroll Bleed & Chaining Lock Engine**:
+    - Solved the mobile Safari / Chromium scroll bleed glitch where scrolling within the menu modal chained to the background page, causing the outer app to jitter and jump.
+    - Implemented a rock-solid `lockBodyScroll()` and `unlockBodyScroll()` engine in `public/app.js` using fixed body positioning, scroll-Y offset preservation, and automatic restoration on modal exit.
+    - Configured `overscroll-behavior: contain; -webkit-overflow-scrolling: touch;` on both modal backdrop and `#modalScrollBody`.
+  - **Hero Promo Carousel Gesture & Direction Alignment**:
+    - Addressed user feedback regarding carousel swipe mapping: aligned touch gestures so swiping left slides left (`prevCarouselSlide()`) and swiping right slides right (`nextCarouselSlide()`).
+    - Added `touch-action: pan-y;` on `#heroPromoCarousel` and a non-passive `touchmove` listener that detects dominant horizontal swipe gestures and prevents vertical scroll jitter (`e.preventDefault()`).
+  - **Automated Verification**:
+    - Added Test Suite 9 ("Full Screen Stall Modal, Dark Theme Category Bar, Anti-Scroll Bleed & Carousel Swipe Alignment") to `scratch/test_aryan_the_pizza.js`.
+    - Total test suite now verifies 90/90 platform tests across 4 comprehensive suites with 100% pass rate.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `HEAD` | 2026-09-28 | Production | Purge all test/sandbox artifacts, wire real UPI direct payment, and bump to v2.3.4 |
+| `HEAD` | 2026-09-28 | Mobile UX & Theme | Full screen stall modal, fix dark theme category bar mismatch, eliminate scroll bleed, and correct carousel swipe direction (v2.3.5) |
+| `b524d4f` | 2026-09-28 | Production | Purge all test/sandbox artifacts, wire real UPI direct payment, and bump to v2.3.4 |
 | `c9936d3` | 2026-09-28 | UX & Auth | Clean front dish cards, reactive customizer options, and checkout login required gate (v2.3.3) |
 | `a9146a7` | 2026-09-23 | Authenticity & Privacy | Purge restaurant dining, fake profiles, and fake addresses; enforce authentic street food cart UX (v2.2.1) |
 | `a944fdc` | 2026-09-23 | Customer Experience | Zomato-inspired dynamic customer storefront and VIP center (v2.2.0) |
@@ -873,6 +900,7 @@ stateDiagram-v2
 
 | Test Script File | Primary Verification Objective | Number of Tests | Status |
 | :--- | :--- | :---: | :---: |
+| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, verified FSSAI/Hygiene, full screen stall modal, dark theme category pills, reactive customizer sheet, checkout login gate, and direct UPI payment | 28 tests | ✅ Passed |
 | [`test_street_food_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_street_food_ux.js) | Authentic street food UX, real food photo carousel, swipe/touch accessibility, theme dark hover protection, zero 1971 fake count, visual veg toggle, buyable VIP, dynamic coupons & adaptive modals | 21 tests | ✅ Passed |
 | [`test_zomato_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_zomato_ux.js) | Zomato-inspired dynamic customer app experience, hero carousel, circular stories, quick filters, bottom dock, VIP Gold profile & wallet engine | 12 tests | ✅ Passed |
 | [`test_store_status_contradiction.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_store_status_contradiction.js) | Server-authoritative store status derivation, anti-bypass invariants, hoisting audit, zero 1.5 km copy | 7 suites | ✅ Passed |

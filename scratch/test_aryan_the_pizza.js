@@ -309,6 +309,44 @@ test('Admin UI is purged of test record references', () => {
   assert(!adminHtml.includes('sample menu items'), 'admin.html still contains sample menu items');
 });
 
+console.log('\n--- TEST SUITE 9: Full Screen Stall Modal, Dark Theme Category Bar, Anti-Scroll Bleed & Carousel Swipe ---');
+test('Stall modal is true full screen on mobile with zero scroll bleed and overscroll containment', () => {
+  const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+  assert(htmlContent.includes('id="stallModal"'), 'Missing #stallModal in index.html');
+  assert(htmlContent.includes('w-full h-full sm:h-auto sm:max-h-[92vh] sm:max-w-2xl rounded-none sm:rounded-3xl'), 'Stall modal is not full-screen on mobile');
+  assert(htmlContent.includes('overscroll-behavior: contain'), 'Missing overscroll-behavior: contain on stall modal');
+  assert(htmlContent.includes('env(safe-area-inset-top'), 'Missing safe-area-inset-top handling on top action bar');
+});
+
+test('Modal category tabs and all stall modal sections seamlessly adapt to dark theme with zero glaring white bars', () => {
+  const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+  assert(htmlContent.includes('id="modalCategoryTabs"'), 'Missing #modalCategoryTabs');
+  assert(htmlContent.includes('dark:bg-stone-950/95') && htmlContent.includes('dark:border-stone-800'), 'modalCategoryTabs missing dark mode classes');
+  assert(htmlContent.includes('id="modalMenuItems" class="p-4 space-y-6 bg-white dark:bg-stone-950"'), 'modalMenuItems missing dark background');
+  assert(htmlContent.includes('id="modalFamousForSection" class="p-4 bg-amber-50/40 dark:bg-amber-950/20'), 'modalFamousForSection missing dark background');
+  assert(htmlContent.includes('id="modalLocalStorySection" class="hidden p-4 bg-stone-50 dark:bg-stone-900'), 'modalLocalStorySection missing dark background');
+  assert(htmlContent.includes('id="modalTrustSection" class="p-4 bg-white dark:bg-stone-900'), 'modalTrustSection missing dark background');
+  assert(htmlContent.includes('id="modalCartBar" class="hidden border-t border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900'), 'modalCartBar missing dark background');
+});
+
+test('app.js implements body scroll lock & unlock to prevent background scroll bleed when modals open', () => {
+  const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+  assert(appJsContent.includes('function lockBodyScroll('), 'Missing lockBodyScroll function in app.js');
+  assert(appJsContent.includes('function unlockBodyScroll('), 'Missing unlockBodyScroll function in app.js');
+  assert(appJsContent.includes('lockBodyScroll();'), 'openStallModal does not call lockBodyScroll()');
+  assert(appJsContent.includes('unlockBodyScroll();'), 'closeStallModal does not call unlockBodyScroll()');
+});
+
+test('Hero promo carousel swipe accurately navigates left on swipe left and prevents vertical jitter', () => {
+  const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+  const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+  assert(htmlContent.includes('touch-action: pan-y'), 'Missing touch-action: pan-y on promo carousel');
+  assert(appJsContent.includes('carousel.addEventListener(\'touchmove\''), 'Missing touchmove listener on promo carousel');
+  assert(appJsContent.includes('prevCarouselSlide(); // Swiped left -> Left slide'), 'Swipe left does not navigate left');
+  assert(appJsContent.includes('nextCarouselSlide(); // Swiped right -> Right slide'), 'Swipe right does not navigate right');
+});
+
 console.log(`\n🎉 ALL ${passCount} ARYAN THE PIZZA INTEGRATION TESTS PASSED COMPLETELY!`);
 console.log('================================================================');
+
 

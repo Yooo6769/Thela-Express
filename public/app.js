@@ -1482,6 +1482,38 @@ function filterCategory(cat) {
 // ==========================================================
 // 6. STALL MENU MODAL & INDIVIDUAL VENDOR EXPERIENCE (IMPROVEMENT #3)
 // ==========================================================
+let bodyScrollLockCount = 0;
+let savedBodyScrollTop = 0;
+
+function lockBodyScroll() {
+  bodyScrollLockCount++;
+  if (bodyScrollLockCount === 1) {
+    savedBodyScrollTop = window.scrollY || document.documentElement.scrollTop || 0;
+    document.body.style.position = 'fixed';
+    document.body.style.top = `-${savedBodyScrollTop}px`;
+    document.body.style.left = '0';
+    document.body.style.right = '0';
+    document.body.style.width = '100%';
+    document.body.style.overflow = 'hidden';
+    document.body.classList.add('modal-open');
+  }
+}
+
+function unlockBodyScroll() {
+  bodyScrollLockCount = Math.max(0, bodyScrollLockCount - 1);
+  if (bodyScrollLockCount === 0) {
+    const scrollY = Math.abs(parseInt(document.body.style.top || '0', 10)) || savedBodyScrollTop;
+    document.body.style.position = '';
+    document.body.style.top = '';
+    document.body.style.left = '';
+    document.body.style.right = '';
+    document.body.style.width = '';
+    document.body.style.overflow = '';
+    document.body.classList.remove('modal-open');
+    window.scrollTo(0, scrollY);
+  }
+}
+
 async function openStallModal(stallId) {
   try {
     const res = await fetch(`/api/stalls/${stallId}`);
@@ -1656,7 +1688,7 @@ async function openStallModal(stallId) {
     // Show modal & prevent background scroll
     const modalEl = document.getElementById('stallModal');
     if (modalEl) modalEl.classList.remove('hidden');
-    document.body.style.overflow = 'hidden';
+    lockBodyScroll();
     AtmosphereManager.pushOverride('stallModal', 'low');
 
   } catch (e) {
@@ -1668,7 +1700,7 @@ async function openStallModal(stallId) {
 function closeStallModal() {
   const modal = document.getElementById('stallModal');
   if (modal) modal.classList.add('hidden');
-  document.body.style.overflow = '';
+  unlockBodyScroll();
   const vidEl = document.getElementById('modalStallVideo');
   if (vidEl) vidEl.pause();
   AtmosphereManager.popOverride('stallModal');
@@ -1724,28 +1756,28 @@ function renderCompactTrustChecks(stall) {
     checks.push({
       label: 'FSSAI Food Safety Verified',
       icon: 'fa-shield-check',
-      bg: 'bg-emerald-50 text-emerald-800 border-emerald-200'
+      bg: 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 border-emerald-200 dark:border-emerald-800'
     });
   }
   if (stall.hygiene_status === 'verified' || stall.hygiene_status === 'certified') {
     checks.push({
       label: `Hygiene Score ${stall.hygiene_score || 95}/100 Audited`,
       icon: 'fa-wand-magic-sparkles',
-      bg: 'bg-amber-50 text-amber-900 border-amber-200'
+      bg: 'bg-amber-50 dark:bg-amber-950/40 text-amber-900 dark:text-amber-300 border-amber-200 dark:border-amber-800'
     });
   }
   if (stall.identity_status === 'verified' || stall.is_verified) {
     checks.push({
       label: 'Vendor KYC & ID Verified',
       icon: 'fa-circle-check',
-      bg: 'bg-blue-50 text-blue-900 border-blue-200'
+      bg: 'bg-blue-50 dark:bg-blue-950/40 text-blue-900 dark:text-blue-300 border-blue-200 dark:border-blue-800'
     });
   }
   if (stall.address && stall.lat && stall.lng) {
     checks.push({
       label: 'Stall GPS Geo-Tagged',
       icon: 'fa-location-dot',
-      bg: 'bg-teal-50 text-teal-900 border-teal-200'
+      bg: 'bg-teal-50 dark:bg-teal-950/40 text-teal-900 dark:text-teal-300 border-teal-200 dark:border-teal-800'
     });
   }
 
@@ -1753,7 +1785,7 @@ function renderCompactTrustChecks(stall) {
     checks.push({
       label: 'Audits Underway • Onboarding in Progress',
       icon: 'fa-clock-rotate-left',
-      bg: 'bg-stone-50 text-stone-700 border-stone-200'
+      bg: 'bg-stone-50 dark:bg-stone-800 text-stone-700 dark:text-stone-300 border-stone-200 dark:border-stone-700'
     });
   }
 
@@ -1790,9 +1822,9 @@ function renderFamousForDishes(items) {
     const itemImg = item.image || getThelaFoodPlaceholder('chaat', item.name);
 
     return `
-      <div class="bg-white p-2.5 rounded-2xl border ${item.isSpecial ? 'border-amber-300 bg-amber-50/20' : 'border-stone-200/80'} shadow-2xs flex items-center justify-between gap-2.5 hover:border-amber-400 transition">
+      <div class="bg-white dark:bg-stone-900 p-2.5 rounded-2xl border ${item.isSpecial ? 'border-amber-300 dark:border-amber-700/60 bg-amber-50/20 dark:bg-amber-950/30' : 'border-stone-200/80 dark:border-stone-800'} shadow-2xs flex items-center justify-between gap-2.5 hover:border-amber-400 dark:hover:border-amber-600 transition">
         <div class="flex items-center space-x-2.5 min-w-0">
-          <div class="relative w-16 h-16 sm:w-18 sm:h-18 rounded-xl overflow-hidden bg-stone-100 shrink-0">
+          <div class="relative w-16 h-16 sm:w-18 sm:h-18 rounded-xl overflow-hidden bg-stone-100 dark:bg-stone-800 shrink-0">
             <img src="${itemImg}" 
               alt="${item.name}" class="w-full h-full object-cover" loading="lazy" decoding="async" onerror="handleFoodImageError(this, 'chaat', '${safeName}')">
             ${item.isSpecial ? `<span class="absolute top-1 left-1 bg-amber-500 text-white text-[8px] font-black px-1.5 py-0.5 rounded shadow-xs">👑 SIGNATURE</span>` : ''}
@@ -1808,11 +1840,11 @@ function renderFamousForDishes(items) {
                   <span class="w-1 h-1 rounded-full bg-red-600"></span>
                 </span>
               `}
-              <span class="font-extrabold text-xs text-stone-900 truncate">${item.name}</span>
+              <span class="font-extrabold text-xs text-stone-900 dark:text-white truncate">${item.name}</span>
             </div>
             <div class="flex items-center space-x-1.5 mt-0.5">
-              <span class="text-xs font-black text-amber-700">₹${item.price}</span>
-              ${item.originalPrice ? `<span class="text-[10px] text-stone-400 line-through">₹${item.originalPrice}</span>` : ''}
+              <span class="text-xs font-black text-amber-700 dark:text-amber-400">₹${item.price}</span>
+              ${item.originalPrice ? `<span class="text-[10px] text-stone-400 dark:text-stone-500 line-through">₹${item.originalPrice}</span>` : ''}
             </div>
           </div>
         </div>
@@ -1820,7 +1852,7 @@ function renderFamousForDishes(items) {
         <!-- Add Button / Stepper -->
         <div class="shrink-0 w-16">
           ${!item.inStock ? `
-            <span class="text-[9px] font-black text-stone-400 block text-center">SOLD OUT</span>
+            <span class="text-[9px] font-black text-stone-400 dark:text-stone-500 block text-center">SOLD OUT</span>
           ` : qty === 0 ? `
             <button onclick="handleAddItemClick('${item.id}')" class="w-full bg-amber-500 hover:bg-amber-600 text-white rounded-lg py-1.5 font-black text-xs shadow-xs active:scale-95 transition">
               + ADD
@@ -2398,7 +2430,7 @@ function openDishCustomizer(dishKeyOrId, preferredVariantId) {
 
   const modal = document.getElementById('customizerModal');
   if (modal) modal.classList.remove('hidden');
-  document.body.style.overflow = 'hidden';
+  lockBodyScroll();
   AtmosphereManager.pushOverride('customizer', 'minimal');
 }
 
@@ -2412,7 +2444,7 @@ function openCustomizer(item) {
 function closeCustomizerModal() {
   const modal = document.getElementById('customizerModal');
   if (modal) modal.classList.add('hidden');
-  document.body.style.overflow = '';
+  unlockBodyScroll();
   AtmosphereManager.popOverride('customizer');
   STATE.customizerState = null;
 }
@@ -4847,6 +4879,18 @@ function initPromoCarousel() {
     isTouchSwiping = true;
   }, { passive: true });
 
+  carousel.addEventListener('touchmove', (e) => {
+    if (!isTouchSwiping || !e.touches || e.touches.length === 0) return;
+    const currentX = e.touches[0].clientX;
+    const currentY = e.touches[0].clientY;
+    const diffX = currentX - touchStartX;
+    const diffY = currentY - touchStartY;
+    // Suppress vertical jitter when horizontal swipe intent is dominant
+    if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 10) {
+      if (e.cancelable) e.preventDefault();
+    }
+  }, { passive: false });
+
   carousel.addEventListener('touchend', (e) => {
     if (!isTouchSwiping || !e.changedTouches || e.changedTouches.length === 0) return;
     isTouchSwiping = false;
@@ -4859,9 +4903,9 @@ function initPromoCarousel() {
     // Only trigger if horizontal swipe is dominant and exceeds 35px threshold
     if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 35) {
       if (diffX < 0) {
-        nextCarouselSlide(); // Swiped left -> Next slide
+        prevCarouselSlide(); // Swiped left -> Left slide
       } else {
-        prevCarouselSlide(); // Swiped right -> Previous slide
+        nextCarouselSlide(); // Swiped right -> Right slide
       }
     }
   }, { passive: true });
@@ -4883,9 +4927,9 @@ function initPromoCarousel() {
     const diff = e.clientX - pointerStartX;
     if (Math.abs(diff) > 40) {
       if (diff < 0) {
-        nextCarouselSlide();
-      } else {
         prevCarouselSlide();
+      } else {
+        nextCarouselSlide();
       }
     }
   });
