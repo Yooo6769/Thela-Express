@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.3.1`  
+**Current Production Version**: `v2.3.2`  
 **Current Date**: September 28, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -45,6 +45,7 @@ flowchart LR
     v223 --> v224["v2.2.4<br/>Dark Theme Hover Contrast Fix & Swipe-Accessible Real Food Carousel"]
     v224 --> v230["v2.3.0<br/>Onboard First Real Street Food Partner — Aryan The Pizza"]
     v230 --> v231["v2.3.1<br/>Modal Redesign, Lag Fix, Variant Selector & Appetizing Hero Imagery"]
+    v231 --> v232["v2.3.2<br/>Street Food Customizer Sheet: Live Size, Crust, Cheese & Seasoning Engine"]
 ```
 
 ---
@@ -675,6 +676,30 @@ flowchart LR
     - Reduced buyable VIP membership cost from ₹99 to ₹1 across customer profile badge, modal CTA button, purchase confirmation prompt, and wallet balance deduction logic.
   - **Automated Verification**:
     - Updated `scratch/test_aryan_the_pizza.js` and `scratch/test_street_food_ux.js`, and added `npm test` script executing 74 end-to-end tests across stall verification, authentic street food UX, order lifecycle, and payments ledger (100% passing).
+
+### `v2.3.2` — Street Food Customizer Sheet: Live Size, Crust, Cheese & Seasoning Engine
+- **Release Date**: September 28, 2026
+- **Git Commit**: `v2.3.2`
+- **Key Architectural Accomplishments**:
+  - **Thela Street Customization Bottom Sheet**:
+    - Built an authentic street food customization sheet (`#customizerModal`) that slides up smoothly when a customer clicks `+ ADD` on any pizza or customizable street dish.
+    - Designed with ThelaExpress native styling: dark/light theme adaptation (`bg-white dark:bg-stone-900`), pure veg badges, close button, and dish preview.
+  - **Dynamic Size & Portion Selection**:
+    - Displays interactive size options: Small (7"), Medium (9" • Most Popular), Large (12") with live prices.
+    - Dynamically updates size-dependent pricing for crust and cheese upgrades.
+  - **Crust & Cheese Style Upgrades**:
+    - Fresh Hand Tossed Crust: Included (+₹0).
+    - Cheese Burst Crust Upgrade: Small (+₹50), Medium (+₹100), Large (+₹150) — dynamically priced and matched to server catalog item IDs (`item_aryan_61`, `item_aryan_62`, `item_aryan_63`).
+    - Extra Double Cheese: Small (+₹20), Medium (+₹30), Large (+₹40) — matched to catalog IDs (`item_aryan_58`, `item_aryan_59`, `item_aryan_60`).
+  - **Complimentary Desi Street Seasonings & Sprinkles**:
+    - Multi-select free street seasonings: Oregano & Chilli Flakes, Special Desi Street Masala, Spicy Peri-Peri Dust, Fresh Green Chillies & Herbs.
+  - **Live Dynamic Pricing & Sticky Footer**:
+    - Interactive quantity stepper (`- 1 +`) and live price button: `Add Item • ₹[Total]`.
+    - Automatically calculates grand total in real-time as size, crust, extra cheese, and quantity change.
+  - **Authoritative Server Pricing Preservation**:
+    - Bundles catalog item IDs directly to ensure 100% mathematical reconciliation with `calculateOrderPricing` and the financial ledger.
+  - **Automated Verification**:
+    - Added dedicated Suite 6 to `scratch/test_aryan_the_pizza.js`. All 77 platform tests passing cleanly.
 
 ---
 

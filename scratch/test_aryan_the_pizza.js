@@ -180,5 +180,59 @@ test('public/app.js includes pizza in placeholder and popular discovery', () => 
   assert(appJs.includes("'pizza'"), 'Missing pizza in discovery list');
 });
 
+console.log('\n--- TEST SUITE 6: Pizza Customization Bottom Sheet & Add-on Engine ---');
+test('Customizer modal markup in index.html contains complete street customization sheet', () => {
+  const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+  assert(htmlContent.includes('id="customizerModal"'), 'Missing #customizerModal in index.html');
+  assert(htmlContent.includes('id="customizerItemThumb"'), 'Missing #customizerItemThumb');
+  assert(htmlContent.includes('id="customizerItemName"'), 'Missing #customizerItemName');
+  assert(htmlContent.includes('id="customizerOptionsContainer"'), 'Missing #customizerOptionsContainer');
+  assert(htmlContent.includes('id="customizerQty"'), 'Missing #customizerQty stepper');
+  assert(htmlContent.includes('id="customizerTotalPrice"'), 'Missing #customizerTotalPrice');
+  assert(htmlContent.includes('id="customizerAddBtn"'), 'Missing #customizerAddBtn');
+});
+
+test('app.js defines pizza customization engine with dynamic size, crust, extra cheese & seasonings', () => {
+  const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+  assert(appJsContent.includes('function openDishCustomizer('), 'Missing openDishCustomizer');
+  assert(appJsContent.includes('function getAddonPricingForSize('), 'Missing getAddonPricingForSize');
+  assert(appJsContent.includes('function setCustomizerVariant('), 'Missing setCustomizerVariant');
+  assert(appJsContent.includes('function setCustomizerCrust('), 'Missing setCustomizerCrust');
+  assert(appJsContent.includes('function toggleCustomizerExtraCheese('), 'Missing toggleCustomizerExtraCheese');
+  assert(appJsContent.includes('function toggleCustomizerSeasoning('), 'Missing toggleCustomizerSeasoning');
+  assert(appJsContent.includes('function confirmCustomizationAndAdd('), 'Missing confirmCustomizationAndAdd');
+  assert(appJsContent.includes('Customisable'), 'Missing Customisable tag on customizable dish cards');
+});
+
+test('Pricing engine correctly calculates order with Pizza + Cheese Burst + Extra Cheese', () => {
+  const stall = db.getStallById('stall_aryan_the_pizza');
+  const items = db.getMenuItems('stall_aryan_the_pizza');
+  
+  const pizza = items.find(i => i.name === 'Veggie Delight Pizza (Medium 9")'); // 140
+  const cheeseBurst = items.find(i => i.name === 'Cheese Burst Crust (Medium 9")'); // 100
+  const extraCheese = items.find(i => i.name === 'Extra Double Cheese (Medium 9")'); // 30
+
+  assert(pizza && cheeseBurst && extraCheese, 'Missing pizza or add-on items in catalog');
+
+  const orderCalculation = calculateOrderPricing({
+    stall,
+    stallMenuItems: items,
+    items: [
+      { id: pizza.id, qty: 1 },
+      { id: cheeseBurst.id, qty: 1 },
+      { id: extraCheese.id, qty: 1 }
+    ]
+  });
+
+  // Food Subtotal: 140 + 100 + 30 = 270
+  assert.strictEqual(orderCalculation.pricing.food_subtotal, 270);
+  // 10% discount on 270 = 27
+  assert.strictEqual(orderCalculation.pricing.vendor_discount, 27);
+  // 10 packaging fee
+  assert.strictEqual(orderCalculation.pricing.packaging_fee, 10);
+  // Customer total: (270 - 27) + 10 = 253
+  assert.strictEqual(orderCalculation.pricing.customer_total, 253);
+});
+
 console.log(`\n🎉 ALL ${passCount} ARYAN THE PIZZA INTEGRATION TESTS PASSED COMPLETELY!`);
 console.log('================================================================');

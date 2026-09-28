@@ -2061,8 +2061,16 @@ function selectDishVariant(dishKey, variantId) {
 }
 
 function addVariantToCart(variantId) {
-  const item = STATE.currentMenu.find(i => i.id === variantId);
+  const item = (STATE.currentMenu || []).find(i => i.id === variantId);
   if (!item) return;
+
+  const grouped = groupMenuDishes(STATE.currentMenu || []);
+  const dish = grouped.find(d => d.id === variantId || (d.variants && d.variants.some(v => v.id === variantId)));
+  if (dish && (dish.variants.length > 1 || (dish.category && dish.category.toLowerCase().includes('pizza')) || (dish.name && dish.name.toLowerCase().includes('pizza')))) {
+    openDishCustomizer(dish.key, variantId);
+    return;
+  }
+
   addItemToCart(item, {});
 }
 
@@ -2258,16 +2266,19 @@ function renderCategoryTabsAndMenuItems(items) {
                       SOLD OUT
                     </div>
                   ` : qty === 0 ? `
-                    <button onclick="addVariantToCart('${activeVariant.id}')" 
-                      class="w-full bg-white dark:bg-stone-800 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-700 rounded-xl py-1 font-black text-xs shadow-md hover:bg-orange-50 dark:hover:bg-stone-700 active:scale-95 transition">
-                      + ADD
+                    <button onclick="${hasVariants ? `openDishCustomizer('${dish.key}', '${activeVariant.id}')` : `addVariantToCart('${activeVariant.id}')`}" 
+                      class="w-full bg-white dark:bg-stone-800 text-orange-600 dark:text-orange-400 border border-orange-200 dark:border-orange-700 rounded-xl py-1 font-black text-xs shadow-md hover:bg-orange-50 dark:hover:bg-stone-700 active:scale-95 transition flex items-center justify-center space-x-1">
+                      <span>+ ADD</span>
+                      ${hasVariants ? `<span class="text-[9px] opacity-75">▾</span>` : ''}
                     </button>
+                    ${hasVariants ? `<span class="text-[9px] font-bold text-stone-400 dark:text-stone-500 block text-center mt-0.5 tracking-tight">Customisable</span>` : ''}
                   ` : `
                     <div class="w-full bg-orange-600 text-white rounded-xl py-1 px-1.5 flex items-center justify-between font-black text-xs shadow-md">
                       <button onclick="decrementCartItem('${activeVariant.id}')" class="w-5 text-center hover:bg-orange-700 rounded transition">-</button>
                       <span>${qty}</span>
-                      <button onclick="incrementCartItem('${activeVariant.id}')" class="w-5 text-center hover:bg-orange-700 rounded transition">+</button>
+                      <button onclick="${hasVariants ? `openDishCustomizer('${dish.key}', '${activeVariant.id}')` : `incrementCartItem('${activeVariant.id}')`}" class="w-5 text-center hover:bg-orange-700 rounded transition">+</button>
                     </div>
+                    ${hasVariants ? `<span class="text-[9px] font-bold text-stone-400 dark:text-stone-500 block text-center mt-0.5 tracking-tight">Customisable</span>` : ''}
                   `}
                 </div>
               </div>
@@ -2291,11 +2302,55 @@ function renderMenuItems(items) {
   renderFamousForDishes(items);
 }
 
+// ==========================================================
+// 6. THELA STREET CUSTOMIZATION ENGINE (Sizes, Crust, Toppings)
+// ==========================================================
+STATE.customizerState = null;
+
+function getAddonPricingForSize(variant) {
+  const label = ((variant?.name || '') + ' ' + (variant?.variantLabel || '') + ' ' + (variant?.shortCode || '')).toLowerCase();
+  if (label.includes('large') || label.includes('12')) {
+    return {
+      size: 'large',
+      sizeLabel: 'Large 12"',
+      cheeseBurstPrice: 150,
+      extraCheesePrice: 40,
+      cheeseBurstItemId: 'item_aryan_63',
+      extraCheeseItemId: 'item_aryan_60'
+    };
+  } else if (label.includes('small') || label.includes('7')) {
+    return {
+      size: 'small',
+      sizeLabel: 'Small 7"',
+      cheeseBurstPrice: 50,
+      extraCheesePrice: 20,
+      cheeseBurstItemId: 'item_aryan_61',
+      extraCheeseItemId: 'item_aryan_58'
+    };
+  } else {
+    // Medium (9")
+    return {
+      size: 'medium',
+      sizeLabel: 'Medium 9"',
+      cheeseBurstPrice: 100,
+      extraCheesePrice: 30,
+      cheeseBurstItemId: 'item_aryan_62',
+      extraCheeseItemId: 'item_aryan_59'
+    };
+  }
+}
+
 function handleAddItemClick(itemId) {
-  const item = STATE.currentMenu.find(i => i.id === itemId);
+  const item = (STATE.currentMenu || []).find(i => i.id === itemId);
   if (!item) return;
 
-  // If item has customizable options, open customizer modal
+  const grouped = groupMenuDishes(STATE.currentMenu || []);
+  const dish = grouped.find(d => d.id === itemId || (d.variants && d.variants.some(v => v.id === itemId)));
+  if (dish && (dish.variants.length > 1 || (dish.category && dish.category.toLowerCase().includes('pizza')) || (dish.name && dish.name.toLowerCase().includes('pizza')) || (item.customizations && item.customizations.length > 0))) {
+    openDishCustomizer(dish.key, itemId);
+    return;
+  }
+
   if (item.customizations && item.customizations.length > 0) {
     openCustomizer(item);
   } else {
@@ -2303,56 +2358,438 @@ function handleAddItemClick(itemId) {
   }
 }
 
-function openCustomizer(item) {
-  STATE.customizerItem = item;
-  STATE.customizerSelections = {};
+function openDishCustomizer(dishKeyOrId, preferredVariantId) {
+  const currentMenu = STATE.currentMenu || [];
+  const groupedDishes = groupMenuDishes(currentMenu);
+  
+  let dish = groupedDishes.find(d => d.key === dishKeyOrId || d.id === dishKeyOrId);
+  if (!dish) {
+    dish = groupedDishes.find(d => d.variants && d.variants.some(v => v.id === dishKeyOrId));
+  }
+  if (!dish) {
+    const raw = currentMenu.find(i => i.id === dishKeyOrId);
+    if (raw) {
+      dish = {
+        key: 'dish_' + raw.id,
+        id: raw.id,
+        name: raw.name,
+        category: raw.category,
+        description: raw.description,
+        isVeg: raw.isVeg,
+        image: raw.image,
+        price: raw.price,
+        variants: [{ id: raw.id, name: raw.name, variantLabel: 'Regular', shortCode: 'Regular', price: raw.price }]
+      };
+    }
+  }
+  if (!dish) return;
 
-  document.getElementById('customizerItemName').innerText = item.name;
-  document.getElementById('customizerItemBasePrice').innerText = `Base: ₹${item.price}`;
+  const hasVariants = Array.isArray(dish.variants) && dish.variants.length > 0;
+  const initialVariantId = preferredVariantId || 
+    (STATE.selectedDishVariant && STATE.selectedDishVariant[dish.key]) || 
+    (hasVariants ? (dish.variants.find(v => (v.name || '').includes('Medium'))?.id || dish.variants[0].id) : dish.id);
 
-  const container = document.getElementById('customizerOptionsContainer');
-  container.innerHTML = item.customizations.map(group => {
-    // Default selection is first option
-    STATE.customizerSelections[group.name] = group.options[0];
+  STATE.customizerState = {
+    dish: dish,
+    selectedVariantId: initialVariantId,
+    crust: 'standard', // 'standard' | 'cheese_burst'
+    extraCheese: false,
+    seasonings: new Set(['Oregano & Chilli Flakes']),
+    cookingNote: '',
+    qty: 1
+  };
 
-    return `
-      <div class="space-y-1.5">
-        <label class="block text-xs font-black text-gray-800 uppercase tracking-wider">${group.name}</label>
-        <div class="grid grid-cols-1 gap-1.5">
-          ${group.options.map(opt => `
-            <label class="flex items-center justify-between p-2.5 rounded-xl border border-gray-200 cursor-pointer hover:border-orange-500 transition">
-              <span class="text-xs font-semibold text-gray-800">${opt}</span>
-              <input type="radio" name="${group.name}" value="${opt}" 
-                ${opt === group.options[0] ? 'checked' : ''}
-                onchange="STATE.customizerSelections['${group.name}'] = '${opt}'"
-                class="text-orange-600 focus:ring-orange-500">
-            </label>
-          `).join('')}
-        </div>
-      </div>
-    `;
-  }).join('');
+  renderCustomizerModalContent();
 
-  document.getElementById('customizerModal').classList.remove('hidden');
+  const modal = document.getElementById('customizerModal');
+  if (modal) modal.classList.remove('hidden');
+  document.body.style.overflow = 'hidden';
   AtmosphereManager.pushOverride('customizer', 'minimal');
 }
 
+window.openDishCustomizer = openDishCustomizer;
+window.openCustomizerForDish = openDishCustomizer;
+
+function openCustomizer(item) {
+  openDishCustomizer(item.id, item.id);
+}
+
 function closeCustomizerModal() {
-  document.getElementById('customizerModal').classList.add('hidden');
+  const modal = document.getElementById('customizerModal');
+  if (modal) modal.classList.add('hidden');
+  document.body.style.overflow = '';
   AtmosphereManager.popOverride('customizer');
+  STATE.customizerState = null;
+}
+
+function setCustomizerVariant(variantId) {
+  if (!STATE.customizerState) return;
+  STATE.customizerState.selectedVariantId = variantId;
+  renderCustomizerModalContent();
+}
+
+function setCustomizerCrust(crustId) {
+  if (!STATE.customizerState) return;
+  STATE.customizerState.crust = crustId;
+  updateCustomizerTotals();
+}
+
+function toggleCustomizerExtraCheese() {
+  if (!STATE.customizerState) return;
+  STATE.customizerState.extraCheese = !STATE.customizerState.extraCheese;
+  updateCustomizerTotals();
+}
+
+function toggleCustomizerSeasoning(name) {
+  if (!STATE.customizerState) return;
+  if (STATE.customizerState.seasonings.has(name)) {
+    STATE.customizerState.seasonings.delete(name);
+  } else {
+    STATE.customizerState.seasonings.add(name);
+  }
+  renderCustomizerSeasoningsSection();
+}
+
+function incrementCustomizerQty() {
+  if (!STATE.customizerState) return;
+  if (STATE.customizerState.qty < 20) {
+    STATE.customizerState.qty += 1;
+    updateCustomizerTotals();
+  }
+}
+
+function decrementCustomizerQty() {
+  if (!STATE.customizerState) return;
+  if (STATE.customizerState.qty > 1) {
+    STATE.customizerState.qty -= 1;
+    updateCustomizerTotals();
+  }
+}
+
+function renderCustomizerModalContent() {
+  if (!STATE.customizerState) return;
+  const { dish, selectedVariantId, crust, extraCheese, qty } = STATE.customizerState;
+
+  const currentVariant = (dish.variants && dish.variants.find(v => v.id === selectedVariantId)) || (dish.variants && dish.variants[0]) || dish;
+  const isPizza = (dish.category && dish.category.toLowerCase().includes('pizza')) || (dish.name && dish.name.toLowerCase().includes('pizza'));
+  const isGarlicBread = (dish.name && dish.name.toLowerCase().includes('garlic bread')) || (dish.category && dish.category.toLowerCase().includes('garlic'));
+  const addonPricing = getAddonPricingForSize(currentVariant);
+
+  // Update Header
+  const thumbEl = document.getElementById('customizerItemThumb');
+  const nameEl = document.getElementById('customizerItemName');
+  const subEl = document.getElementById('customizerItemSub');
+  const vegBadge = document.getElementById('customizerVegBadge');
+
+  if (thumbEl) {
+    thumbEl.src = dish.image || getThelaFoodPlaceholder(dish.category || 'streetfood', dish.name);
+    thumbEl.onerror = () => handleFoodImageError(thumbEl, dish.category || 'streetfood', dish.name);
+  }
+  if (nameEl) nameEl.innerText = dish.name;
+  if (subEl) {
+    subEl.innerText = isPizza ? 'Hand-Tossed Pure Veg Street Pizza • Fresh Dough Daily' : (isGarlicBread ? 'Freshly Baked Garlic Bread with Desi Herbs' : (dish.description || 'Authentic Street Food Delicacy'));
+  }
+  if (vegBadge) {
+    vegBadge.className = dish.isVeg 
+      ? 'w-3.5 h-3.5 rounded border-2 border-green-600 flex items-center justify-center p-0.5 shrink-0' 
+      : 'w-3.5 h-3.5 rounded border-2 border-red-600 flex items-center justify-center p-0.5 shrink-0';
+    vegBadge.innerHTML = `<span class="w-1.5 h-1.5 rounded-full ${dish.isVeg ? 'bg-green-600' : 'bg-red-600'}"></span>`;
+  }
+
+  const container = document.getElementById('customizerOptionsContainer');
+  if (!container) return;
+
+  const hasVariants = Array.isArray(dish.variants) && dish.variants.length > 0;
+
+  let html = '';
+
+  // 1. Choose Size / Portion (Required • Select 1)
+  if (hasVariants) {
+    html += `
+      <div class="space-y-2.5">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white flex items-center space-x-1.5">
+            <span>Choose Size / Portion</span>
+            <span class="text-[10px] text-amber-600 dark:text-amber-400 font-bold bg-amber-50 dark:bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-200/60 dark:border-amber-800/40">Required</span>
+          </label>
+          <span class="text-[11px] text-stone-400 font-medium">Select 1 option</span>
+        </div>
+
+        <div class="space-y-2">
+          ${dish.variants.map(v => {
+            const isSelected = v.id === selectedVariantId;
+            const isMedium = (v.name || '').toLowerCase().includes('medium') || (v.variantLabel || '').includes('9');
+            return `
+              <div onclick="setCustomizerVariant('${v.id}')"
+                class="flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition select-none ${isSelected ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 ring-1 ring-amber-500 shadow-xs' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-300 dark:hover:border-stone-700'}">
+                <div class="flex items-center space-x-3">
+                  <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${isSelected ? 'border-amber-600 bg-amber-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
+                    ${isSelected ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : ''}
+                  </div>
+                  <div>
+                    <div class="font-black text-xs sm:text-sm text-stone-900 dark:text-white flex items-center space-x-2">
+                      <span>${v.shortCode || v.variantLabel || v.name}</span>
+                      ${isMedium ? '<span class="bg-amber-500 text-stone-950 text-[9px] font-black px-1.5 py-0.5 rounded-md shadow-xs">Most Popular</span>' : ''}
+                    </div>
+                    <div class="text-[11px] text-stone-500 dark:text-stone-400 font-medium">
+                      ${v.shortCode?.includes('7') ? 'Personal Pan (1 Person)' : (v.shortCode?.includes('9') ? 'Standard Medium (Ideal for 2)' : (v.shortCode?.includes('12') ? 'King Feast (3-4 People)' : (v.shortCode || 'Fresh preparation')))}
+                    </div>
+                  </div>
+                </div>
+                <div class="text-right">
+                  <span class="font-black text-sm text-stone-900 dark:text-white">₹${v.price}</span>
+                </div>
+              </div>
+            `;
+          }).join('')}
+        </div>
+      </div>
+    `;
+  }
+
+  // 2. Crust Style & Cheese Burst (If Pizza)
+  if (isPizza) {
+    html += `
+      <div class="space-y-2.5 pt-2 border-t border-stone-100 dark:border-stone-800">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white flex items-center space-x-1.5">
+            <span>Select Crust Style</span>
+            <span class="text-[10px] text-stone-500 dark:text-stone-400 font-semibold bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-md">1 Option</span>
+          </label>
+        </div>
+
+        <div class="space-y-2">
+          <!-- Standard Fresh Hand Tossed -->
+          <div onclick="setCustomizerCrust('standard')"
+            class="flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition select-none ${crust === 'standard' ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 ring-1 ring-amber-500 shadow-xs' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-300 dark:hover:border-stone-700'}">
+            <div class="flex items-center space-x-3">
+              <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${crust === 'standard' ? 'border-amber-600 bg-amber-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
+                ${crust === 'standard' ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : ''}
+              </div>
+              <div>
+                <div class="font-black text-xs sm:text-sm text-stone-900 dark:text-white">Fresh Hand Tossed Crust</div>
+                <div class="text-[11px] text-stone-500 dark:text-stone-400 font-medium">Authentic crispy golden street pizza crust</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="text-xs font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md">Included (₹0)</span>
+            </div>
+          </div>
+
+          <!-- Cheese Burst Upgrade -->
+          <div onclick="setCustomizerCrust('cheese_burst')"
+            class="flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition select-none ${crust === 'cheese_burst' ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 ring-1 ring-amber-500 shadow-xs' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-300 dark:hover:border-stone-700'}">
+            <div class="flex items-center space-x-3">
+              <div class="w-5 h-5 rounded-full border-2 flex items-center justify-center transition ${crust === 'cheese_burst' ? 'border-amber-600 bg-amber-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
+                ${crust === 'cheese_burst' ? '<div class="w-2 h-2 rounded-full bg-white"></div>' : ''}
+              </div>
+              <div>
+                <div class="font-black text-xs sm:text-sm text-stone-900 dark:text-white flex items-center space-x-1.5">
+                  <span>Cheese Burst Crust</span>
+                  <span class="bg-amber-500/20 text-amber-700 dark:text-amber-300 text-[10px] font-bold px-1.5 py-0.2 rounded">Bestseller</span>
+                </div>
+                <div class="text-[11px] text-stone-500 dark:text-stone-400 font-medium">Molten mozzarella stuffed inside crust edge</div>
+              </div>
+            </div>
+            <div class="text-right">
+              <span class="font-black text-xs sm:text-sm text-amber-600 dark:text-amber-400">+₹${addonPricing.cheeseBurstPrice}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 3. Cheese Add-on -->
+      <div class="space-y-2.5 pt-2 border-t border-stone-100 dark:border-stone-800">
+        <div class="flex items-center justify-between">
+          <label class="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white flex items-center space-x-1.5">
+            <span>Extra Cheese Topping</span>
+            <span class="text-[10px] text-stone-500 dark:text-stone-400 font-semibold bg-stone-100 dark:bg-stone-800 px-2 py-0.5 rounded-md">Optional</span>
+          </label>
+        </div>
+
+        <div onclick="toggleCustomizerExtraCheese()"
+          class="flex items-center justify-between p-3.5 rounded-2xl border cursor-pointer transition select-none ${extraCheese ? 'border-amber-500 bg-amber-50/70 dark:bg-amber-950/40 ring-1 ring-amber-500 shadow-xs' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-300 dark:hover:border-stone-700'}">
+          <div class="flex items-center space-x-3">
+            <div class="w-5 h-5 rounded-lg border-2 flex items-center justify-center transition ${extraCheese ? 'border-amber-600 bg-amber-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
+              ${extraCheese ? '<i class="fa-solid fa-check text-[10px]"></i>' : ''}
+            </div>
+            <div>
+              <div class="font-black text-xs sm:text-sm text-stone-900 dark:text-white">Extra Double Cheese</div>
+              <div class="text-[11px] text-stone-500 dark:text-stone-400 font-medium">Generous top layer of 100% pure melted mozzarella</div>
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="font-black text-xs sm:text-sm text-amber-600 dark:text-amber-400">+₹${addonPricing.extraCheesePrice}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  }
+
+  // 4. Street Seasonings & Sprinkles (Complimentary • Free)
+  html += `
+    <div id="customizerSeasoningsContainer" class="space-y-2.5 pt-2 border-t border-stone-100 dark:border-stone-800">
+      <!-- Rendered by renderCustomizerSeasoningsSection() -->
+    </div>
+  `;
+
+  // 5. Chef Cooking Note
+  html += `
+    <div class="space-y-1.5 pt-2 border-t border-stone-100 dark:border-stone-800">
+      <label class="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white">Special Cooking Instructions</label>
+      <input type="text" id="customizerCookingNote" placeholder="e.g. Make it extra crispy, spicy seasoning, well-done..."
+        value="${STATE.customizerState.cookingNote || ''}"
+        oninput="if(STATE.customizerState) STATE.customizerState.cookingNote = this.value"
+        class="w-full bg-stone-50 dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl px-3 py-2 text-xs text-stone-900 dark:text-stone-100 placeholder-stone-400 focus:outline-none focus:ring-1 focus:ring-amber-500">
+    </div>
+  `;
+
+  container.innerHTML = html;
+
+  renderCustomizerSeasoningsSection();
+  updateCustomizerTotals();
+}
+
+function renderCustomizerSeasoningsSection() {
+  const container = document.getElementById('customizerSeasoningsContainer');
+  if (!container || !STATE.customizerState) return;
+
+  const seasoningsList = [
+    { id: 'Oregano & Chilli Flakes', label: '🌿 Oregano & Red Chilli Flakes', desc: 'Classic Italian street herbs & heat' },
+    { id: 'Special Desi Street Masala', label: '🌶️ Special Desi Street Masala', desc: 'Chatpata roasted Indian street masala' },
+    { id: 'Spicy Peri-Peri Seasoning', label: '🧂 Spicy Peri-Peri Dust', desc: 'Zesty tangy spice sprinkle' },
+    { id: 'Extra Green Chillies & Herbs', label: '🫑 Extra Green Chillies & Herbs', desc: 'Fresh cut green chillies & coriander' }
+  ];
+
+  container.innerHTML = `
+    <div class="flex items-center justify-between">
+      <label class="text-xs font-black uppercase tracking-wider text-stone-900 dark:text-white flex items-center space-x-1.5">
+        <span>Street Seasonings & Herbs</span>
+        <span class="text-[10px] text-emerald-600 dark:text-emerald-400 font-bold bg-emerald-50 dark:bg-emerald-950/60 px-2 py-0.5 rounded-md">Complimentary</span>
+      </label>
+      <span class="text-[11px] text-stone-400 font-medium">Free</span>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+      ${seasoningsList.map(s => {
+        const isChecked = STATE.customizerState.seasonings.has(s.id);
+        return `
+          <div onclick="toggleCustomizerSeasoning('${s.id}')"
+            class="flex items-center justify-between p-2.5 rounded-xl border cursor-pointer transition select-none ${isChecked ? 'border-emerald-500 bg-emerald-50/60 dark:bg-emerald-950/30' : 'border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-emerald-300 dark:hover:border-stone-700'}">
+            <div class="flex items-center space-x-2.5 min-w-0">
+              <div class="w-4 h-4 rounded-md border flex items-center justify-center shrink-0 transition ${isChecked ? 'border-emerald-600 bg-emerald-600 text-white' : 'border-stone-300 dark:border-stone-600'}">
+                ${isChecked ? '<i class="fa-solid fa-check text-[9px]"></i>' : ''}
+              </div>
+              <div class="min-w-0">
+                <div class="font-bold text-[11px] text-stone-900 dark:text-white truncate">${s.label}</div>
+                <div class="text-[10px] text-stone-400 truncate">${s.desc}</div>
+              </div>
+            </div>
+            <span class="text-[10px] font-bold text-emerald-600 dark:text-emerald-400 shrink-0 ml-1">Free</span>
+          </div>
+        `;
+      }).join('')}
+    </div>
+  `;
+}
+
+function updateCustomizerTotals() {
+  if (!STATE.customizerState) return;
+  const { dish, selectedVariantId, crust, extraCheese, qty } = STATE.customizerState;
+
+  const currentVariant = (dish.variants && dish.variants.find(v => v.id === selectedVariantId)) || (dish.variants && dish.variants[0]) || dish;
+  const isPizza = (dish.category && dish.category.toLowerCase().includes('pizza')) || (dish.name && dish.name.toLowerCase().includes('pizza'));
+  const addonPricing = getAddonPricingForSize(currentVariant);
+
+  const basePrice = Number(currentVariant.price) || 0;
+  const burstPrice = (isPizza && crust === 'cheese_burst') ? addonPricing.cheeseBurstPrice : 0;
+  const cheesePrice = (isPizza && extraCheese) ? addonPricing.extraCheesePrice : 0;
+
+  const unitTotal = basePrice + burstPrice + cheesePrice;
+  const grandTotal = unitTotal * qty;
+
+  const qtyEl = document.getElementById('customizerQty');
+  const priceEl = document.getElementById('customizerTotalPrice');
+
+  if (qtyEl) qtyEl.innerText = qty;
+  if (priceEl) priceEl.innerText = `₹${grandTotal}`;
 }
 
 function confirmCustomizationAndAdd() {
-  if (STATE.customizerItem) {
-    addItemToCart(STATE.customizerItem, { ...STATE.customizerSelections });
+  if (!STATE.customizerState) {
+    closeCustomizerModal();
+    return;
   }
+
+  const { dish, selectedVariantId, crust, extraCheese, seasonings, cookingNote, qty } = STATE.customizerState;
+  const currentMenu = STATE.currentMenu || [];
+  const variantItem = currentMenu.find(i => i.id === selectedVariantId) || dish;
+
+  // Verify stall match
+  if (STATE.cart.stallId && STATE.cart.stallId !== STATE.currentStall.id) {
+    if (!confirm(`Your cart contains items from another stall. Clear cart and add from ${STATE.currentStall.name}?`)) {
+      closeCustomizerModal();
+      return;
+    }
+    STATE.cart.items = [];
+  }
+
+  STATE.cart.stallId = STATE.currentStall.id;
+  STATE.cart.stallName = STATE.currentStall.name;
+
+  const addonPricing = getAddonPricingForSize(variantItem);
+  const isPizza = (dish.category && dish.category.toLowerCase().includes('pizza')) || (dish.name && dish.name.toLowerCase().includes('pizza'));
+
+  const customsDesc = {};
+  if (variantItem.variantLabel || variantItem.shortCode) {
+    customsDesc['Size'] = variantItem.shortCode || variantItem.variantLabel;
+  }
+  if (isPizza) {
+    customsDesc['Crust'] = crust === 'cheese_burst' ? 'Cheese Burst (+₹' + addonPricing.cheeseBurstPrice + ')' : 'Fresh Hand Tossed';
+    if (extraCheese) {
+      customsDesc['Extra Cheese'] = 'Double Cheese (+₹' + addonPricing.extraCheesePrice + ')';
+    }
+  }
+  if (seasonings.size > 0) {
+    customsDesc['Seasoning'] = Array.from(seasonings).join(', ');
+  }
+  if (cookingNote && cookingNote.trim()) {
+    customsDesc['Note'] = cookingNote.trim();
+  }
+
+  // 1. Add primary dish variant
+  addItemToCart(variantItem, customsDesc, qty, true);
+
+  // 2. If Cheese Burst was selected, add the server-catalog Cheese Burst item
+  if (isPizza && crust === 'cheese_burst') {
+    const burstItem = currentMenu.find(i => i.id === addonPricing.cheeseBurstItemId) || {
+      id: addonPricing.cheeseBurstItemId,
+      name: `Cheese Burst Crust (${addonPricing.sizeLabel})`,
+      price: addonPricing.cheeseBurstPrice
+    };
+    addItemToCart(burstItem, { for: variantItem.name }, qty, true);
+  }
+
+  // 3. If Extra Double Cheese was selected, add the server-catalog Extra Cheese item
+  if (isPizza && extraCheese) {
+    const cheeseItem = currentMenu.find(i => i.id === addonPricing.extraCheeseItemId) || {
+      id: addonPricing.extraCheeseItemId,
+      name: `Extra Double Cheese (${addonPricing.sizeLabel})`,
+      price: addonPricing.extraCheesePrice
+    };
+    addItemToCart(cheeseItem, { for: variantItem.name }, qty, true);
+  }
+
   closeCustomizerModal();
+  renderMenuItems(STATE.currentMenu);
+  updateCartFloatingBar();
+  showToast(`🍕 Added ${qty}x ${dish.name} (${variantItem.shortCode || variantItem.variantLabel || 'Custom'}) to cart!`);
 }
 
 // ==========================================================
 // 7. CART ENGINE & CHECKOUT
 // ==========================================================
-function addItemToCart(item, customs) {
+function addItemToCart(item, customs, qtyToAdd = 1, silent = false) {
   // Reset cart if adding from another stall
   if (STATE.cart.stallId && STATE.cart.stallId !== STATE.currentStall.id) {
     if (!confirm(`Your cart contains items from another stall. Clear cart and add from ${STATE.currentStall.name}?`)) {
@@ -2364,22 +2801,25 @@ function addItemToCart(item, customs) {
   STATE.cart.stallId = STATE.currentStall.id;
   STATE.cart.stallName = STATE.currentStall.name;
 
-  const existing = STATE.cart.items.find(i => i.item_id === item.id);
+  const existing = STATE.cart.items.find(i => (i.id === item.id || i.item_id === item.id) && JSON.stringify(i.customs || {}) === JSON.stringify(customs || {}));
   if (existing) {
-    existing.qty += 1;
+    existing.qty += qtyToAdd;
   } else {
     STATE.cart.items.push({
+      id: item.id,
       item_id: item.id,
       name: item.name,
-      price: item.price,
-      qty: 1,
-      customs: customs
+      price: Number(item.price) || 0,
+      qty: qtyToAdd,
+      customs: customs || {}
     });
   }
 
-  renderMenuItems(STATE.currentMenu);
-  updateCartFloatingBar();
-  showToast(`Added ${item.name} to cart`);
+  if (!silent) {
+    renderMenuItems(STATE.currentMenu);
+    updateCartFloatingBar();
+    showToast(`Added ${item.name} to cart`);
+  }
 }
 
 function incrementCartItem(itemId) {

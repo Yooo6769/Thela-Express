@@ -19,7 +19,7 @@ function calculateOrderPricing({
     
     // Look up item in stall's authoritative menu catalog
     const catalogItem = stallMenuItems.find(
-      m => m.id === rawItem.id || (m.name && rawItem.name && m.name.toLowerCase() === rawItem.name.toLowerCase())
+      m => m.id === rawItem.id || m.id === rawItem.item_id || (m.name && rawItem.name && m.name.toLowerCase() === rawItem.name.toLowerCase())
     );
 
     let authoritativePrice = 0;
