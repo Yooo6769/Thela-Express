@@ -7,7 +7,9 @@ function calculateOrderPricing({
   items = [],
   clientTip = 0,
   couponCode = null,
-  platformSettings = {}
+  platformSettings = {},
+  customerDistanceKm = null,
+  isVip = false
 } = {}) {
   if (!items || !Array.isArray(items) || items.length === 0) {
     throw new Error('Order must contain at least one valid item.');
@@ -56,9 +58,35 @@ function calculateOrderPricing({
     ? Number(platformSettings.packagingFeeDefault) 
     : 10;
 
-  const deliveryFee = platformSettings.deliveryFeeDefault !== undefined 
-    ? Number(platformSettings.deliveryFeeDefault) 
-    : 0;
+  // Delivery Fee Rule (Maximum delivery limit 25 km):
+  // VIP: Up to 7 km FREE (0), > 7 km chargeable (₹30 base + ₹5/extra km)
+  // Non-VIP: ALL delivery is chargeable (₹30 for <= 7 km, + ₹5/extra km for > 7 km)
+  let deliveryFee = 0;
+  if (customerDistanceKm !== null && customerDistanceKm !== undefined && !isNaN(Number(customerDistanceKm))) {
+    const dist = Math.max(0, Number(customerDistanceKm));
+    if (dist > 25.0) {
+      throw new Error(`Delivery address is outside delivery boundary (maximum 25 km). Your location is ${dist.toFixed(1)} km away.`);
+    }
+    if (isVip) {
+      if (dist <= 7.0) {
+        deliveryFee = 0;
+      } else {
+        const extraKm = Math.ceil(dist - 7.0);
+        deliveryFee = 30 + (extraKm * 5);
+      }
+    } else {
+      if (dist <= 7.0) {
+        deliveryFee = 30;
+      } else {
+        const extraKm = Math.ceil(dist - 7.0);
+        deliveryFee = 30 + (extraKm * 5);
+      }
+    }
+  } else {
+    deliveryFee = platformSettings.deliveryFeeDefault !== undefined 
+      ? Number(platformSettings.deliveryFeeDefault) 
+      : 0;
+  }
 
   // 3. Tip Validation (100% pass-through to rider, 0% platform commission, integer >= 0)
   const tip = Math.max(0, Math.floor(Number(clientTip) || 0));
@@ -149,6 +177,29 @@ function calculateOrderPricing({
   };
 }
 
+function calculateDeliveryFee({ distanceKm = 0, isVip = false } = {}) {
+  const dist = Math.max(0, Number(distanceKm) || 0);
+  if (dist > 25.0) {
+    return { deliverable: false, fee: null, isFree: false, reason: 'Exceeds 25 km delivery limit' };
+  }
+  if (isVip) {
+    if (dist <= 7.0) {
+      return { deliverable: true, fee: 0, isFree: true, tier: 'VIP_FREE' };
+    } else {
+      const extraKm = Math.ceil(dist - 7.0);
+      return { deliverable: true, fee: 30 + (extraKm * 5), isFree: false, tier: 'VIP_CHARGEABLE' };
+    }
+  } else {
+    if (dist <= 7.0) {
+      return { deliverable: true, fee: 30, isFree: false, tier: 'STANDARD_CHARGEABLE' };
+    } else {
+      const extraKm = Math.ceil(dist - 7.0);
+      return { deliverable: true, fee: 30 + (extraKm * 5), isFree: false, tier: 'STANDARD_CHARGEABLE' };
+    }
+  }
+}
+
 module.exports = {
-  calculateOrderPricing
+  calculateOrderPricing,
+  calculateDeliveryFee
 };

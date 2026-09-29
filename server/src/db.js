@@ -198,6 +198,10 @@ class Database {
     return this.data.users.find(u => u.phone === cleanPhone);
   }
 
+  getUserByPhone(phone) {
+    return this.findUserByPhone(phone);
+  }
+
   createUser(userData) {
     const cleanPhone = (userData.phone || '').replace(/\D/g, '').slice(-10);
     const user = {
@@ -656,24 +660,46 @@ class Database {
 
     return list.map(s => {
       const formatted = this.formatStallForPublic(s);
-      const standardRadius = s.delivery_radius_km || 10.0;
-      const vipRadius = s.vip_delivery_radius_km || 20.0;
-      const maxRadius = isVip ? vipRadius : standardRadius;
-      formatted.delivery_radius_km = standardRadius;
-      formatted.vip_delivery_radius_km = vipRadius;
+      const maxRadius = 25.0;
+      formatted.delivery_radius_km = maxRadius;
+      formatted.vip_delivery_radius_km = maxRadius;
       if (hasCustLoc && formatted.lat && formatted.lng && !isNaN(formatted.lat) && !isNaN(formatted.lng)) {
         const geoKm = this.computeGeographicDistanceKm(cLat, cLng, formatted.lat, formatted.lng);
         formatted.distance = `${geoKm.toFixed(1)} km`;
         formatted.distanceKm = geoKm;
         formatted.isDeliverable = geoKm <= maxRadius;
-        formatted.isDeliverableStandard = geoKm <= standardRadius;
-        formatted.isDeliverableVip = geoKm <= vipRadius;
+        formatted.isDeliverableStandard = geoKm <= maxRadius;
+        formatted.isDeliverableVip = geoKm <= maxRadius;
+
+        // Delivery fee calculation
+        let deliveryFee = 0;
+        let isFreeDelivery = false;
+        if (isVip) {
+          if (geoKm <= 7.0) {
+            deliveryFee = 0;
+            isFreeDelivery = true;
+          } else {
+            const extraKm = Math.ceil(geoKm - 7.0);
+            deliveryFee = 30 + (extraKm * 5);
+          }
+        } else {
+          if (geoKm <= 7.0) {
+            deliveryFee = 30;
+          } else {
+            const extraKm = Math.ceil(geoKm - 7.0);
+            deliveryFee = 30 + (extraKm * 5);
+          }
+        }
+        formatted.delivery_fee = deliveryFee;
+        formatted.is_free_delivery = isFreeDelivery;
       } else {
         formatted.distance = null;
         formatted.distanceKm = null;
         formatted.isDeliverable = false;
         formatted.isDeliverableStandard = false;
         formatted.isDeliverableVip = false;
+        formatted.delivery_fee = null;
+        formatted.is_free_delivery = false;
       }
       return formatted;
     });
@@ -808,6 +834,8 @@ class Database {
 
     const now = new Date().toISOString();
     const cleanCustomerPhone = (orderData.customer_phone || '').replace(/\D/g, '').slice(-10);
+    const customer = cleanCustomerPhone ? this.getUserByPhone(cleanCustomerPhone) : null;
+    const isVip = orderData.is_vip !== undefined ? !!orderData.is_vip : !!(customer && customer.goldMember);
 
     // 1. Authoritative Pricing & Allocation Engine
     const stall = this.getStallById(orderData.stall_id);
@@ -818,7 +846,9 @@ class Database {
       items: orderData.items || [],
       clientTip: orderData.tip,
       couponCode: orderData.coupon_code || orderData.couponCode,
-      platformSettings: this.data.settings || {}
+      platformSettings: this.data.settings || {},
+      customerDistanceKm: orderData.distance_km !== undefined ? orderData.distance_km : null,
+      isVip
     });
 
     // In isolated unit tests where an explicit grand_total is set directly on db.createOrder

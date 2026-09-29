@@ -1516,9 +1516,12 @@
             <span data-i18n="item_total">Item Total</span>
             <span id="billSubtotal" class="font-bold text-gray-900">₹0</span>
           </div>
-          <div class="flex justify-between">
-            <span data-i18n="delivery_fee">Delivery Fee</span>
-            <span class="text-green-600 font-bold">FREE</span>
+          <div class="flex justify-between items-center">
+            <div class="flex items-center space-x-1.5">
+              <span data-i18n="delivery_fee">Delivery Fee</span>
+              <span id="billDeliveryBadge" class="text-[10px] font-bold px-1.5 py-0.2 rounded hidden"></span>
+            </div>
+            <span id="billDeliveryFee" class="font-bold text-gray-900">₹30</span>
           </div>
           <div class="flex justify-between">
             <span data-i18n="platform_fee">Food-grade Packaging Fee</span>
@@ -1913,7 +1916,7 @@
             <span>App version</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="text-amber-600 dark:text-amber-400 font-mono font-bold">v2.2.2</span>
+            <span class="text-amber-600 dark:text-amber-400 font-mono font-bold">v2.3.8</span>
             <i class="fa-solid fa-chevron-right text-[10px] text-stone-500"></i>
           </div>
         </div>
@@ -2090,7 +2093,7 @@
           </div>
           <div>
             <h2 class="font-extrabold text-base text-stone-900 dark:text-white">Delivery Location & Address</h2>
-            <p class="text-xs text-stone-500 dark:text-stone-400">Delivery up to 10 km (Up to 20 km for VIP members)</p>
+            <p class="text-xs text-stone-500 dark:text-stone-400">Delivery up to 25 km • Free delivery up to 7 km for VIP members</p>
           </div>
         </div>
         <button onclick="closeAddressDrawer()" class="w-8 h-8 rounded-full bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 text-stone-500 dark:text-stone-300 flex items-center justify-center hover:bg-stone-100 dark:hover:bg-stone-700">
@@ -2100,86 +2103,22 @@
 
       <!-- Address Content -->
       <div class="flex-1 overflow-y-auto p-4 space-y-4">
-        <!-- Quick Select Delivery Area Presets -->
-        <div class="bg-amber-50/50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 rounded-2xl p-3.5 space-y-2.5">
-          <div class="flex items-center justify-between">
-            <div class="flex items-center space-x-1.5">
-              <i class="fa-solid fa-map-location-dot text-amber-600 text-xs"></i>
-              <span class="text-xs font-black text-stone-900 dark:text-white uppercase tracking-wider">Quick Select Area</span>
+        <!-- Live GPS Location Action -->
+        <div class="p-3.5 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-300/80 dark:border-amber-700/50 flex items-center justify-between shadow-xs">
+          <div class="flex items-center space-x-3">
+            <div class="w-9 h-9 rounded-xl bg-amber-500 text-stone-950 flex items-center justify-center font-bold text-sm shadow-xs shrink-0">
+              <i class="fa-solid fa-location-crosshairs text-base"></i>
             </div>
-            <button type="button" onclick="captureCustomerGps()" class="text-[11px] font-bold text-amber-700 dark:text-amber-400 hover:underline flex items-center space-x-1">
-              <i class="fa-solid fa-location-crosshairs"></i>
-              <span id="gpsDetectLabel">Use Live GPS</span>
-            </button>
+            <div>
+              <div class="font-extrabold text-xs text-stone-900 dark:text-white flex items-center space-x-1.5">
+                <span>Use Current Location via GPS</span>
+              </div>
+              <p class="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5" id="gpsDetectSubLabel">Auto-detect your location within 25 km delivery range</p>
+            </div>
           </div>
-          <p class="text-[11px] text-stone-600 dark:text-stone-400">Tap your neighborhood to instantly verify delivery distance:</p>
-          <div class="grid grid-cols-1 gap-2 pt-1" id="quickDeliveryAreasList">
-            <button type="button" onclick="setPredefinedLocation('mukherjee_nagar')" class="w-full text-left p-2.5 rounded-xl border border-amber-300 dark:border-amber-700/60 bg-white dark:bg-stone-900 hover:border-amber-500 transition flex items-center justify-between">
-              <div>
-                <div class="font-extrabold text-xs text-stone-900 dark:text-white flex items-center space-x-1.5">
-                  <span>📍 Mukherjee Nagar</span>
-                  <span class="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-black px-1.5 py-0.2 rounded">IN RANGE • ~0.1 km</span>
-                </div>
-                <div class="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5">Near GTB Nagar Metro Station, Delhi - 110009</div>
-              </div>
-              <i class="fa-solid fa-chevron-right text-stone-400 text-xs shrink-0 ml-2"></i>
-            </button>
-
-            <button type="button" onclick="setPredefinedLocation('gtb_nagar')" class="w-full text-left p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-400 transition flex items-center justify-between">
-              <div>
-                <div class="font-extrabold text-xs text-stone-900 dark:text-white flex items-center space-x-1.5">
-                  <span>📍 GTB Nagar / Hudson Lane</span>
-                  <span class="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-black px-1.5 py-0.2 rounded">IN RANGE • ~1.1 km</span>
-                </div>
-                <div class="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5">North Campus, Delhi - 110009</div>
-              </div>
-              <i class="fa-solid fa-chevron-right text-stone-400 text-xs shrink-0 ml-2"></i>
-            </button>
-
-            <button type="button" onclick="setPredefinedLocation('model_town')" class="w-full text-left p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-400 transition flex items-center justify-between">
-              <div>
-                <div class="font-extrabold text-xs text-stone-900 dark:text-white flex items-center space-x-1.5">
-                  <span>📍 Model Town</span>
-                  <span class="bg-emerald-100 dark:bg-emerald-950 text-emerald-800 dark:text-emerald-300 text-[9px] font-black px-1.5 py-0.2 rounded">IN RANGE • ~1.8 km</span>
-                </div>
-                <div class="text-[10px] text-stone-500 dark:text-stone-400 mt-0.5">Model Town II, Delhi - 110009</div>
-              </div>
-              <i class="fa-solid fa-chevron-right text-stone-400 text-xs shrink-0 ml-2"></i>
-            </button>
-
-            <button type="button" onclick="setPredefinedLocation('connaught_place')" class="w-full text-left p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-400 transition flex items-center justify-between">
-              <div>
-                <div class="font-bold text-xs text-stone-800 dark:text-stone-200 flex items-center space-x-1.5">
-                  <span>📍 Connaught Place (CP)</span>
-                  <span class="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[9px] font-black px-1.5 py-0.2 rounded">VIP 20KM RANGE • ~10.6 km</span>
-                </div>
-                <div class="text-[10px] text-stone-400 mt-0.5">Inner Circle, Central Delhi - 110001</div>
-              </div>
-              <i class="fa-solid fa-crown text-amber-500 text-xs shrink-0 ml-2"></i>
-            </button>
-
-            <button type="button" onclick="setPredefinedLocation('noida_sec18')" class="w-full text-left p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-amber-400 transition flex items-center justify-between">
-              <div>
-                <div class="font-bold text-xs text-stone-800 dark:text-stone-200 flex items-center space-x-1.5">
-                  <span>📍 Noida Sector 18</span>
-                  <span class="bg-amber-100 dark:bg-amber-950 text-amber-800 dark:text-amber-300 text-[9px] font-black px-1.5 py-0.2 rounded">VIP 20KM RANGE • ~19 km</span>
-                </div>
-                <div class="text-[10px] text-stone-400 mt-0.5">Atta Market, Sector 18, Noida - 201301</div>
-              </div>
-              <i class="fa-solid fa-crown text-amber-500 text-xs shrink-0 ml-2"></i>
-            </button>
-
-            <button type="button" onclick="setPredefinedLocation('ghaziabad')" class="w-full text-left p-2.5 rounded-xl border border-stone-200 dark:border-stone-800 bg-white dark:bg-stone-900 hover:border-stone-400 transition flex items-center justify-between opacity-80">
-              <div>
-                <div class="font-bold text-xs text-stone-700 dark:text-stone-300 flex items-center space-x-1.5">
-                  <span>📍 Ghaziabad (RDC)</span>
-                  <span class="bg-stone-200 dark:bg-stone-800 text-stone-600 dark:text-stone-400 text-[9px] font-bold px-1.5 py-0.2 rounded">OUT OF RANGE • ~26 km</span>
-                </div>
-                <div class="text-[10px] text-stone-400 mt-0.5">Raj Nagar, Ghaziabad - 201001 (Exceeds 20 km)</div>
-              </div>
-              <i class="fa-solid fa-ban text-stone-400 text-xs shrink-0 ml-2"></i>
-            </button>
-          </div>
+          <button type="button" onclick="captureCustomerGps()" class="px-3.5 py-1.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-black text-xs transition active:scale-95 flex items-center space-x-1 shrink-0 cursor-pointer shadow-xs">
+            <span id="gpsDetectLabel">Locate Me</span>
+          </button>
         </div>
 
         <!-- Saved Addresses List (if user has any saved) -->

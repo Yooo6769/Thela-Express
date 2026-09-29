@@ -2,8 +2,8 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.3.7`  
-**Current Date**: September 28, 2026  
+**Current Production Version**: `v2.3.8`  
+**Current Date**: September 29, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
 **Local Document Paths**:
@@ -51,6 +51,7 @@ flowchart LR
     v234 --> v235["v2.3.5<br/>Full Screen Modal, Dark Category Bar, Scroll Containment & Swipe Fix"]
     v235 --> v236["v2.3.6<br/>Mukherjee Nagar 110009 Vendor Location & 7km Delivery Radius Gating"]
     v236 --> v237["v2.3.7<br/>10km Standard / 20km VIP Delivery Limits, GTB Nagar Metro Landmark & Clean Zero-Coords UX"]
+    v237 --> v238["v2.3.8<br/>25km Max Delivery Radius, VIP Free <=7km & Chargeable Rules, and Purged Area Suggestions"]
 ```
 
 ---
@@ -852,11 +853,47 @@ flowchart LR
 
 ---
 
+### `v2.3.8` — 25km Maximum Delivery Radius, VIP Free Delivery <=7km & Chargeable Rules, and Complete Area Suggestions Purge
+- **Release Date**: September 29, 2026
+- **Git Commit**: `5b49cd8` (`feat(delivery): 25km max delivery limit, VIP free <=7km & chargeable rules, and purge all area suggestions (v2.3.8)`)
+- **Key Accomplishments**:
+  - **Maximum Delivery Radius Increased to 25.0 km Platform-Wide**:
+    - Expanded delivery radius for Aryan The Pizza and all future stalls to a uniform maximum of **25.0 km**.
+    - Server database (`thela.db.json`), `onboard_aryan_the_pizza.js`, and `db.getStalls` updated with `delivery_radius_km: 25.0` and `vip_delivery_radius_km: 25.0`.
+    - Order route (`server/src/routes/orders.js`) strictly gates order placement: distances $> 25.0$ km are rejected with `OUT_OF_DELIVERY_RANGE`.
+  - **Authoritative Delivery Fee Engine (VIP Free $\le$ 7km, Non-VIP All Chargeable)**:
+    - Implemented dynamic, distance-based delivery fee computation in `server/src/payments/pricing_engine.js` (`calculateOrderPricing` and `calculateDeliveryFee`):
+      - **VIP Customers**:
+        - Distance $\le 7.0$ km: **FREE DELIVERY** (`delivery_fee = 0`, `isFree = true`).
+        - Distance $> 7.0$ km and $\le 25.0$ km: **Chargeable** (`₹30 + (Math.ceil(dist - 7) * 5)`).
+      - **Non-VIP (Standard) Customers**:
+        - **ALL deliveries are chargeable** (no free delivery tier).
+        - Distance $\le 7.0$ km: **₹30** base delivery fee.
+        - Distance $> 7.0$ km and $\le 25.0$ km: **₹30 base + ₹5 per extra km** (`₹30 + (Math.ceil(dist - 7) * 5)`).
+      - Distance $> 25.0$ km: Out of delivery range; order placement and fee calculation rejected.
+    - Preserves full backwards compatibility with flat delivery fee defaults when no customer distance is supplied in testing.
+  - **Complete Purge of Neighborhood Preset Suggestions**:
+    - **Address Drawer Purged**: Completely removed the "QUICK SELECT AREA" card (Mukherjee Nagar, GTB Nagar, Model Town, Connaught Place, Noida Sector 18, Ghaziabad) from `public/index.html`.
+    - **Discovery Empty State Purged**: Removed all "Popular Delhi Delivery Localities" pills and suggestion buttons from `public/app.js`.
+    - Clean GPS and Manual Address UX: Customers now configure delivery solely through genuine GPS geolocation ("Use Current Location via GPS") or manual house/locality entry ("+ Enter Custom Address").
+  - **Fixed Address Book "undefined" Rendering Bug**:
+    - Resolved JavaScript string interpolation bug in `renderSavedAddresses` where GPS-captured addresses with missing sub-properties printed the literal word `undefined`.
+    - Added resilient fallback cascade: `addrDesc = addr.address || addr.landmark || addr.area || ''`.
+  - **Dynamic Cart Bill Breakdown**:
+    - Cart drawer dynamically updates delivery fee badge: shows `FREE` (emerald badge) for eligible VIP orders or `₹XX` with distance context for chargeable orders.
+    - Integrated real-time delivery fee calculation into checkout total before order dispatch.
+  - **Comprehensive Automated Verification**:
+    - Updated Test Suite 10 in `scratch/test_aryan_the_pizza.js` (34 tests) to verify all 6 geo locations (Mukherjee Nagar, GTB Nagar, Connaught Place at 10.6 km, Noida at 19 km, Ghaziabad RDC at 24.4 km in-range, and Far NCR at 28.6 km out-of-range), tests both VIP and Standard fee rules, asserts complete suggestion removal, and confirms zero "undefined" labels.
+    - 100% pass rate across all 96 automated tests in 4 test suites.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `HEAD` | 2026-09-28 | Location & Delivery | 10km standard / 20km VIP delivery limits, GTB Nagar Metro landmark, and clean zero-coords UX (v2.3.7) |
+| `5b49cd8` | 2026-09-29 | Delivery & Pricing | 25km max delivery limit, VIP free <=7km & chargeable rules, and purge all area suggestions (v2.3.8) |
+| `b3a8db0` | 2026-09-28 | Location & Delivery | 10km standard / 20km VIP delivery limits, GTB Nagar Metro landmark, and clean zero-coords UX (v2.3.7) |
 | `010f7ae` | 2026-09-28 | Location & Delivery | Enforce Mukherjee Nagar 110009 vendor location, 7km delivery radius gating, and GPS/address discovery requirement (v2.3.6) |
 | `38fc3be` | 2026-09-28 | Mobile UX & Theme | Full screen stall modal, fix dark theme category bar mismatch, eliminate scroll bleed, and correct carousel swipe direction (v2.3.5) |
 | `b524d4f` | 2026-09-28 | Production | Purge all test/sandbox artifacts, wire real UPI direct payment, and bump to v2.3.4 |
@@ -970,7 +1007,7 @@ stateDiagram-v2
 
 | Test Script File | Primary Verification Objective | Number of Tests | Status |
 | :--- | :--- | :---: | :---: |
-| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, GTB Nagar Metro landmark, 10km standard / 20km VIP radius gating, full screen modal, dark theme category pills, reactive customizer sheet, checkout login gate, zero-coords UX, and direct UPI payment | 33 tests | ✅ Passed |
+| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, GTB Nagar Metro landmark, 25km maximum delivery radius gating, VIP free delivery <=7km & chargeable tiers, full screen modal, dark theme category pills, reactive customizer sheet, checkout login gate, zero-coords UX, complete suggestion purge, and direct UPI payment | 34 tests | ✅ Passed |
 | [`test_street_food_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_street_food_ux.js) | Authentic street food UX, real food photo carousel, swipe/touch accessibility, theme dark hover protection, zero 1971 fake count, visual veg toggle, buyable VIP, dynamic coupons & adaptive modals | 21 tests | ✅ Passed |
 | [`test_zomato_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_zomato_ux.js) | Zomato-inspired dynamic customer app experience, hero carousel, circular stories, quick filters, bottom dock, VIP Gold profile & wallet engine | 12 tests | ✅ Passed |
 | [`test_store_status_contradiction.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_store_status_contradiction.js) | Server-authoritative store status derivation, anti-bypass invariants, hoisting audit, zero 1.5 km copy | 7 suites | ✅ Passed |

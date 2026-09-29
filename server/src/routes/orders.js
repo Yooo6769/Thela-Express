@@ -58,21 +58,21 @@ router.post('/', (req, res) => {
     return res.status(400).json({ error: `Cannot place order: ${acceptanceCheck.reason}` });
   }
 
-  // Authoritative Delivery Radius Gate: Delivery address must be within stall radius (10 km standard, 20 km for VIP members)
+  // Authoritative Delivery Radius Gate: Maximum delivery limit is strictly 25 km
   const custLat = parseFloat(req.body.delivery_lat || req.body.customer_lat);
   const custLng = parseFloat(req.body.delivery_lng || req.body.customer_lng);
+  const customer = customer_phone ? db.getUserByPhone(customer_phone) : null;
+  const isVip = !!((req.auth && req.auth.user && req.auth.user.goldMember) || (customer && customer.goldMember));
+  let orderDistKm = null;
+  const maxRadius = 25.0;
+
   if (!isNaN(custLat) && !isNaN(custLng) && stall.lat && stall.lng) {
-    const dist = db.computeGeographicDistanceKm(custLat, custLng, stall.lat, stall.lng);
-    const customer = customer_phone ? db.getUserByPhone(customer_phone) : null;
-    const isVip = !!(customer && customer.goldMember);
-    const maxRadius = isVip ? (stall.vip_delivery_radius_km || 20.0) : (stall.delivery_radius_km || 10.0);
-    if (dist > maxRadius) {
+    orderDistKm = db.computeGeographicDistanceKm(custLat, custLng, stall.lat, stall.lng);
+    if (orderDistKm > maxRadius) {
       return res.status(400).json({
-        error: isVip
-          ? `Delivery address is outside the vendor's VIP delivery zone (${maxRadius} km from GTB Nagar). Your location is ${dist.toFixed(1)} km away.`
-          : `Delivery address is outside the vendor's standard delivery zone (10 km). ${stall.name} delivers within 10 km (or up to 20 km for VIP members). Your location is ${dist.toFixed(1)} km away.`,
+        error: `Delivery address is outside the vendor's delivery zone. ${stall.name} delivers up to ${maxRadius} km from GTB Nagar (Your location is ${orderDistKm.toFixed(1)} km away).`,
         code: 'OUT_OF_DELIVERY_RANGE',
-        distanceKm: dist,
+        distanceKm: orderDistKm,
         maxRadiusKm: maxRadius,
         isVip
       });
@@ -88,7 +88,9 @@ router.post('/', (req, res) => {
       items,
       clientTip: tip,
       couponCode: coupon_code || couponCode,
-      platformSettings: db.data.settings || {}
+      platformSettings: db.data.settings || {},
+      customerDistanceKm: orderDistKm,
+      isVip
     });
   } catch (err) {
     const isOutOfStock = err.message && (err.message.includes('unavailable') || err.message.includes('sold out'));
@@ -115,6 +117,8 @@ router.post('/', (req, res) => {
     delivery_address: delivery_address || '',
     delivery_instruction: delivery_instruction || 'Leave at Door',
     payment_method: payment_method || 'UPI',
+    distance_km: orderDistKm,
+    is_vip: isVip,
     ...(process.env.NODE_ENV === 'test' && testOtp ? { testOtp } : {})
   });
 
