@@ -1916,7 +1916,7 @@
             <span>App version</span>
           </div>
           <div class="flex items-center space-x-1.5">
-            <span class="text-amber-600 dark:text-amber-400 font-mono font-bold">v2.3.8</span>
+            <span class="text-amber-600 dark:text-amber-400 font-mono font-bold">v2.3.9</span>
             <i class="fa-solid fa-chevron-right text-[10px] text-stone-500"></i>
           </div>
         </div>
@@ -2129,56 +2129,76 @@
           </div>
         </div>
 
-        <!-- Add New Custom Address Form -->
-        <div class="bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 rounded-2xl p-4 space-y-3">
-          <div class="flex items-center justify-between">
-            <h3 class="text-xs font-black text-stone-900 dark:text-white uppercase tracking-wider">+ Enter Custom Address</h3>
+        <!-- Add New Custom Address Form / Login Required Container -->
+        <div id="customAddressSection" class="bg-stone-50 dark:bg-stone-800/50 border border-stone-200 dark:border-stone-700 rounded-2xl p-4 space-y-3">
+          <!-- Shown when NOT logged in -->
+          <div id="addressLoginRequiredPrompt" class="text-center py-2 space-y-2.5">
+            <div class="w-10 h-10 mx-auto rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-base shadow-xs">
+              <i class="fa-solid fa-lock"></i>
+            </div>
+            <div class="space-y-1">
+              <h4 class="font-black text-xs text-stone-900 dark:text-stone-100 uppercase tracking-wider">Log In to Add Delivery Address</h4>
+              <p class="text-[11px] text-stone-500 dark:text-stone-400 leading-relaxed">
+                Please log in with your phone number to save and manage delivery addresses.
+              </p>
+            </div>
+            <button type="button" onclick="closeAddressDrawer(); openAuthModal();" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl py-2.5 font-black text-xs transition shadow-md cursor-pointer flex items-center justify-center space-x-2">
+              <i class="fa-solid fa-arrow-right-to-bracket"></i>
+              <span>Log In / Sign Up</span>
+            </button>
           </div>
 
-          <form id="newAddressForm" onsubmit="handleSaveAddress(event)" class="space-y-2.5 text-xs">
-            <!-- Tag Selector Pills -->
-            <div class="space-y-1">
-              <label class="font-bold text-stone-700 dark:text-stone-300">Save As</label>
-              <div class="flex items-center space-x-2" id="newAddrTagGroup">
-                <button type="button" onclick="setNewAddrTag('Home')" id="tagBtnHome" class="tag-pill px-3 py-1.5 rounded-xl border border-amber-600 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold flex items-center space-x-1">
-                  <i class="fa-solid fa-house"></i><span>Home</span>
-                </button>
-                <button type="button" onclick="setNewAddrTag('Work')" id="tagBtnWork" class="tag-pill px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-bold flex items-center space-x-1">
-                  <i class="fa-solid fa-briefcase"></i><span>Work</span>
-                </button>
-                <button type="button" onclick="setNewAddrTag('Other')" id="tagBtnOther" class="tag-pill px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-bold flex items-center space-x-1">
-                  <i class="fa-solid fa-location-dot"></i><span>Other</span>
-                </button>
+          <!-- Shown when LOGGED IN -->
+          <div id="customAddressFormSection" class="hidden space-y-3">
+            <div class="flex items-center justify-between">
+              <h3 class="text-xs font-black text-stone-900 dark:text-white uppercase tracking-wider">+ Enter Custom Address</h3>
+            </div>
+
+            <form id="newAddressForm" onsubmit="handleSaveAddress(event)" class="space-y-2.5 text-xs">
+              <!-- Tag Selector Pills -->
+              <div class="space-y-1">
+                <label class="font-bold text-stone-700 dark:text-stone-300">Save As</label>
+                <div class="flex items-center space-x-2" id="newAddrTagGroup">
+                  <button type="button" onclick="setNewAddrTag('Home')" id="tagBtnHome" class="tag-pill px-3 py-1.5 rounded-xl border border-amber-600 bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-bold flex items-center space-x-1">
+                    <i class="fa-solid fa-house"></i><span>Home</span>
+                  </button>
+                  <button type="button" onclick="setNewAddrTag('Work')" id="tagBtnWork" class="tag-pill px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-bold flex items-center space-x-1">
+                    <i class="fa-solid fa-briefcase"></i><span>Work</span>
+                  </button>
+                  <button type="button" onclick="setNewAddrTag('Other')" id="tagBtnOther" class="tag-pill px-3 py-1.5 rounded-xl border border-stone-200 dark:border-stone-700 bg-white dark:bg-stone-800 text-stone-700 dark:text-stone-300 font-bold flex items-center space-x-1">
+                    <i class="fa-solid fa-location-dot"></i><span>Other</span>
+                  </button>
+                </div>
               </div>
-            </div>
 
-            <div class="space-y-1">
-              <label class="font-bold text-stone-700 dark:text-stone-300">Flat / House No. / Building *</label>
-              <input type="text" id="newAddrHouse" placeholder="e.g. Flat 204, Block B" required
-                class="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
-            </div>
+              <div class="space-y-1">
+                <label class="font-bold text-stone-700 dark:text-stone-300">Flat / House No. / Building *</label>
+                <input type="text" id="newAddrHouse" placeholder="e.g. Flat 204, Block B" required
+                  class="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
+              </div>
 
-            <div class="space-y-1">
-              <label class="font-bold text-stone-700 dark:text-stone-300">Street / Colony / Locality *</label>
-              <input type="text" id="newAddrStreet" placeholder="e.g. Main Market, Mukherjee Nagar" required
-                class="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
-            </div>
+              <div class="space-y-1">
+                <label class="font-bold text-stone-700 dark:text-stone-300">Street / Colony / Locality *</label>
+                <input type="text" id="newAddrStreet" placeholder="e.g. Main Market / Colony Name" required
+                  class="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
+              </div>
 
-            <div class="space-y-1">
-              <label class="font-bold text-stone-700 dark:text-stone-300">Nearby Landmark / Pincode</label>
-              <input type="text" id="newAddrLandmark" placeholder="e.g. Near GTB Nagar Metro Station, 110009"
-                class="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
-            </div>
+              <div class="space-y-1">
+                <label class="font-bold text-stone-700 dark:text-stone-300">Nearby Landmark / Pincode</label>
+                <input type="text" id="newAddrLandmark" placeholder="e.g. Landmark / Metro Station, Pincode"
+                  class="w-full bg-white dark:bg-stone-900 border border-stone-200 dark:border-stone-700 text-stone-900 dark:text-white rounded-xl px-3 py-2 font-semibold focus:outline-none focus:ring-2 focus:ring-amber-500">
+              </div>
 
-            <label class="flex items-center space-x-2 pt-1 cursor-pointer">
-              <input type="checkbox" id="newAddrDefaultToggle" checked class="w-4 h-4 accent-amber-600 rounded">
-              <span class="text-[11px] font-bold text-stone-700 dark:text-stone-300">Set as current delivery address</span>
-            </label>
+              <label class="flex items-center space-x-2 pt-1 cursor-pointer">
+                <input type="checkbox" id="newAddrDefaultToggle" checked class="w-4 h-4 accent-amber-600 rounded">
+                <span class="text-[11px] font-bold text-stone-700 dark:text-stone-300">Set as current delivery address</span>
+              </label>
 
-            <button type="submit" id="saveAddressBtn" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl py-2.5 font-black text-xs transition shadow-md">
-              Save & Deliver Here
-            </button>
-          </form>
+              <button type="submit" id="saveAddressBtn" class="w-full bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl py-2.5 font-black text-xs transition shadow-md">
+                Save & Deliver Here
+              </button>
+            </form>
+          </div>
         </div>
       </div>
     </div>

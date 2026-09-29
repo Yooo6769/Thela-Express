@@ -580,115 +580,7 @@ function switchView(viewName) {
 // 5. CUSTOMER VIEW LOGIC (Craving Hub, Discovery & Catalog)
 // ==========================================================
 
-const DELHI_PREDEFINED_LOCATIONS = {
-  mukherjee_nagar: {
-    title: 'Mukherjee Nagar',
-    tag: 'Home',
-    address: 'Near GTB Nagar Metro Station, Mukherjee Nagar, Delhi - 110009',
-    area: 'Mukherjee Nagar',
-    pincode: '110009',
-    lat: 28.7095,
-    lng: 77.2075
-  },
-  gtb_nagar: {
-    title: 'GTB Nagar / Hudson Lane',
-    tag: 'Home',
-    address: 'Near GTB Nagar Metro Station Gate 1, Hudson Lane, Delhi - 110009',
-    area: 'GTB Nagar',
-    pincode: '110009',
-    lat: 28.7000,
-    lng: 77.2070
-  },
-  model_town: {
-    title: 'Model Town',
-    tag: 'Home',
-    address: 'Main Market, Model Town II, Delhi - 110009',
-    area: 'Model Town',
-    pincode: '110009',
-    lat: 28.7150,
-    lng: 77.1900
-  },
-  connaught_place: {
-    title: 'Connaught Place (CP)',
-    tag: 'Work',
-    address: 'Inner Circle, Connaught Place, Central Delhi - 110001',
-    area: 'Connaught Place',
-    pincode: '110001',
-    lat: 28.6139,
-    lng: 77.2090
-  },
-  noida_sec18: {
-    title: 'Noida Sector 18',
-    tag: 'Other',
-    address: 'Atta Market, Sector 18, Noida, Uttar Pradesh - 201301',
-    area: 'Sector 18',
-    pincode: '201301',
-    lat: 28.5700,
-    lng: 77.3200
-  },
-  ghaziabad: {
-    title: 'Ghaziabad (RDC)',
-    tag: 'Other',
-    address: 'RDC, Raj Nagar, Ghaziabad, Uttar Pradesh - 201001',
-    area: 'Ghaziabad',
-    pincode: '201001',
-    lat: 28.6692,
-    lng: 77.4538
-  }
-};
-
-function setPredefinedLocation(key) {
-  const preset = DELHI_PREDEFINED_LOCATIONS[key];
-  if (!preset) return;
-
-  STATE.activeAddress = {
-    id: 'addr_preset_' + key,
-    tag: preset.tag,
-    title: preset.title,
-    address: preset.address,
-    area: preset.area,
-    pincode: preset.pincode,
-    lat: preset.lat,
-    lng: preset.lng,
-    isDefault: true
-  };
-  STATE.customerLocation = {
-    lat: preset.lat,
-    lng: preset.lng,
-    source: 'preset',
-    area: preset.area
-  };
-
-  localStorage.setItem('thela_active_address', JSON.stringify(STATE.activeAddress));
-  localStorage.setItem('thela_customer_location', JSON.stringify(STATE.customerLocation));
-
-  if (STATE.user && STATE.user.phone) {
-    if (!STATE.user.addresses) STATE.user.addresses = [];
-    const idx = STATE.user.addresses.findIndex(a => a.id === STATE.activeAddress.id);
-    if (idx >= 0) {
-      STATE.user.addresses[idx] = STATE.activeAddress;
-    } else {
-      STATE.user.addresses.push(STATE.activeAddress);
-    }
-    localStorage.setItem('thela_user', JSON.stringify(STATE.user));
-  }
-
-  updateHeaderLocation();
-  updateCartAddressDisplay();
-  closeAddressDrawer();
-  loadStalls();
-
-  const dist = computeGeographicDistanceKm(preset.lat, preset.lng, 28.7095, 77.2075);
-  const isVip = !!(STATE.user && STATE.user.goldMember);
-  const maxRadius = isVip ? 20.0 : 10.0;
-  if (dist !== null && dist <= maxRadius) {
-    showToast(`📍 Location set: ${preset.title} (${dist.toFixed(1)} km away • In Delivery Range ✓)`);
-  } else if (!isVip && dist !== null && dist <= 20.0) {
-    showToast(`👑 Location set: ${preset.title} (${dist.toFixed(1)} km away • Unlock with Thela VIP @ ₹1)`);
-  } else {
-    showToast(`📍 Location set: ${preset.title} (${dist !== null ? dist.toFixed(1) : '20+'} km away • Outside Delivery Range)`);
-  }
-}
+// Geographic distance calculation between any two points on Earth (Decentralized, no central hub)
 
 function computeGeographicDistanceKm(lat1, lon1, lat2, lon2) {
   const p1 = parseFloat(lat1);
@@ -1346,7 +1238,7 @@ function renderStalls(stalls) {
             <i class="fa-solid fa-location-crosshairs"></i>
             <span>Use Current GPS Location</span>
           </button>
-          <button onclick="openAddressDrawer()" class="px-4 py-2.5 rounded-2xl bg-white dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-900 dark:text-stone-100 border border-stone-200 dark:border-stone-700 font-bold text-xs shadow-xs flex items-center space-x-2 transition cursor-pointer">
+          <button onclick="handleEnterAddressClick()" class="px-4 py-2.5 rounded-2xl bg-white dark:bg-stone-800 hover:bg-stone-100 dark:hover:bg-stone-700 text-stone-900 dark:text-stone-100 border border-stone-200 dark:border-stone-700 font-bold text-xs shadow-xs flex items-center space-x-2 transition cursor-pointer">
             <i class="fa-solid fa-house-chimney"></i>
             <span>Enter Delivery Address</span>
           </button>
@@ -1370,9 +1262,6 @@ function renderStalls(stalls) {
     if (exploreCountEl) exploreCountEl.innerText = '0 STREET FOOD THELAS DELIVERING TO YOU';
 
     const currentLocName = STATE.activeAddress?.title || STATE.activeAddress?.address || (STATE.customerLocation?.area || 'your current location');
-    const firstStall = stalls[0];
-    const eta = firstStall ? calculateMarketplaceEta(firstStall, custCoords, STATE.deliveryCapacity) : null;
-    const distText = eta?.distanceText ? `${eta.distanceText}` : 'too far away';
 
     container.innerHTML = `
       <div class="col-span-full bg-white dark:bg-stone-900 rounded-3xl border-2 border-dashed border-stone-200 dark:border-stone-800 p-6 sm:p-8 text-center space-y-4 shadow-sm">
@@ -1382,7 +1271,7 @@ function renderStalls(stalls) {
         <div class="space-y-1.5 max-w-md mx-auto">
           <h3 class="font-black text-lg sm:text-xl text-stone-900 dark:text-stone-100">No Carts Delivering to Your Location Yet</h3>
           <p class="text-xs text-stone-600 dark:text-stone-400 leading-relaxed">
-            Our verified street partner <strong class="text-amber-600 font-black">Aryan The Pizza</strong> (Near GTB Nagar Metro Station) delivers within 25 km (Free delivery up to 7 km for VIP members). Your current location (<strong>${currentLocName}</strong>) is <strong>${distText}</strong> away, which is outside our 25 km delivery range.
+            Every verified street food thela on ThelaExpress delivers hot, fresh bites within a 25 km radius of its own cart location (Free delivery up to 7 km for VIP members). There are currently no street food carts registered within 25 km of <strong>${currentLocName}</strong>.
           </p>
         </div>
         <div class="flex flex-wrap items-center justify-center gap-2.5 pt-1">
@@ -3430,8 +3319,8 @@ async function handlePlaceOrder() {
   if (activeStall && custCoords && typeof custCoords.lat === 'number' && typeof custCoords.lng === 'number') {
     dist = computeGeographicDistanceKm(custCoords.lat, custCoords.lng, activeStall.lat, activeStall.lng);
     const maxRadius = 25.0;
-    if (dist > maxRadius) {
-      showToast(`⚠️ Delivery Unavailable: ${activeStall.name} delivers within 25 km of GTB Nagar. Your address is ${dist.toFixed(1)} km away.`);
+      const stallArea = activeStall.area || activeStall.city || 'its cart location';
+      showToast(`⚠️ Delivery Unavailable: ${activeStall.name} delivers within 25 km of ${stallArea}. Your address is ${dist.toFixed(1)} km away.`);
       return;
     }
   }
@@ -4728,8 +4617,17 @@ function handleLogout() {
 }
 
 // Address Drawer Logic
+function handleEnterAddressClick() {
+  if (!STATE.user || !STATE.user.phone) {
+    showToast('🔒 Please log in with your phone number to enter and save an address');
+    openAuthModal();
+    return;
+  }
+  openAddressDrawer();
+}
+
 function openAddressDrawer() {
-  // Allow all customers (including guests) to set their delivery location / address
+  // Allow all customers to view the address drawer; saving addresses requires authentication
   renderSavedAddresses();
   document.getElementById('addressDrawer').classList.remove('hidden');
   AtmosphereManager.pushOverride('addressDrawer', 'minimal');
@@ -4742,19 +4640,50 @@ function closeAddressDrawer() {
 
 function renderSavedAddresses() {
   const container = document.getElementById('savedAddressesContainer');
+  const loginPrompt = document.getElementById('addressLoginRequiredPrompt');
+  const formSection = document.getElementById('customAddressFormSection');
+  const isLoggedIn = !!(STATE.user && STATE.user.phone);
+
+  if (loginPrompt && formSection) {
+    if (isLoggedIn) {
+      loginPrompt.classList.add('hidden');
+      formSection.classList.remove('hidden');
+    } else {
+      loginPrompt.classList.remove('hidden');
+      formSection.classList.add('hidden');
+    }
+  }
+
   if (!container) return;
 
-  // Combine user saved addresses or active guest address
+  if (!isLoggedIn) {
+    container.innerHTML = `
+      <div class="py-5 px-4 text-center bg-stone-50 dark:bg-stone-800/50 rounded-2xl border border-dashed border-stone-200 dark:border-stone-800 space-y-2.5">
+        <div class="w-9 h-9 mx-auto rounded-xl bg-amber-100 dark:bg-amber-950/60 text-amber-600 dark:text-amber-400 flex items-center justify-center font-bold text-sm shadow-xs">
+          <i class="fa-solid fa-lock"></i>
+        </div>
+        <div class="space-y-0.5">
+          <h4 class="font-black text-xs text-stone-900 dark:text-stone-100 uppercase tracking-wider">Log In to View & Add Saved Addresses</h4>
+          <p class="text-[11px] text-stone-500 dark:text-stone-400">Log in with your phone number to access your address book or save new delivery locations.</p>
+        </div>
+        <button type="button" onclick="closeAddressDrawer(); openAuthModal();" class="px-4 py-2 bg-gradient-to-r from-amber-600 to-orange-600 hover:from-amber-700 hover:to-orange-700 text-white rounded-xl font-black text-xs transition shadow-xs cursor-pointer inline-flex items-center space-x-1.5">
+          <i class="fa-solid fa-arrow-right-to-bracket"></i><span>Log In / Sign Up</span>
+        </button>
+      </div>
+    `;
+    return;
+  }
+
   const addresses = (STATE.user && STATE.user.addresses && STATE.user.addresses.length > 0)
     ? STATE.user.addresses
-    : (STATE.activeAddress ? [STATE.activeAddress] : []);
+    : [];
 
   if (addresses.length === 0) {
     container.innerHTML = `
       <div class="py-6 text-center text-stone-400 bg-stone-50 dark:bg-stone-800/50 rounded-2xl border border-dashed border-stone-200 dark:border-stone-800">
         <i class="fa-solid fa-map-pin text-2xl text-stone-300 dark:text-stone-600 mb-1"></i>
         <p class="text-xs font-bold text-stone-600 dark:text-stone-300">No saved addresses yet</p>
-        <p class="text-[10px] text-stone-400 dark:text-stone-500">Detect your live GPS location above or type your address below</p>
+        <p class="text-[10px] text-stone-400 dark:text-stone-500">Detect your live GPS location above or enter your address below</p>
       </div>
     `;
     return;
@@ -4787,11 +4716,10 @@ function renderSavedAddresses() {
 
         <div class="flex items-center space-x-2 shrink-0 ml-2">
           ${isSelected ? '<span class="text-amber-600 dark:text-amber-400 text-sm"><i class="fa-solid fa-circle-check"></i></span>' : ''}
-          ${(STATE.user && STATE.user.phone && !addr.id.startsWith('addr_preset_')) ? `
           <button onclick="event.stopPropagation(); handleDeleteAddress('${addr.id}')" 
             class="text-stone-300 hover:text-red-500 p-1 transition cursor-pointer" title="Delete Address">
             <i class="fa-regular fa-trash-can text-xs"></i>
-          </button>` : ''}
+          </button>
         </div>
       </div>
     `;
@@ -4826,42 +4754,43 @@ function captureCustomerGps(isSilent = false) {
       const lat = parseFloat(pos.coords.latitude.toFixed(6));
       const lng = parseFloat(pos.coords.longitude.toFixed(6));
 
-      // Calculate distance to hub (Mukherjee Nagar / GTB Nagar Metro Station: 28.7095, 77.2075)
-      const dist = computeGeographicDistanceKm(lat, lng, 28.7095, 77.2075);
-      const isVip = !!(STATE.user && STATE.user.goldMember);
-      const maxRadius = 25.0;
-      const isNearby = dist !== null && dist <= maxRadius;
+      // Dynamically evaluate against all registered stalls in the system (Decentralized, no central hub)
+      const activeStalls = STATE.stalls || [];
+      let deliverableStallsCount = 0;
+      let closestStall = null;
+      let closestDist = Infinity;
 
-      let areaName = 'Current Location';
-      if (dist !== null) {
-        if (dist <= 1.5) {
-          areaName = 'GTB Nagar / Mukherjee Nagar';
-        } else if (dist <= 5.0) {
-          areaName = 'North Delhi Area';
-        } else if (dist <= 10.0) {
-          areaName = 'Delhi Area';
-        } else if (dist <= 25.0) {
-          areaName = 'NCR Extended Area';
-        } else {
-          areaName = 'NCR Region';
+      activeStalls.forEach(s => {
+        if (typeof s.lat === 'number' && typeof s.lng === 'number') {
+          const d = computeGeographicDistanceKm(lat, lng, s.lat, s.lng);
+          const r = s.delivery_radius_km || 25.0;
+          if (d !== null && d <= r) {
+            deliverableStallsCount++;
+          }
+          if (d !== null && d < closestDist) {
+            closestDist = d;
+            closestStall = s;
+          }
         }
-      }
+      });
+
+      const areaName = 'Current Location';
 
       STATE.customerLocation = {
         lat,
         lng,
         source: 'gps',
         area: areaName,
-        distanceKm: dist
+        distanceKm: closestDist < Infinity ? closestDist : null
       };
 
       STATE.activeAddress = {
         id: 'addr_gps_live',
         tag: 'Live GPS',
-        title: areaName,
-        address: `Pinned via Device GPS (${areaName})`,
+        title: 'Current Location',
+        address: `Pinned via Device GPS (${lat.toFixed(4)}, ${lng.toFixed(4)})`,
         area: areaName,
-        pincode: (dist !== null && dist <= 2.0) ? '110009' : '',
+        pincode: '',
         lat,
         lng,
         isDefault: true
@@ -4873,7 +4802,7 @@ function captureCustomerGps(isSilent = false) {
       const houseInput = document.getElementById('newAddrHouse');
       const streetInput = document.getElementById('newAddrStreet');
       if (houseInput) houseInput.value = 'Current Location';
-      if (streetInput) streetInput.value = areaName;
+      if (streetInput) streetInput.value = `GPS (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
 
       if (label) label.innerText = 'GPS Locked ✓';
       updateHeaderLocation();
@@ -4882,16 +4811,17 @@ function captureCustomerGps(isSilent = false) {
       loadStalls();
 
       if (!isSilent) {
-        if (isNearby) {
-          if (isVip && dist <= 7.0) {
-            showToast(`📍 Location pinned: ${areaName} (${dist.toFixed(1)} km away • Free VIP Delivery)`);
+        const isVip = !!(STATE.user && STATE.user.goldMember);
+        if (deliverableStallsCount > 0) {
+          if (isVip && closestDist <= 7.0) {
+            showToast(`📍 Location pinned (${closestDist.toFixed(1)} km from ${closestStall?.name || 'cart'} • Free VIP Delivery)`);
           } else if (isVip) {
-            showToast(`📍 Location pinned: ${areaName} (${dist.toFixed(1)} km away • Delivery Chargeable > 7 km)`);
+            showToast(`📍 Location pinned (${closestDist.toFixed(1)} km from ${closestStall?.name || 'cart'} • Chargeable > 7 km)`);
           } else {
-            showToast(`📍 Location pinned: ${areaName} (${dist.toFixed(1)} km away • In Delivery Range)`);
+            showToast(`📍 Location pinned: ${deliverableStallsCount} street food thela${deliverableStallsCount > 1 ? 's' : ''} delivering to you`);
           }
         } else {
-          showToast(`⚠️ Location pinned: ${dist !== null ? dist.toFixed(1) : '25+'} km away (Outside 25 km delivery boundary).`);
+          showToast(`📍 Location pinned: Lat ${lat.toFixed(4)}, Lng ${lng.toFixed(4)} (No registered carts within 25 km yet)`);
         }
       }
     },
@@ -4899,7 +4829,7 @@ function captureCustomerGps(isSilent = false) {
       console.warn('GPS error:', err);
       if (label) label.innerText = 'Use Live GPS';
       if (!isSilent) {
-        showToast('Could not access GPS. Please choose or enter your address manually.');
+        showToast('Could not access GPS. Please log in to enter an address manually.');
       }
     },
     { enableHighAccuracy: true, timeout: 8000 }
@@ -4908,6 +4838,14 @@ function captureCustomerGps(isSilent = false) {
 
 async function handleSaveAddress(event) {
   if (event) event.preventDefault();
+
+  // Strict Authentication Gate: User must be logged in with mobile number to save address
+  if (!STATE.user || !STATE.user.phone) {
+    showToast('🔒 Please log in with your phone number to save an address');
+    closeAddressDrawer();
+    openAuthModal();
+    return;
+  }
 
   const house = document.getElementById('newAddrHouse')?.value.trim();
   const street = document.getElementById('newAddrStreet')?.value.trim();
@@ -4923,21 +4861,32 @@ async function handleSaveAddress(event) {
   const address = landmark ? `${street}, Landmark: ${landmark}` : street;
   const tag = STATE.newAddrTag || 'Home';
 
-  // Infer coordinates based on text or current location
+  // Infer coordinates based on text or current location (Decentralized, no central hub bias)
   const combinedText = (house + ' ' + street + ' ' + landmark).toLowerCase();
-  let inferredLat = 28.7095;
-  let inferredLng = 77.2075;
-  let inferredArea = 'Mukherjee Nagar';
-  let inferredPincode = '110009';
+  let inferredLat = (STATE.customerLocation && typeof STATE.customerLocation.lat === 'number') 
+    ? STATE.customerLocation.lat 
+    : 28.6139;
+  let inferredLng = (STATE.customerLocation && typeof STATE.customerLocation.lng === 'number') 
+    ? STATE.customerLocation.lng 
+    : 77.2090;
+  let inferredArea = street || 'Saved Address';
+  let inferredPincode = '';
 
   if (combinedText.includes('gtb') || combinedText.includes('hudson') || combinedText.includes('kingsway')) {
     inferredLat = 28.7000;
     inferredLng = 77.2070;
     inferredArea = 'GTB Nagar';
+    inferredPincode = '110009';
+  } else if (combinedText.includes('mukherjee')) {
+    inferredLat = 28.7095;
+    inferredLng = 77.2075;
+    inferredArea = 'Mukherjee Nagar';
+    inferredPincode = '110009';
   } else if (combinedText.includes('model town')) {
     inferredLat = 28.7150;
     inferredLng = 77.1900;
     inferredArea = 'Model Town';
+    inferredPincode = '110009';
   } else if (combinedText.includes('connaught') || combinedText.includes('cp') || combinedText.includes('110001')) {
     inferredLat = 28.6139;
     inferredLng = 77.2090;
@@ -4953,10 +4902,11 @@ async function handleSaveAddress(event) {
     inferredLng = 77.4538;
     inferredArea = 'Ghaziabad';
     inferredPincode = '201001';
-  } else if (STATE.customerLocation && typeof STATE.customerLocation.lat === 'number') {
-    inferredLat = STATE.customerLocation.lat;
-    inferredLng = STATE.customerLocation.lng;
-    inferredArea = STATE.customerLocation.area || 'Custom Location';
+  } else if (combinedText.includes('mumbai') || combinedText.includes('bandra') || combinedText.includes('andheri')) {
+    inferredLat = 19.0760;
+    inferredLng = 72.8777;
+    inferredArea = 'Mumbai';
+    inferredPincode = '400001';
   }
 
   const newAddressObj = {
@@ -4978,23 +4928,18 @@ async function handleSaveAddress(event) {
   }
 
   try {
-    if (STATE.user && STATE.user.phone) {
-      const res = await fetch(`/api/users/${STATE.user.phone}/addresses`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ tag, title, address, isDefault, lat: inferredLat, lng: inferredLng, pincode: inferredPincode })
-      });
+    const res = await fetch(`/api/users/${STATE.user.phone}/addresses`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tag, title, address, isDefault, lat: inferredLat, lng: inferredLng, pincode: inferredPincode })
+    });
 
-      const data = await res.json();
-      if (data.success && data.addresses) {
-        STATE.user.addresses = data.addresses;
-        STATE.activeAddress = data.address || data.addresses[data.addresses.length - 1];
-        localStorage.setItem('thela_user', JSON.stringify(STATE.user));
-      } else {
-        STATE.activeAddress = newAddressObj;
-      }
+    const data = await res.json();
+    if (data.success && data.addresses) {
+      STATE.user.addresses = data.addresses;
+      STATE.activeAddress = data.address || data.addresses[data.addresses.length - 1];
+      localStorage.setItem('thela_user', JSON.stringify(STATE.user));
     } else {
-      // Guest customer sets address
       STATE.activeAddress = newAddressObj;
     }
 
@@ -5022,19 +4967,37 @@ async function handleSaveAddress(event) {
     closeAddressDrawer();
     loadStalls();
 
-    const dist = computeGeographicDistanceKm(inferredLat, inferredLng, 28.7095, 77.2075);
+    // Check deliverability against all active stalls dynamically (Decentralized)
+    const activeStalls = STATE.stalls || [];
+    let deliverableCount = 0;
+    let closestDist = Infinity;
+    let closestStall = null;
+
+    activeStalls.forEach(s => {
+      if (typeof s.lat === 'number' && typeof s.lng === 'number') {
+        const d = computeGeographicDistanceKm(inferredLat, inferredLng, s.lat, s.lng);
+        const r = s.delivery_radius_km || 25.0;
+        if (d !== null && d <= r) {
+          deliverableCount++;
+        }
+        if (d !== null && d < closestDist) {
+          closestDist = d;
+          closestStall = s;
+        }
+      }
+    });
+
     const isVip = !!(STATE.user && STATE.user.goldMember);
-    const maxRadius = 25.0;
-    if (dist !== null && dist <= maxRadius) {
-      if (isVip && dist <= 7.0) {
-        showToast(`✅ Address saved: ${title} (${dist.toFixed(1)} km away • Free VIP Delivery)`);
+    if (deliverableCount > 0) {
+      if (isVip && closestDist <= 7.0) {
+        showToast(`✅ Address saved: ${title} (${closestDist.toFixed(1)} km from ${closestStall?.name || 'cart'} • Free VIP Delivery)`);
       } else if (isVip) {
-        showToast(`✅ Address saved: ${title} (${dist.toFixed(1)} km away • Delivery Chargeable > 7 km)`);
+        showToast(`✅ Address saved: ${title} (${closestDist.toFixed(1)} km from ${closestStall?.name || 'cart'} • Delivery Chargeable > 7 km)`);
       } else {
-        showToast(`✅ Address saved: ${title} (${dist.toFixed(1)} km away • In Delivery Range)`);
+        showToast(`✅ Address saved: ${title} (${deliverableCount} thela${deliverableCount > 1 ? 's' : ''} delivering to you)`);
       }
     } else {
-      showToast(`⚠️ Address saved: ${title} (${dist !== null ? dist.toFixed(1) : '25+'} km away • Outside 25 km delivery zone)`);
+      showToast(`✅ Address saved: ${title} (Currently outside delivery zone of registered thelas)`);
     }
   } catch (err) {
     console.error('Save address error:', err);
@@ -5071,12 +5034,6 @@ async function handleDeleteAddress(addrId) {
 }
 
 function selectDeliveryAddress(addrId) {
-  if (addrId && addrId.startsWith('addr_preset_')) {
-    const key = addrId.replace('addr_preset_', '');
-    setPredefinedLocation(key);
-    return;
-  }
-
   let addr = null;
   if (STATE.user?.addresses) {
     addr = STATE.user.addresses.find(a => a.id === addrId);

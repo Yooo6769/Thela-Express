@@ -515,10 +515,88 @@ test('Zero-coords UX: address inputs and toasts contain clean area names and no 
   assert(!appJsContent.includes('Switch to Mukherjee Nagar'), 'app.js still suggests switching to Mukherjee Nagar');
   assert(!htmlContent.includes('Switch to Mukherjee Nagar'), 'index.html still contains Switch to Mukherjee Nagar');
 
-  // Landmark is GTB Nagar Metro Station
+  // Landmark is GTB Nagar Metro Station on Aryan The Pizza profile, not Batra Cinema
+  const stall = db.getStallById('stall_aryan_the_pizza');
+  assert(stall.landmark.includes('Near GTB Nagar Metro Station'), 'Aryan The Pizza landmark must be near GTB Nagar Metro Station');
   assert(!htmlContent.includes('Near Batra Cinema'), 'index.html still references Batra Cinema');
-  assert(htmlContent.includes('Near GTB Nagar Metro Station'), 'index.html missing GTB Nagar Metro Station landmark');
   assert(!appJsContent.includes('Batra Cinema'), 'app.js still references Batra Cinema');
+});
+
+test('Address Book Security Gate: Adding/saving address requires mobile login and prompts guests to log in', () => {
+  const htmlContent = fs.readFileSync(htmlPath, 'utf8');
+  const appJsContent = fs.readFileSync(appJsPath, 'utf8');
+
+  // index.html has login required prompt in address drawer
+  assert(htmlContent.includes('id="addressLoginRequiredPrompt"'), 'index.html missing addressLoginRequiredPrompt');
+  assert(htmlContent.includes('Log In to Add Delivery Address'), 'index.html missing Log In to Add Delivery Address heading');
+  assert(htmlContent.includes('id="customAddressFormSection"'), 'index.html missing customAddressFormSection');
+
+  // app.js enforces login gate before saving address
+  assert(appJsContent.includes('function handleEnterAddressClick()'), 'app.js missing handleEnterAddressClick');
+  assert(appJsContent.includes('Please log in with your phone number to enter and save an address'), 'app.js missing login toast for entering address');
+  assert(appJsContent.includes('Please log in with your phone number to save an address'), 'app.js missing login toast in handleSaveAddress');
+
+  // renderSavedAddresses shows login prompt when user is not logged in
+  assert(appJsContent.includes('Log In to View & Add Saved Addresses'), 'app.js missing guest address container prompt');
+});
+
+test('Decentralized Platform: Any stall registered in Ghaziabad, Noida, Mumbai or any city delivers up to 25km from its own coordinates', () => {
+  // 1. Aryan The Pizza in Mukherjee Nagar (28.7095, 77.2075) delivers up to 25km from its stall
+  const mnCustomerLat = 28.7095;
+  const mnCustomerLng = 77.2075;
+  const mnStalls = db.getStalls(null, mnCustomerLat, mnCustomerLng, false);
+  assert(mnStalls.some(s => s.id === 'stall_aryan_the_pizza' && s.isDeliverable), 'Aryan The Pizza should deliver to Mukherjee Nagar');
+
+  // 2. Simulate a new vendor stall registered in Ghaziabad RDC (28.6692, 77.4538)
+  const ghaziabadStall = {
+    id: 'stall_ghaziabad_chaat_1',
+    name: 'Ghaziabad Famous Chaat',
+    lat: 28.6692,
+    lng: 77.4538,
+    area: 'Raj Nagar RDC',
+    city: 'Ghaziabad',
+    delivery_radius_km: 25.0,
+    status: 'OPEN_FOR_ORDERS',
+    menu_items: []
+  };
+
+  // Customer sitting in Ghaziabad (28.6700, 77.4500) -> ~0.4 km from Ghaziabad stall
+  const gzCustomerLat = 28.6700;
+  const gzCustomerLng = 77.4500;
+
+  const distToGzStall = db.computeGeographicDistanceKm(gzCustomerLat, gzCustomerLng, ghaziabadStall.lat, ghaziabadStall.lng);
+  assert(distToGzStall < 1.0, `Customer should be ~0.4km from Ghaziabad stall, got ${distToGzStall}`);
+  assert(distToGzStall <= ghaziabadStall.delivery_radius_km, 'Ghaziabad stall must deliver within 25km of its own location');
+
+  // 3. Simulate a vendor stall registered in Mumbai Bandra (19.0596, 72.8295)
+  const mumbaiStall = {
+    id: 'stall_mumbai_vada_pav_1',
+    name: 'Bandra Vada Pav Center',
+    lat: 19.0596,
+    lng: 72.8295,
+    area: 'Bandra West',
+    city: 'Mumbai',
+    delivery_radius_km: 25.0,
+    status: 'OPEN_FOR_ORDERS',
+    menu_items: []
+  };
+
+  // Customer in Andheri West, Mumbai (19.1363, 72.8277) -> ~8.5 km from Bandra, > 1150 km from Delhi
+  const mumbaiCustomerLat = 19.1363;
+  const mumbaiCustomerLng = 72.8277;
+
+  const distToMumbaiStall = db.computeGeographicDistanceKm(mumbaiCustomerLat, mumbaiCustomerLng, mumbaiStall.lat, mumbaiStall.lng);
+  const distToAryan = db.computeGeographicDistanceKm(mumbaiCustomerLat, mumbaiCustomerLng, 28.7095, 77.2075);
+
+  assert(distToMumbaiStall >= 8.0 && distToMumbaiStall <= 10.0, `Mumbai customer should be ~8.5km from Mumbai stall, got ${distToMumbaiStall}`);
+  assert(distToMumbaiStall <= mumbaiStall.delivery_radius_km, 'Mumbai stall delivers up to 25km from Bandra');
+  assert(distToAryan > 1100, 'Aryan The Pizza in Delhi is >1100km from Mumbai customer');
+
+  // 4. Verify orders.js error string is dynamic (stall.area / stall.city) and has zero hardcoded "from GTB Nagar"
+  const ordersJsPath = path.join(__dirname, '../server/src/routes/orders.js');
+  const ordersJsContent = fs.readFileSync(ordersJsPath, 'utf8');
+  assert(!ordersJsContent.includes('from GTB Nagar'), 'orders.js still hardcodes "from GTB Nagar"');
+  assert(ordersJsContent.includes('stall.area || stall.city'), 'orders.js missing dynamic stall.area / stall.city location');
 });
 
 console.log(`\n🎉 ALL ${passCount} ARYAN THE PIZZA INTEGRATION TESTS PASSED COMPLETELY!`);

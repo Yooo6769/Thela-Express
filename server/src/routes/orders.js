@@ -69,8 +69,9 @@ router.post('/', (req, res) => {
   if (!isNaN(custLat) && !isNaN(custLng) && stall.lat && stall.lng) {
     orderDistKm = db.computeGeographicDistanceKm(custLat, custLng, stall.lat, stall.lng);
     if (orderDistKm > maxRadius) {
+      const stallLocation = stall.area || stall.city || 'its location';
       return res.status(400).json({
-        error: `Delivery address is outside the vendor's delivery zone. ${stall.name} delivers up to ${maxRadius} km from GTB Nagar (Your location is ${orderDistKm.toFixed(1)} km away).`,
+        error: `Delivery address is outside the vendor's delivery zone. ${stall.name} delivers up to ${maxRadius} km from ${stallLocation} (Your location is ${orderDistKm.toFixed(1)} km away).`,
         code: 'OUT_OF_DELIVERY_RANGE',
         distanceKm: orderDistKm,
         maxRadiusKm: maxRadius,

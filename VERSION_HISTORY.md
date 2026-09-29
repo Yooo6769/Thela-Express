@@ -52,6 +52,7 @@ flowchart LR
     v235 --> v236["v2.3.6<br/>Mukherjee Nagar 110009 Vendor Location & 7km Delivery Radius Gating"]
     v236 --> v237["v2.3.7<br/>10km Standard / 20km VIP Delivery Limits, GTB Nagar Metro Landmark & Clean Zero-Coords UX"]
     v237 --> v238["v2.3.8<br/>25km Max Delivery Radius, VIP Free <=7km & Chargeable Rules, and Purged Area Suggestions"]
+    v238 --> v239["v2.3.9<br/>Mandatory Mobile Login for Address Creation & Decentralized All-India Vendor Platform"]
 ```
 
 ---
@@ -886,12 +887,36 @@ flowchart LR
     - Updated Test Suite 10 in `scratch/test_aryan_the_pizza.js` (34 tests) to verify all 6 geo locations (Mukherjee Nagar, GTB Nagar, Connaught Place at 10.6 km, Noida at 19 km, Ghaziabad RDC at 24.4 km in-range, and Far NCR at 28.6 km out-of-range), tests both VIP and Standard fee rules, asserts complete suggestion removal, and confirms zero "undefined" labels.
     - 100% pass rate across all 96 automated tests in 4 test suites.
 
+### `v2.3.9` — Mandatory Mobile Login for Address Creation & Decentralized All-India Vendor Platform
+- **Release Date**: September 29, 2026
+- **Architecture Highlights**:
+  - **Strict Authentication Gate for Delivery Addresses**:
+    - Adding or saving delivery addresses now strictly requires mobile authentication. Unauthenticated guests can no longer add or save addresses without logging in.
+    - Address drawer (`#addressDrawer`) dynamically toggles views based on login state:
+      - **Guest View**: Displays clean `#addressLoginRequiredPrompt` with a lock icon, explanation, and a direct 1-tap "Log In / Sign Up" button (`onclick="closeAddressDrawer(); openAuthModal();"`).
+      - **Customer View**: Reveals `#customAddressFormSection` for entering flat/house, street/locality, and landmarks.
+    - Gated `handleEnterAddressClick()`: If an unauthenticated guest clicks "Enter Delivery Address" on the storefront, the system immediately presents `openAuthModal()` and toasts: *"🔒 Please log in with your phone number to enter and save an address"*.
+    - Gated `handleSaveAddress(event)`: Rejects unauthenticated form submissions, closes the drawer, and summons `openAuthModal()`.
+  - **Complete Platform Decentralization (Equal Treatment Across All Cities)**:
+    - Mukherjee Nagar is firmly treated as the physical address of *one specific stall* ("Aryan The Pizza"), **NOT** the center of the platform.
+    - Any new vendor stall registering anywhere across India (e.g. Ghaziabad, Noida, Delhi, Mumbai, Pune, Bengaluru) delivers up to 25 km from *its own cart coordinates*.
+    - **Neutralized GPS Detection**: In `captureCustomerGps()`, removed all hardcoded distance math to `28.7095, 77.2075` and removed North Delhi/NCR tiering. Customer GPS coordinates are evaluated dynamically against *all active stalls* in `STATE.stalls` (`stall.delivery_radius_km || 25.0`), displaying distance to the nearest cart.
+    - **Neutralized Address Placeholders**: Replaced Delhi-biased examples in `public/index.html` with universal neutral placeholders: `placeholder="e.g. Main Market / Colony Name"` and `placeholder="e.g. Landmark / Metro Station, Pincode"`.
+    - **Dynamic Server-Side Error Strings**: Updated `server/src/routes/orders.js` out-of-range error response from hardcoded `"from GTB Nagar"` to dynamic: `"...delivers up to ${maxRadius} km from ${stall.area || stall.city || 'its location'}"`.
+    - **Decentralized Discovery Copy**: Updated State 2 zero-stalls banner in `renderStalls()` to: *"Every verified street food thela on ThelaExpress delivers hot, fresh bites within a 25 km radius of its own cart location (Free delivery up to 7 km for VIP members)."*
+    - **Purged Legacy Presets**: Completely purged `DELHI_PREDEFINED_LOCATIONS` and legacy preset selection logic from `public/app.js`.
+  - **Comprehensive Automated Verification**:
+    - Expanded `scratch/test_aryan_the_pizza.js` to 36 tests.
+    - Verified guest login gate on address creation and simulated decentralized vendor registration across multiple cities (Ghaziabad RDC and Mumbai Bandra), proving delivery is calculated relative to each stall's own physical coordinates.
+    - 100% pass rate across all 98 automated tests in 4 test suites.
+
 ---
 
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
+| `d8d3b68` | 2026-09-29 | Auth & Location | Gate address creation behind mobile login and enforce decentralized multi-city stall delivery (v2.3.9) |
 | `5b49cd8` | 2026-09-29 | Delivery & Pricing | 25km max delivery limit, VIP free <=7km & chargeable rules, and purge all area suggestions (v2.3.8) |
 | `b3a8db0` | 2026-09-28 | Location & Delivery | 10km standard / 20km VIP delivery limits, GTB Nagar Metro landmark, and clean zero-coords UX (v2.3.7) |
 | `010f7ae` | 2026-09-28 | Location & Delivery | Enforce Mukherjee Nagar 110009 vendor location, 7km delivery radius gating, and GPS/address discovery requirement (v2.3.6) |
@@ -1007,7 +1032,7 @@ stateDiagram-v2
 
 | Test Script File | Primary Verification Objective | Number of Tests | Status |
 | :--- | :--- | :---: | :---: |
-| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, GTB Nagar Metro landmark, 25km maximum delivery radius gating, VIP free delivery <=7km & chargeable tiers, full screen modal, dark theme category pills, reactive customizer sheet, checkout login gate, zero-coords UX, complete suggestion purge, and direct UPI payment | 34 tests | ✅ Passed |
+| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, GTB Nagar Metro landmark, 25km maximum delivery radius gating, VIP free delivery <=7km & chargeable tiers, full screen modal, dark theme category pills, reactive customizer sheet, checkout login gate, zero-coords UX, complete suggestion purge, direct UPI payment, mobile login required for address creation, and decentralized multi-city delivery | 36 tests | ✅ Passed |
 | [`test_street_food_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_street_food_ux.js) | Authentic street food UX, real food photo carousel, swipe/touch accessibility, theme dark hover protection, zero 1971 fake count, visual veg toggle, buyable VIP, dynamic coupons & adaptive modals | 21 tests | ✅ Passed |
 | [`test_zomato_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_zomato_ux.js) | Zomato-inspired dynamic customer app experience, hero carousel, circular stories, quick filters, bottom dock, VIP Gold profile & wallet engine | 12 tests | ✅ Passed |
 | [`test_store_status_contradiction.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_store_status_contradiction.js) | Server-authoritative store status derivation, anti-bypass invariants, hoisting audit, zero 1.5 km copy | 7 suites | ✅ Passed |
