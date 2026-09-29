@@ -916,7 +916,7 @@ flowchart LR
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `d8d3b68` | 2026-09-29 | Auth & Location | Gate address creation behind mobile login and enforce decentralized multi-city stall delivery (v2.3.9) |
+| `4f702a5` | 2026-09-29 | Auth & Location | Gate address creation behind mobile login and enforce decentralized multi-city stall delivery (v2.3.9) |
 | `5b49cd8` | 2026-09-29 | Delivery & Pricing | 25km max delivery limit, VIP free <=7km & chargeable rules, and purge all area suggestions (v2.3.8) |
 | `b3a8db0` | 2026-09-28 | Location & Delivery | 10km standard / 20km VIP delivery limits, GTB Nagar Metro landmark, and clean zero-coords UX (v2.3.7) |
 | `010f7ae` | 2026-09-28 | Location & Delivery | Enforce Mukherjee Nagar 110009 vendor location, 7km delivery radius gating, and GPS/address discovery requirement (v2.3.6) |
