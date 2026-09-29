@@ -599,6 +599,76 @@ test('Decentralized Platform: Any stall registered in Ghaziabad, Noida, Mumbai o
   assert(ordersJsContent.includes('stall.area || stall.city'), 'orders.js missing dynamic stall.area / stall.city location');
 });
 
+test('Authoritative Pan-India Address Geocoding: Andhra Pradesh 515001 resolves to genuine coordinates (>1500km from Delhi, NOT 14km)', () => {
+  const { resolveIndianAddressCoordinates } = require('../server/src/utils/indian_geocoder');
+  const stall = db.getStallById('stall_aryan_the_pizza');
+  assert(stall, 'Aryan The Pizza stall must exist in db');
+
+  // 1. Address with "andra pradesh 515001"
+  const geo1 = resolveIndianAddressCoordinates('andra pradesh 515001');
+  assert(geo1.isResolved, 'andra pradesh 515001 should resolve');
+  assert.strictEqual(geo1.pincode, '515001', 'Pincode should be 515001');
+  assert(Math.abs(geo1.lat - 14.6819) < 0.01, `Lat should be ~14.6819, got ${geo1.lat}`);
+  assert(Math.abs(geo1.lng - 77.6006) < 0.01, `Lng should be ~77.6006, got ${geo1.lng}`);
+
+  // Calculate distance from Aryan The Pizza (Delhi: 28.7095, 77.2075)
+  const distToAryan1 = db.computeGeographicDistanceKm(geo1.lat, geo1.lng, stall.lat, stall.lng);
+  assert(distToAryan1 > 1500, `Distance to Delhi must be > 1500km, got ${distToAryan1}km (must NEVER be 14km!)`);
+  assert(distToAryan1 > stall.delivery_radius_km, 'Andhra Pradesh is far outside 25km delivery limit');
+
+  // 2. Full street address in Anantapur, Andhra Pradesh
+  const geo2 = resolveIndianAddressCoordinates('Flat 402, Near Clock Tower, Anantapur, Andhra Pradesh 515001');
+  assert(geo2.isResolved);
+  assert(Math.abs(geo2.lat - 14.6819) < 0.01);
+  const distToAryan2 = db.computeGeographicDistanceKm(geo2.lat, geo2.lng, stall.lat, stall.lng);
+  assert(distToAryan2 > 1500);
+
+  // 3. State name without pincode: "andra pradesh"
+  const geo3 = resolveIndianAddressCoordinates('Door 12, Guntur Road, andra pradesh');
+  assert(geo3.isResolved);
+  const distToAryan3 = db.computeGeographicDistanceKm(geo3.lat, geo3.lng, stall.lat, stall.lng);
+  assert(distToAryan3 > 1300, `Andhra Pradesh without pincode must be > 1300km from Delhi, got ${distToAryan3}`);
+
+  // 4. Test newly registered stall in Andhra Pradesh (14.6819, 77.6006)
+  const apStall = {
+    id: 'stall_anantapur_dosa_1',
+    name: 'Sri Krishna Tiffin Center',
+    lat: 14.6819,
+    lng: 77.6006,
+    area: 'Subhash Road',
+    city: 'Anantapur',
+    delivery_radius_km: 25.0,
+    status: 'OPEN_FOR_ORDERS'
+  };
+
+  // For AP customer, distance to AP stall is 0km (deliverable!)
+  const distToApStall = db.computeGeographicDistanceKm(geo1.lat, geo1.lng, apStall.lat, apStall.lng);
+  assert(distToApStall < 1.0, `AP customer to AP stall should be < 1km, got ${distToApStall}`);
+  assert(distToApStall <= apStall.delivery_radius_km, 'AP stall delivers to AP customer within 25km');
+
+  // For Delhi customer, distance to AP stall is > 1500km (NOT deliverable)
+  const distDelhiToApStall = db.computeGeographicDistanceKm(stall.lat, stall.lng, apStall.lat, apStall.lng);
+  assert(distDelhiToApStall > 1500, 'Delhi customer is outside 25km of AP stall');
+
+  // 5. Test truly unrecognized address without city/pincode or GPS
+  const geoUnknown = resolveIndianAddressCoordinates('Random Street With No City 999999');
+  assert.strictEqual(geoUnknown.isResolved, false, 'Unrecognized address must have isResolved = false');
+  assert.strictEqual(geoUnknown.lat, null, 'Unrecognized address must not default to Delhi lat');
+  assert.strictEqual(geoUnknown.lng, null, 'Unrecognized address must not default to Delhi lng');
+
+  // 6. Test client geocoder module exists and parses
+  const clientGeocoderPath = path.join(__dirname, '../public/indian_geocoder.js');
+  assert(fs.existsSync(clientGeocoderPath), 'public/indian_geocoder.js must exist');
+  const { execSync } = require('child_process');
+  assert.doesNotThrow(() => {
+    execSync(`node --check "${clientGeocoderPath}"`, { stdio: 'pipe' });
+  }, 'public/indian_geocoder.js failed syntax validation');
+
+  // 7. Verify index.html loads indian_geocoder.js
+  const indexHtml = fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8');
+  assert(indexHtml.includes('src="/indian_geocoder.js'), 'public/index.html must include indian_geocoder.js');
+});
+
 test('Client-Side Script Integrity: public/app.js parses with zero syntax errors', () => {
   const { execSync } = require('child_process');
   assert.doesNotThrow(() => {

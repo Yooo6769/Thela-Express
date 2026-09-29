@@ -30,6 +30,15 @@ app.use('/api/riders', ridersRoutes);
 app.use('/api/onboard', onboardRoutes);
 app.use('/api/admin', adminRoutes);
 
+const { resolveIndianAddressCoordinates } = require('./utils/indian_geocoder');
+
+// Geocoding API: Resolves 6-digit Indian PIN codes, Indian States, and Cities
+app.get('/api/geocode', (req, res) => {
+  const query = req.query.q || req.query.address || '';
+  const result = resolveIndianAddressCoordinates(query);
+  res.json({ success: true, ...result });
+});
+
 // Health check
 app.get('/api/health', (req, res) => {
   res.json({

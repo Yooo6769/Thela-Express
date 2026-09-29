@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.3.8`  
+**Current Production Version**: `v2.4.0`  
 **Current Date**: September 29, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -53,6 +53,7 @@ flowchart LR
     v236 --> v237["v2.3.7<br/>10km Standard / 20km VIP Delivery Limits, GTB Nagar Metro Landmark & Clean Zero-Coords UX"]
     v237 --> v238["v2.3.8<br/>25km Max Delivery Radius, VIP Free <=7km & Chargeable Rules, and Purged Area Suggestions"]
     v238 --> v239["v2.3.9<br/>Mandatory Mobile Login for Address Creation & Decentralized All-India Vendor Platform"]
+    v239 --> v240["v2.4.0<br/>Pan-India Pincode & State Geocoding Engine; Zero Central Fallback; 1560km AP Out-of-Range Enforcement"]
 ```
 
 ---
@@ -912,10 +913,51 @@ flowchart LR
 
 ---
 
+### `v2.4.0` — Authoritative Pan-India Address & Pincode Geocoding Engine; Zero Central Fallback; 1560km AP Out-of-Range Enforcement
+- **Release Date**: September 29, 2026
+- **Architecture Highlights**:
+  - **The "14 km" Illusion Root Cause Identified & Eradicated**:
+    - Previously, client-side address saving in `public/app.js` checked only 7 hardcoded Delhi/NCR strings ('gtb', 'mukherjee', 'model town', 'connaught', 'noida', 'ghaziabad', 'mumbai').
+    - When a user entered an Andhra Pradesh address (e.g. "andra pradesh 515001"), it failed all 7 conditions and silently defaulted to `28.6139, 77.2090` (Connaught Place, Central Delhi).
+    - Consequently, the distance from Connaught Place to Aryan The Pizza (Mukherjee Nagar, Delhi: `28.7095, 77.2075`) was calculated as 10.6 km straight line / ~14.3 km road ETA, falsely showing "14 km away - can be delivered"!
+  - **Authoritative Pan-India Pincode & State Geocoding Engine**:
+    - Created universal UMD geocoder module in `server/src/utils/indian_geocoder.js` and `public/indian_geocoder.js`.
+    - Features `PINCODE_PREFIX_MAP` matching 100+ Indian postal circle prefixes (3-digit and 2-digit) covering every district across India:
+      - `515xxx`: Anantapur, Andhra Pradesh (`14.6819, 77.6006`).
+      - `50-53`: Andhra Pradesh & Telangana (Hyderabad, Vijayawada, Guntur, Tirupati, Visakhapatnam, Kadapa, Kurnool).
+      - `56-59`: Karnataka (Bengaluru, Mysuru, Mangaluru, Hubballi).
+      - `60-64`: Tamil Nadu (Chennai, Coimbatore, Madurai).
+      - `67-69`: Kerala (Thiruvananthapuram, Kochi, Kozhikode).
+      - `40-44`: Maharashtra (Mumbai, Pune, Nagpur, Nashik).
+      - `36-39`: Gujarat (Ahmedabad, Surat, Vadodara, Rajkot).
+      - `30-34`: Rajasthan (Jaipur, Jodhpur, Udaipur, Kota).
+      - `45-49`: Madhya Pradesh & Chhattisgarh (Bhopal, Indore, Raipur).
+      - `70-79`: West Bengal, Odisha & North East (Kolkata, Bhubaneswar, Guwahati).
+      - `80-85`: Bihar & Jharkhand (Patna, Ranchi, Jamshedpur).
+      - `11-28`: North India (Delhi, UP, Haryana, Punjab, Himachal, J&K, Uttarakhand).
+    - Features `STATE_AND_CITY_NAME_MAP` matching all 28 Indian States, 8 Union Territories, and major Indian cities with spelling variations (e.g., "andra pradesh", "andhra pradesh", "ap").
+  - **Zero Central Hub Fallback**:
+    - Unrecognized addresses without a City, State, or 6-digit PIN code and without GPS return `isResolved: false` and `lat: null, lng: null`. The system alerts the user: *"📍 Please enter your City, State or 6-digit PIN code so we can verify cart delivery range"* and **NEVER** silently places the user in Delhi.
+  - **Strict Out-of-Range Enforcement (>1500 km to Andhra Pradesh)**:
+    - Entering "Flat 101, Anantapur, Andhra Pradesh 515001" or "andra pradesh 515001" now resolves to genuine coordinates `14.6819, 77.6006`.
+    - Distance to Aryan The Pizza (Mukherjee Nagar Delhi) is calculated as **1,560.3 km**.
+    - Delivery is strictly flagged out-of-range (`isDeliverable = false`).
+    - The toast displays: `📍 Address saved: Flat 101 (Aryan The Pizza is 1560 km away • Outside 25 km delivery zone)`.
+    - Storefront renders State 2 empty state: *"No Carts Delivering to Your Location Yet: There are currently no street food carts registered within 25 km of Anantapur, Andhra Pradesh"*.
+    - Checkout gate blocks order submission with toast: *"📍 Delivery Unavailable: Aryan The Pizza delivers within 25 km of Mukherjee Nagar. Your address is 1560.3 km away."*.
+  - **Decentralized Multi-City Parity**:
+    - If a vendor registers in Andhra Pradesh (e.g. at `14.6819, 77.6006`), that vendor will be 0 km from this customer and deliverable ($\le 25$ km), proving every location in India is treated equally with zero favoritism.
+  - **Universal Testing & Verification**:
+    - 38/38 tests passed in `test_aryan_the_pizza.js`.
+    - 100/100 tests passed across all 4 production test suites.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
+| `HEAD` | 2026-09-29 | Geocoding & Accuracy | Authoritative Pan-India pincode and state address resolver, zero Delhi fallback, and 1560km AP out-of-range enforcement (v2.4.0) |
 | `4f702a5` | 2026-09-29 | Auth & Location | Gate address creation behind mobile login and enforce decentralized multi-city stall delivery (v2.3.9) |
 | `5b49cd8` | 2026-09-29 | Delivery & Pricing | 25km max delivery limit, VIP free <=7km & chargeable rules, and purge all area suggestions (v2.3.8) |
 | `b3a8db0` | 2026-09-28 | Location & Delivery | 10km standard / 20km VIP delivery limits, GTB Nagar Metro landmark, and clean zero-coords UX (v2.3.7) |
@@ -1032,7 +1074,7 @@ stateDiagram-v2
 
 | Test Script File | Primary Verification Objective | Number of Tests | Status |
 | :--- | :--- | :---: | :---: |
-| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, GTB Nagar Metro landmark, 25km maximum delivery radius gating, VIP free delivery <=7km & chargeable tiers, full screen modal, dark theme category pills, reactive customizer sheet, checkout login gate, zero-coords UX, complete suggestion purge, direct UPI payment, mobile login required for address creation, decentralized multi-city delivery, and client-side syntax parsing integrity | 37 tests | ✅ Passed |
+| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, GTB Nagar Metro landmark, 25km maximum delivery radius gating, VIP free delivery <=7km & chargeable tiers, full screen modal, dark theme category pills, reactive customizer sheet, checkout login gate, zero-coords UX, complete suggestion purge, direct UPI payment, mobile login required for address creation, decentralized multi-city delivery, authoritative Pan-India geocoder (1560km AP out-of-range), and client-side syntax parsing integrity | 38 tests | ✅ Passed |
 | [`test_street_food_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_street_food_ux.js) | Authentic street food UX, real food photo carousel, swipe/touch accessibility, theme dark hover protection, zero 1971 fake count, visual veg toggle, buyable VIP, dynamic coupons & adaptive modals | 21 tests | ✅ Passed |
 | [`test_zomato_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_zomato_ux.js) | Zomato-inspired dynamic customer app experience, hero carousel, circular stories, quick filters, bottom dock, VIP Gold profile & wallet engine | 12 tests | ✅ Passed |
 | [`test_store_status_contradiction.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_store_status_contradiction.js) | Server-authoritative store status derivation, anti-bypass invariants, hoisting audit, zero 1.5 km copy | 7 suites | ✅ Passed |

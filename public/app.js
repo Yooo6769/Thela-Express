@@ -600,11 +600,11 @@ function computeGeographicDistanceKm(lat1, lon1, lat2, lon2) {
 
 function getActiveCustomerCoordinates() {
   if (typeof STATE !== 'undefined') {
-    if (STATE.customerLocation && typeof STATE.customerLocation.lat === 'number' && typeof STATE.customerLocation.lng === 'number') {
-      return STATE.customerLocation;
-    }
     if (STATE.activeAddress && typeof STATE.activeAddress.lat === 'number' && typeof STATE.activeAddress.lng === 'number') {
       return { lat: STATE.activeAddress.lat, lng: STATE.activeAddress.lng };
+    }
+    if (STATE.customerLocation && typeof STATE.customerLocation.lat === 'number' && typeof STATE.customerLocation.lng === 'number') {
+      return STATE.customerLocation;
     }
   }
   return null;
@@ -4862,53 +4862,38 @@ async function handleSaveAddress(event) {
   const address = landmark ? `${street}, Landmark: ${landmark}` : street;
   const tag = STATE.newAddrTag || 'Home';
 
-  // Infer coordinates based on text or current location (Decentralized, no central hub bias)
-  const combinedText = (house + ' ' + street + ' ' + landmark).toLowerCase();
-  let inferredLat = (STATE.customerLocation && typeof STATE.customerLocation.lat === 'number') 
-    ? STATE.customerLocation.lat 
-    : 28.6139;
-  let inferredLng = (STATE.customerLocation && typeof STATE.customerLocation.lng === 'number') 
-    ? STATE.customerLocation.lng 
-    : 77.2090;
-  let inferredArea = street || 'Saved Address';
-  let inferredPincode = '';
+  // Authoritative Pan-India Address & Pincode Geocoding (Decentralized, all places treated equally)
+  const combinedText = [house, street, landmark].filter(Boolean).join(' ');
+  const liveGpsCoords = (STATE.customerLocation?.source === 'gps' && typeof STATE.customerLocation.lat === 'number') 
+    ? STATE.customerLocation 
+    : null;
 
-  if (combinedText.includes('gtb') || combinedText.includes('hudson') || combinedText.includes('kingsway')) {
-    inferredLat = 28.7000;
-    inferredLng = 77.2070;
-    inferredArea = 'GTB Nagar';
-    inferredPincode = '110009';
-  } else if (combinedText.includes('mukherjee')) {
-    inferredLat = 28.7095;
-    inferredLng = 77.2075;
-    inferredArea = 'Mukherjee Nagar';
-    inferredPincode = '110009';
-  } else if (combinedText.includes('model town')) {
-    inferredLat = 28.7150;
-    inferredLng = 77.1900;
-    inferredArea = 'Model Town';
-    inferredPincode = '110009';
-  } else if (combinedText.includes('connaught') || combinedText.includes('cp') || combinedText.includes('110001')) {
-    inferredLat = 28.6139;
-    inferredLng = 77.2090;
-    inferredArea = 'Connaught Place';
-    inferredPincode = '110001';
-  } else if (combinedText.includes('noida') || combinedText.includes('201301')) {
-    inferredLat = 28.5700;
-    inferredLng = 77.3200;
-    inferredArea = 'Noida Sector 18';
-    inferredPincode = '201301';
-  } else if (combinedText.includes('ghaziabad') || combinedText.includes('201001') || combinedText.includes('raj nagar')) {
-    inferredLat = 28.6692;
-    inferredLng = 77.4538;
-    inferredArea = 'Ghaziabad';
-    inferredPincode = '201001';
-  } else if (combinedText.includes('mumbai') || combinedText.includes('bandra') || combinedText.includes('andheri')) {
-    inferredLat = 19.0760;
-    inferredLng = 72.8777;
-    inferredArea = 'Mumbai';
-    inferredPincode = '400001';
+  const geocoderFn = (typeof window !== 'undefined' && window.IndianGeocoder && window.IndianGeocoder.resolveIndianAddressCoordinates)
+    ? window.IndianGeocoder.resolveIndianAddressCoordinates
+    : null;
+
+  let geo = geocoderFn ? geocoderFn(combinedText, liveGpsCoords) : null;
+  if (!geo || !geo.isResolved) {
+    try {
+      const geoRes = await fetch(`/api/geocode?q=${encodeURIComponent(combinedText)}`);
+      const geoData = await geoRes.json();
+      if (geoData && geoData.isResolved) {
+        geo = geoData;
+      }
+    } catch (e) {
+      console.warn('Geocode API error:', e);
+    }
   }
+
+  if (!geo || !geo.isResolved) {
+    showToast('📍 Please enter your City, State or 6-digit PIN code so we can verify cart delivery range');
+    return;
+  }
+
+  const inferredLat = geo.lat;
+  const inferredLng = geo.lng;
+  const inferredArea = geo.area || street || 'Saved Address';
+  const inferredPincode = geo.pincode || '';
 
   const newAddressObj = {
     id: 'addr_' + Date.now(),
@@ -4998,7 +4983,10 @@ async function handleSaveAddress(event) {
         showToast(`✅ Address saved: ${title} (${deliverableCount} thela${deliverableCount > 1 ? 's' : ''} delivering to you)`);
       }
     } else {
-      showToast(`✅ Address saved: ${title} (Currently outside delivery zone of registered thelas)`);
+      const distInfo = (closestDist < Infinity && closestStall)
+        ? ` (${closestStall.name} is ${closestDist.toFixed(0)} km away • Outside 25 km delivery zone)`
+        : ' (Currently outside 25 km delivery zone)';
+      showToast(`📍 Address saved: ${title}${distInfo}`);
     }
   } catch (err) {
     console.error('Save address error:', err);

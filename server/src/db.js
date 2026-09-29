@@ -256,6 +256,8 @@ class Database {
     if (landmark) fullTitle += ` (Near ${landmark})`;
     if (!fullTitle) fullTitle = 'Custom Delivery Point';
 
+    const parsedLat = parseFloat(addressData.lat);
+    const parsedLng = parseFloat(addressData.lng);
     const newAddress = {
       id: `addr_${Date.now()}_${Math.random().toString(36).substr(2, 4)}`,
       tag: addressData.tag || 'Home', // 'Home', 'Work', 'Other'
@@ -263,9 +265,11 @@ class Database {
       street: street,
       landmark: landmark,
       city: city,
+      area: addressData.area || city || street,
+      pincode: addressData.pincode || '',
       title: fullTitle,
-      lat: parseFloat(addressData.lat) || 12.9719,
-      lng: parseFloat(addressData.lng) || 77.6412,
+      lat: !isNaN(parsedLat) ? parsedLat : null,
+      lng: !isNaN(parsedLng) ? parsedLng : null,
       isDefault: isDefault
     };
 
