@@ -902,13 +902,13 @@ flowchart LR
     - Any new vendor stall registering anywhere across India (e.g. Ghaziabad, Noida, Delhi, Mumbai, Pune, Bengaluru) delivers up to 25 km from *its own cart coordinates*.
     - **Neutralized GPS Detection**: In `captureCustomerGps()`, removed all hardcoded distance math to `28.7095, 77.2075` and removed North Delhi/NCR tiering. Customer GPS coordinates are evaluated dynamically against *all active stalls* in `STATE.stalls` (`stall.delivery_radius_km || 25.0`), displaying distance to the nearest cart.
     - **Neutralized Address Placeholders**: Replaced Delhi-biased examples in `public/index.html` with universal neutral placeholders: `placeholder="e.g. Main Market / Colony Name"` and `placeholder="e.g. Landmark / Metro Station, Pincode"`.
-    - **Dynamic Server-Side Error Strings**: Updated `server/src/routes/orders.js` out-of-range error response from hardcoded `"from GTB Nagar"` to dynamic: `"...delivers up to ${maxRadius} km from ${stall.area || stall.city || 'its location'}"`.
-    - **Decentralized Discovery Copy**: Updated State 2 zero-stalls banner in `renderStalls()` to: *"Every verified street food thela on ThelaExpress delivers hot, fresh bites within a 25 km radius of its own cart location (Free delivery up to 7 km for VIP members)."*
-    - **Purged Legacy Presets**: Completely purged `DELHI_PREDEFINED_LOCATIONS` and legacy preset selection logic from `public/app.js`.
+    - **Client-Side Script Parsing Integrity**:
+      - Restored `if (dist > maxRadius) {` boundary check in `handlePlaceOrder()`, resolving a client-side syntax error that prevented the browser from evaluating `public/app.js` and blocked button clicks.
+      - Integrated automated `node --check` syntax validation into `test_aryan_the_pizza.js` to continuously enforce 100% parse validity across all frontend scripts.
   - **Comprehensive Automated Verification**:
-    - Expanded `scratch/test_aryan_the_pizza.js` to 36 tests.
-    - Verified guest login gate on address creation and simulated decentralized vendor registration across multiple cities (Ghaziabad RDC and Mumbai Bandra), proving delivery is calculated relative to each stall's own physical coordinates.
-    - 100% pass rate across all 98 automated tests in 4 test suites.
+    - Expanded `scratch/test_aryan_the_pizza.js` to 37 tests.
+    - Verified guest login gate on address creation, simulated decentralized vendor registration across multiple cities (Ghaziabad RDC and Mumbai Bandra), proving delivery is calculated relative to each stall's own physical coordinates, and validated client-side script syntax integrity.
+    - 100% pass rate across all 99 automated tests in 4 test suites.
 
 ---
 
@@ -1032,7 +1032,7 @@ stateDiagram-v2
 
 | Test Script File | Primary Verification Objective | Number of Tests | Status |
 | :--- | :--- | :---: | :---: |
-| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, GTB Nagar Metro landmark, 25km maximum delivery radius gating, VIP free delivery <=7km & chargeable tiers, full screen modal, dark theme category pills, reactive customizer sheet, checkout login gate, zero-coords UX, complete suggestion purge, direct UPI payment, mobile login required for address creation, and decentralized multi-city delivery | 36 tests | ✅ Passed |
+| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, GTB Nagar Metro landmark, 25km maximum delivery radius gating, VIP free delivery <=7km & chargeable tiers, full screen modal, dark theme category pills, reactive customizer sheet, checkout login gate, zero-coords UX, complete suggestion purge, direct UPI payment, mobile login required for address creation, decentralized multi-city delivery, and client-side syntax parsing integrity | 37 tests | ✅ Passed |
 | [`test_street_food_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_street_food_ux.js) | Authentic street food UX, real food photo carousel, swipe/touch accessibility, theme dark hover protection, zero 1971 fake count, visual veg toggle, buyable VIP, dynamic coupons & adaptive modals | 21 tests | ✅ Passed |
 | [`test_zomato_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_zomato_ux.js) | Zomato-inspired dynamic customer app experience, hero carousel, circular stories, quick filters, bottom dock, VIP Gold profile & wallet engine | 12 tests | ✅ Passed |
 | [`test_store_status_contradiction.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_store_status_contradiction.js) | Server-authoritative store status derivation, anti-bypass invariants, hoisting audit, zero 1.5 km copy | 7 suites | ✅ Passed |

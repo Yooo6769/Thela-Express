@@ -599,6 +599,13 @@ test('Decentralized Platform: Any stall registered in Ghaziabad, Noida, Mumbai o
   assert(ordersJsContent.includes('stall.area || stall.city'), 'orders.js missing dynamic stall.area / stall.city location');
 });
 
+test('Client-Side Script Integrity: public/app.js parses with zero syntax errors', () => {
+  const { execSync } = require('child_process');
+  assert.doesNotThrow(() => {
+    execSync(`node --check "${appJsPath}"`, { stdio: 'pipe' });
+  }, 'public/app.js failed syntax validation');
+});
+
 console.log(`\n🎉 ALL ${passCount} ARYAN THE PIZZA INTEGRATION TESTS PASSED COMPLETELY!`);
 console.log('================================================================');
 

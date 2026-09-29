@@ -3319,6 +3319,7 @@ async function handlePlaceOrder() {
   if (activeStall && custCoords && typeof custCoords.lat === 'number' && typeof custCoords.lng === 'number') {
     dist = computeGeographicDistanceKm(custCoords.lat, custCoords.lng, activeStall.lat, activeStall.lng);
     const maxRadius = 25.0;
+    if (dist > maxRadius) {
       const stallArea = activeStall.area || activeStall.city || 'its cart location';
       showToast(`⚠️ Delivery Unavailable: ${activeStall.name} delivers within 25 km of ${stallArea}. Your address is ${dist.toFixed(1)} km away.`);
       return;
