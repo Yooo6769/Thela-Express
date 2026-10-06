@@ -960,6 +960,44 @@ const CURATED_DISCOVERY = {
   hiddengems: []
 };
 
+function renderDietaryBadge(stall) {
+  if (!stall) return '';
+  const isBoth = stall.dietaryType === 'both' || (stall.servesVeg && stall.servesNonVeg);
+  const isPure = stall.isPureVeg || (stall.dietaryType === 'pure_veg') || (stall.isVeg && !isBoth);
+
+  if (isBoth) {
+    return `
+      <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded border border-stone-200 dark:border-stone-700 bg-stone-50 dark:bg-stone-800 shadow-2xs" title="Serves both Vegetarian and Non-Vegetarian food">
+        <span class="w-3 h-3 rounded border border-green-600 flex items-center justify-center p-0.5" title="Veg Available">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+        </span>
+        <span class="w-3 h-3 rounded border border-red-600 flex items-center justify-center p-0.5" title="Non-Veg Available">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+        </span>
+        <span class="text-[9px] font-black text-stone-700 dark:text-stone-300 ml-0.5">VEG & NON-VEG</span>
+      </span>
+    `;
+  } else if (isPure) {
+    return `
+      <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded border border-green-200 dark:border-green-800 bg-green-50 dark:bg-green-950/40 shadow-2xs" title="100% Pure Vegetarian Stall">
+        <span class="w-3 h-3 rounded border border-green-600 flex items-center justify-center p-0.5" title="Pure Veg Stall">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
+        </span>
+        <span class="text-[9px] font-black text-green-700 dark:text-green-300">PURE VEG</span>
+      </span>
+    `;
+  } else {
+    return `
+      <span class="inline-flex items-center space-x-1 px-1.5 py-0.5 rounded border border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/40 shadow-2xs" title="Non-Vegetarian Stall">
+        <span class="w-3 h-3 rounded border border-red-600 flex items-center justify-center p-0.5" title="Non-Veg Stall">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
+        </span>
+        <span class="text-[9px] font-black text-red-700 dark:text-red-300">NON-VEG</span>
+      </span>
+    `;
+  }
+}
+
 function renderDiscoverySections(stalls) {
   const sections = [
     { key: 'trending', sectionId: 'secTrending', trackId: 'secTrendingTrack', defaultBadge: '🔥 Trending' },
@@ -996,7 +1034,7 @@ function renderDiscoverySections(stalls) {
     }
 
     if (STATE.vegOnly) {
-      matchingStalls = matchingStalls.filter(s => s.isVeg);
+      matchingStalls = matchingStalls.filter(s => s.servesVeg || s.isVeg || s.isPureVeg || s.hasVeg || s.dietaryType === 'both');
     }
 
     // If no genuine matching live stalls exist, keep the entire section completely hidden
@@ -1025,6 +1063,12 @@ function renderDiscoverySections(stalls) {
         lng: s.lng || null,
         prepTime: (typeof s.prepTime === 'number' && s.prepTime > 0) ? s.prepTime : (parseInt(s.prepTime, 10) > 0 ? parseInt(s.prepTime, 10) : null),
         isVeg: Boolean(s.isVeg),
+        isPureVeg: s.isPureVeg !== undefined ? Boolean(s.isPureVeg) : (s.isVeg && s.dietaryType !== 'both'),
+        dietaryType: s.dietaryType || (s.isVeg ? 'pure_veg' : 'both'),
+        servesVeg: s.servesVeg !== undefined ? Boolean(s.servesVeg) : true,
+        servesNonVeg: s.servesNonVeg !== undefined ? Boolean(s.servesNonVeg) : !s.isVeg,
+        hasVeg: s.hasVeg !== undefined ? Boolean(s.hasVeg) : true,
+        hasNonVeg: s.hasNonVeg !== undefined ? Boolean(s.hasNonVeg) : !s.isVeg,
         badgeText: defaultBadge,
         badgeIcon: '',
         badgeColor: 'bg-stone-900/90 text-white',
@@ -1096,15 +1140,7 @@ function renderDiscoverySections(stalls) {
                   ${card.name}
                 </h4>
                 <div class="flex items-center space-x-1 shrink-0 mt-0.5">
-                  ${card.isVeg ? `
-                    <span class="w-3.5 h-3.5 rounded border border-green-600 flex items-center justify-center p-0.5" title="Pure Veg">
-                      <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
-                    </span>
-                  ` : `
-                    <span class="w-3.5 h-3.5 rounded border border-red-600 flex items-center justify-center p-0.5" title="Non-Veg">
-                      <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                    </span>
-                  `}
+                  ${renderDietaryBadge(card)}
                 </div>
               </div>
               ${card.specialty ? `<p class="text-xs text-stone-500 font-medium mt-0.5 line-clamp-1">${card.specialty}</p>` : ''}
@@ -1398,15 +1434,7 @@ function renderStalls(stalls) {
                 ${stall.name}
               </h3>
               <div class="flex items-center space-x-1 shrink-0 mt-0.5">
-                ${stall.isVeg ? `
-                  <span class="w-3.5 h-3.5 rounded border border-green-600 flex items-center justify-center p-0.5" title="Pure Veg Stall">
-                    <span class="w-1.5 h-1.5 rounded-full bg-green-600"></span>
-                  </span>
-                ` : `
-                  <span class="w-3.5 h-3.5 rounded border border-red-600 flex items-center justify-center p-0.5" title="Non-Veg Available">
-                    <span class="w-1.5 h-1.5 rounded-full bg-red-600"></span>
-                  </span>
-                `}
+                ${renderDietaryBadge(stall)}
               </div>
             </div>
             
@@ -1529,7 +1557,7 @@ function toggleVegFilter() {
   }
 
   loadStalls();
-  showToast(STATE.vegOnly ? '🌱 Pure Veg Mode: Showing 100% vegetarian stalls' : 'Showing all options');
+  showToast(STATE.vegOnly ? '🌱 Veg Mode Active: Showing vegetarian food & options' : 'Showing all food options (Veg & Non-Veg)');
 }
 
 async function loadCategories() {
@@ -1651,6 +1679,8 @@ async function openStallModal(stallId) {
       return;
     }
     STATE.currentStall = data.stall;
+    STATE.currentMenuRaw = data.items || [];
+    STATE.modalVegOverride = STATE.vegOnly;
     STATE.currentMenu = data.items || [];
 
     // 1. Hero Media (Video or Image)
@@ -1701,10 +1731,26 @@ async function openStallModal(stallId) {
 
     const vegPillEl = document.getElementById('modalVegPill');
     if (vegPillEl) {
-      if (data.stall.isVeg) {
-        vegPillEl.classList.remove('hidden');
+      const isBoth = data.stall.dietaryType === 'both' || (data.stall.servesVeg && data.stall.servesNonVeg);
+      const isPure = data.stall.isPureVeg || (data.stall.dietaryType === 'pure_veg') || (data.stall.isVeg && !isBoth);
+      vegPillEl.classList.remove('hidden');
+      if (isBoth) {
+        vegPillEl.className = 'text-[10px] font-black uppercase tracking-wider bg-stone-900/90 border border-stone-600 text-stone-200 px-2.5 py-0.5 rounded-md flex items-center space-x-1.5 backdrop-blur-md shadow-xs';
+        vegPillEl.innerHTML = `
+          <span class="w-2.5 h-2.5 rounded border border-green-400 flex items-center justify-center p-0.5"><span class="w-1 h-1 rounded-full bg-green-400"></span></span>
+          <span class="w-2.5 h-2.5 rounded border border-red-400 flex items-center justify-center p-0.5"><span class="w-1 h-1 rounded-full bg-red-400"></span></span>
+          <span>Veg & Non-Veg</span>
+        `;
+      } else if (isPure) {
+        vegPillEl.className = 'text-[10px] font-black uppercase tracking-wider bg-green-950/80 border border-green-500/50 text-green-300 px-2 py-0.5 rounded-md flex items-center backdrop-blur-md';
+        vegPillEl.innerHTML = `
+          <span class="w-1.5 h-1.5 rounded-full bg-green-400 mr-1"></span>Pure Veg
+        `;
       } else {
-        vegPillEl.classList.add('hidden');
+        vegPillEl.className = 'text-[10px] font-black uppercase tracking-wider bg-red-950/80 border border-red-500/50 text-red-300 px-2 py-0.5 rounded-md flex items-center backdrop-blur-md';
+        vegPillEl.innerHTML = `
+          <span class="w-1.5 h-1.5 rounded-full bg-red-400 mr-1"></span>Non-Veg
+        `;
       }
     }
 
@@ -1771,8 +1817,13 @@ async function openStallModal(stallId) {
       }
     }
 
+    // Resolve items according to veg preference
+    const showVegOnly = Boolean(STATE.modalVegOverride && (data.stall.dietaryType === 'both' || data.stall.servesNonVeg));
+    const activeItems = showVegOnly ? (data.items || []).filter(i => i.isVeg) : (data.items || []);
+    STATE.currentMenu = activeItems;
+
     // 8. "Famous For" Section (Top 2-3 signature dishes)
-    renderFamousForDishes(data.items || []);
+    renderFamousForDishes(activeItems);
 
     // 9. "Local Story" Section (Strictly genuine verified history only)
     const storySection = document.getElementById('modalLocalStorySection');
@@ -1808,7 +1859,7 @@ async function openStallModal(stallId) {
     }
 
     // 12. Render Categorized Menu & Sticky Navigation Tabs
-    renderCategoryTabsAndMenuItems(data.items || []);
+    renderCategoryTabsAndMenuItems(activeItems);
 
     // 13. Update Sticky Cart Bar
     updateCartFloatingBar();
@@ -1824,6 +1875,18 @@ async function openStallModal(stallId) {
     showToast('Failed to load stall menu');
   }
 }
+
+function toggleModalVegView() {
+  if (!STATE.currentMenuRaw || !STATE.currentStall) return;
+  STATE.modalVegOverride = !STATE.modalVegOverride;
+  const showVegOnly = Boolean(STATE.modalVegOverride && (STATE.currentStall.dietaryType === 'both' || STATE.currentStall.servesNonVeg));
+  const items = showVegOnly ? STATE.currentMenuRaw.filter(i => i.isVeg) : STATE.currentMenuRaw;
+  STATE.currentMenu = items;
+  renderFamousForDishes(items);
+  renderCategoryTabsAndMenuItems(items);
+  showToast(STATE.modalVegOverride ? '🌱 Showing vegetarian dishes only' : 'Showing all dishes (Veg & Non-Veg)');
+}
+window.toggleModalVegView = toggleModalVegView;
 
 function closeStallModal() {
   const modal = document.getElementById('stallModal');
@@ -2223,14 +2286,14 @@ function groupMenuDishes(rawItems) {
 function selectDishVariant(dishKey, variantId) {
   STATE.selectedDishVariant = STATE.selectedDishVariant || {};
   STATE.selectedDishVariant[dishKey] = variantId;
-  renderMenuItems(STATE.currentMenu);
+  renderCategoryTabsAndMenuItems(STATE.currentMenu);
 }
 
 function addVariantToCart(variantId) {
-  const item = (STATE.currentMenu || []).find(i => i.id === variantId);
+  const item = (STATE.currentMenu || []).find(i => i.id === variantId) || (STATE.currentMenuRaw || []).find(i => i.id === variantId);
   if (!item) return;
 
-  const grouped = groupMenuDishes(STATE.currentMenu || []);
+  const grouped = groupMenuDishes(STATE.currentMenuRaw || STATE.currentMenu || []);
   const dish = grouped.find(d => d.id === variantId || (d.variants && d.variants.some(v => v.id === variantId)));
   if (dish && (dish.variants.length > 1 || (dish.category && dish.category.toLowerCase().includes('pizza')) || (dish.name && dish.name.toLowerCase().includes('pizza')))) {
     openDishCustomizer(dish.key, variantId);
@@ -2247,13 +2310,27 @@ function renderCategoryTabsAndMenuItems(items) {
 
   if (!items || items.length === 0) {
     if (tabsContainer) tabsContainer.innerHTML = '';
-    itemsContainer.innerHTML = `
-      <div class="p-8 text-center space-y-2">
-        <i class="fa-solid fa-utensils text-3xl text-stone-300"></i>
-        <h4 class="font-black text-sm text-stone-700">No dishes listed yet</h4>
-        <p class="text-xs text-stone-400">This authentic vendor is preparing their fresh menu items.</p>
-      </div>
-    `;
+    const hasAnyRaw = STATE.currentMenuRaw && STATE.currentMenuRaw.length > 0;
+    if (hasAnyRaw && STATE.modalVegOverride) {
+      itemsContainer.innerHTML = `
+        <div class="p-8 text-center space-y-3 bg-stone-50 dark:bg-stone-900 rounded-3xl m-4 border border-stone-200 dark:border-stone-800">
+          <i class="fa-solid fa-leaf text-3xl text-emerald-500"></i>
+          <h4 class="font-black text-sm text-stone-800 dark:text-stone-200">No vegetarian dishes found</h4>
+          <p class="text-xs text-stone-500">All available items are non-vegetarian.</p>
+          <button onclick="toggleModalVegView()" class="px-4 py-2 rounded-xl bg-amber-500 text-white font-black text-xs hover:bg-amber-600 transition shadow-xs cursor-pointer">
+            View All Dishes (${STATE.currentMenuRaw.length})
+          </button>
+        </div>
+      `;
+    } else {
+      itemsContainer.innerHTML = `
+        <div class="p-8 text-center space-y-2">
+          <i class="fa-solid fa-utensils text-3xl text-stone-300"></i>
+          <h4 class="font-black text-sm text-stone-700">No dishes listed yet</h4>
+          <p class="text-xs text-stone-400">This authentic vendor is preparing their fresh menu items.</p>
+        </div>
+      `;
+    }
     return;
   }
 
@@ -2331,8 +2408,22 @@ function renderCategoryTabsAndMenuItems(items) {
 
   STATE.selectedDishVariant = STATE.selectedDishVariant || {};
 
+  const isBothStall = STATE.currentStall && (STATE.currentStall.dietaryType === 'both' || (STATE.currentStall.servesVeg && STATE.currentStall.servesNonVeg));
+  const totalRawCount = (STATE.currentMenuRaw && STATE.currentMenuRaw.length) || items.length;
+  const dietaryNoticeBanner = isBothStall ? `
+    <div class="mb-3 p-3 rounded-2xl ${STATE.modalVegOverride ? 'bg-emerald-50/90 dark:bg-emerald-950/40 border border-emerald-200/80 dark:border-emerald-800/60' : 'bg-stone-50 dark:bg-stone-850 border border-stone-200 dark:border-stone-800'} flex items-center justify-between text-xs transition">
+      <div class="flex items-center space-x-2 ${STATE.modalVegOverride ? 'text-emerald-800 dark:text-emerald-300' : 'text-stone-700 dark:text-stone-300'} font-bold">
+        <i class="fa-solid ${STATE.modalVegOverride ? 'fa-leaf text-emerald-600' : 'fa-utensils text-amber-500'}"></i>
+        <span>${STATE.modalVegOverride ? `Showing Vegetarian Dishes (${items.length} items)` : `Showing All Dishes (${totalRawCount} items)`}</span>
+      </div>
+      <button onclick="toggleModalVegView()" class="text-[11px] font-black px-3 py-1 rounded-xl transition cursor-pointer shadow-2xs ${STATE.modalVegOverride ? 'text-emerald-700 dark:text-emerald-400 bg-white dark:bg-stone-800 border border-emerald-300 dark:border-emerald-700 hover:bg-emerald-100' : 'text-stone-800 dark:text-stone-200 bg-white dark:bg-stone-800 border border-stone-300 dark:border-stone-700 hover:bg-stone-100'}">
+        ${STATE.modalVegOverride ? `Show All (${totalRawCount})` : '🌱 Veg Only'}
+      </button>
+    </div>
+  ` : '';
+
   // 4. Render Categorized Sections and Redesigned Food Cards
-  itemsContainer.innerHTML = categories.map(cat => `
+  itemsContainer.innerHTML = dietaryNoticeBanner + categories.map(cat => `
     <div id="cat_section_${cat.id}" class="menu-cat-section space-y-3 pt-2 first:pt-0">
       <div class="flex items-center justify-between border-b border-stone-100 dark:border-stone-800 pb-2">
         <h3 class="font-black text-stone-900 dark:text-white text-sm tracking-tight flex items-center space-x-2">
@@ -2514,7 +2605,7 @@ function handleAddItemClick(itemId) {
 }
 
 function openDishCustomizer(dishKeyOrId, preferredVariantId) {
-  const currentMenu = STATE.currentMenu || [];
+  const currentMenu = STATE.currentMenuRaw || STATE.currentMenu || [];
   const groupedDishes = groupMenuDishes(currentMenu);
   
   let dish = groupedDishes.find(d => d.key === dishKeyOrId || d.id === dishKeyOrId);

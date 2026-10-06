@@ -626,8 +626,19 @@ class Database {
     if (stall.identity_status === 'verified' && stall.verification_status === 'APPROVED') completedChecks.push({ key: 'identity', label: 'Vendor KYC & ID Verified', icon: 'fa-circle-check', color: 'blue' });
     if (stall.location_verified) completedChecks.push({ key: 'location', label: 'Physical Location Verified', icon: 'fa-location-dot', color: 'teal' });
 
+    const isPureVeg = stall.isPureVeg !== undefined ? Boolean(stall.isPureVeg) : (stall.isVeg === true && stall.dietaryType !== 'both' && !stall.servesNonVeg);
+    const dietaryType = stall.dietaryType || (isPureVeg ? 'pure_veg' : ((stall.servesVeg || stall.hasVeg) && (stall.servesNonVeg || stall.hasNonVeg) ? 'both' : (stall.isVeg ? 'pure_veg' : 'both')));
+    const servesVeg = stall.servesVeg !== undefined ? Boolean(stall.servesVeg) : (isPureVeg || dietaryType === 'both' || dietaryType === 'pure_veg' || stall.isVeg === true);
+    const servesNonVeg = stall.servesNonVeg !== undefined ? Boolean(stall.servesNonVeg) : (!isPureVeg || dietaryType === 'both' || dietaryType === 'non_veg');
+
     return {
       ...stall,
+      isPureVeg,
+      dietaryType,
+      servesVeg,
+      servesNonVeg,
+      hasVeg: servesVeg,
+      hasNonVeg: servesNonVeg,
       isOpen: storeStatus.isOpen, // Server-authoritative: NEVER true unless genuine LIVE + all 7 gates pass + isOpen
       store_status: storeStatus,
       effective_store_status: storeStatus.code,

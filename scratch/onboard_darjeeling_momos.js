@@ -58,6 +58,12 @@ const stallObj = {
   isOpen: true,
   is_active: true,
   isVeg: false, // Serves both Veg & Non-Veg (Chicken) momos
+  isPureVeg: false,
+  dietaryType: 'both',
+  servesVeg: true,
+  servesNonVeg: true,
+  hasVeg: true,
+  hasNonVeg: true,
 
   // FSSAI Regulatory State
   fssai_number: '23326002001158',

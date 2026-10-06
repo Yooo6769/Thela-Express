@@ -43,7 +43,7 @@ router.get('/', (req, res) => {
   let stalls = db.getStalls(category, lat, lng, isVip);
 
   if (vegOnly === 'true') {
-    stalls = stalls.filter(s => s.isVeg);
+    stalls = stalls.filter(s => s.servesVeg || s.isVeg || s.isPureVeg || s.hasVeg || s.dietaryType === 'both');
   }
 
   if (nearbyOnly === 'true' && lat && lng) {

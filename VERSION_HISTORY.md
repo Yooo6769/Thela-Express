@@ -2,7 +2,7 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.4.2`  
+**Current Production Version**: `v2.4.3`  
 **Current Date**: October 6, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
@@ -56,6 +56,7 @@ flowchart LR
     v239 --> v240["v2.4.0<br/>Pan-India Pincode & State Geocoding Engine; Zero Central Fallback; 1560km AP Out-of-Range Enforcement"]
     v240 --> v241["v2.4.1<br/>Far NCR Geocoding Accuracy: Noida (26.4km) & Greater Noida (39km) Out-of-Range Enforcement"]
     v241 --> v242["v2.4.2<br/>Second Real Street Partner — Darjeeling Momos (Vishwavidyalaya Metro Station)"]
+    v242 --> v243["v2.4.3<br/>Dual Veg & Non-Veg Classification, Stall Badge & Filter Resilience Engine"]
 ```
 
 ---
@@ -1015,10 +1016,48 @@ flowchart LR
 
 ---
 
+### `v2.4.3` — Dual Veg & Non-Veg Dietary Classification, Stall Badges & Filter Resilience Engine
+- **Release Date**: October 6, 2026
+- **Architecture Highlights**:
+  - **The "Non-Veg Only" Labeling Problem Identified & Eradicated**:
+    - Previously, stalls were treated under a simplistic binary boolean `isVeg: true | false`.
+    - When Darjeeling Momos was onboarded with chicken items, it was marked `isVeg: false`.
+    - As a result, the storefront rendered a single red non-veg square badge on the stall card, giving customers the false impression that the stall sells zero vegetarian food. In reality, **20 out of 25 dishes (80%)** are 100% vegetarian (Steamed Veg Momos, Paneer Momos, Kurkure Veg Momos, Paneer Kurkure Momos, Veg Rolls, Fries, Chilly Potato, Chowmein, Maggi).
+    - Even worse, clicking the "VEG" filter button on the header executed `stalls.filter(s => s.isVeg)`, completely hiding Darjeeling Momos from vegetarian customers even though 80% of its menu is pure vegetarian!
+  - **Multi-Tier Dietary Classification Model**:
+    - Extended stall schema across `server/data/thela.db.json`, `server/src/db.js`, and `server/src/routes/stalls.js`:
+      - `dietaryType`: `'pure_veg'` | `'both'` | `'non_veg'`
+      - `servesVeg`: `true` (any stall serving vegetarian food)
+      - `servesNonVeg`: `true` | `false`
+      - `isPureVeg`: `true` only for 100% vegetarian kitchens (e.g. Aryan The Pizza)
+      - `hasVeg`: `true`, `hasNonVeg`: `true` | `false`
+    - Aryan The Pizza: `dietaryType: 'pure_veg'`, `servesVeg: true`, `servesNonVeg: false`, `isPureVeg: true`.
+    - Darjeeling Momos: `dietaryType: 'both'`, `servesVeg: true`, `servesNonVeg: true`, `isPureVeg: false`.
+  - **Crystal-Clear Dietary Badges on Storefront & Discovery Cards**:
+    - Created `renderDietaryBadge(stall)` in `public/app.js`:
+      - Dual Stalls (Darjeeling Momos): Renders 🟢 🔴 **VEG & NON-VEG** badge with both green and red dietary squares, immediately signaling to customers that both options are freshly prepared.
+      - 100% Pure Veg Stalls (Aryan The Pizza): Renders 🟢 **PURE VEG** badge.
+    - Updated modal hero header badge (`#modalVegPill`) to dynamically render `🟢 🔴 Veg & Non-Veg` or `🟢 Pure Veg`.
+  - **Veg Filter Resilience (Zero Disappearing Stalls)**:
+    - Updated `/api/stalls` backend route and `renderDiscoverySections` frontend logic:
+      - `stalls.filter(s => s.servesVeg || s.isVeg || s.isPureVeg || s.hasVeg || s.dietaryType === 'both')`.
+      - Turning ON the "VEG" button keeps stalls that serve vegetarian food visible so vegetarian customers can discover their extensive veg menus!
+  - **Modal Dish Filtering with Interactive Notice Banner**:
+    - When a customer has Veg Mode active, the stall modal filters its dish list and "Famous For" signatures to display vegetarian dishes only (all 20 veg dishes for Darjeeling Momos).
+    - Displays a clean, interactive banner: *"🌱 Showing Vegetarian Dishes Only (20 dishes)"* with a 1-tap button to *"Show All (25)"*.
+    - Customers can seamlessly toggle between veg dishes and the full menu without leaving the modal.
+  - **Comprehensive Automated Verification**:
+    - Added Test Suite 12 ("Dual Dietary Classification (Veg & Non-Veg Invariants)") to `scratch/test_aryan_the_pizza.js`.
+    - All 47 tests passed in `test_aryan_the_pizza.js`.
+    - All 109 platform tests passed with 100% success rate across all 4 production test suites.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
+| `[pending]` | 2026-10-06 | Dietary & UX | Dual Veg & Non-Veg classification, stall card badges, and veg filter resilience engine (v2.4.3) |
 | `9bfc1f3` | 2026-10-06 | Partner Onboarding | Onboard second real partner: Darjeeling Momos near Vishwavidyalaya Metro with 25 menu items (v2.4.2) |
 | `ac3317c` | 2026-10-06 | Geocoding & Accuracy | Accurate Far NCR Noida (26.4km) and Greater Noida (39km) out-of-range boundaries (v2.4.1) |
 | `9c5d98a` | 2026-09-29 | Geocoding & Accuracy | Authoritative Pan-India pincode and state address resolver, zero Delhi fallback, and 1560km AP out-of-range enforcement (v2.4.0) |
@@ -1138,7 +1177,7 @@ stateDiagram-v2
 
 | Test Script File | Primary Verification Objective | Number of Tests | Status |
 | :--- | :--- | :---: | :---: |
-| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, GTB Nagar Metro landmark, 25km maximum delivery radius gating, VIP free delivery <=7km & chargeable tiers, full screen modal, dark theme category pills, reactive customizer sheet, checkout login gate, zero-coords UX, complete suggestion purge, direct UPI payment, mobile login required for address creation, decentralized multi-city delivery, authoritative Pan-India geocoder (1560km AP out-of-range), and client-side syntax parsing integrity | 38 tests | ✅ Passed |
+| [`test_aryan_the_pizza.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_aryan_the_pizza.js) | First real partner onboarding, 7 activation gates, GTB Nagar Metro landmark, 25km maximum delivery radius gating, VIP free delivery <=7km & chargeable tiers, full screen modal, dark theme category pills, reactive customizer sheet, checkout login gate, zero-coords UX, complete suggestion purge, direct UPI payment, mobile login required for address creation, decentralized multi-city delivery, authoritative Pan-India geocoder (1560km AP out-of-range), Darjeeling Momos onboarding & menu transcription, dual Veg & Non-Veg dietary classification, and client-side syntax parsing integrity | 47 tests | ✅ Passed |
 | [`test_street_food_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_street_food_ux.js) | Authentic street food UX, real food photo carousel, swipe/touch accessibility, theme dark hover protection, zero 1971 fake count, visual veg toggle, buyable VIP, dynamic coupons & adaptive modals | 21 tests | ✅ Passed |
 | [`test_zomato_ux.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_zomato_ux.js) | Zomato-inspired dynamic customer app experience, hero carousel, circular stories, quick filters, bottom dock, VIP Gold profile & wallet engine | 12 tests | ✅ Passed |
 | [`test_store_status_contradiction.js`](file:///C:/Users/anura/.gemini/antigravity/scratch/thela-express-prod/scratch/test_store_status_contradiction.js) | Server-authoritative store status derivation, anti-bypass invariants, hoisting audit, zero 1.5 km copy | 7 suites | ✅ Passed |
