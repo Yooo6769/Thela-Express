@@ -408,15 +408,15 @@ test('db.getStalls computes deliverability up to 25km and calculates VIP vs Stan
   assert.strictEqual(cpStallVip.delivery_fee, 50, 'VIP delivery fee > 7km (10.6 km) must be chargeable (₹50)');
   assert.strictEqual(cpStallVip.is_free_delivery, false);
 
-  // 4. Noida Sector 18 (19 km) -> Deliverable for both (<= 25 km)
-  const noidaStallsStd = db.getStalls(null, 28.5700, 77.3200, false);
-  const noidaStallStd = noidaStallsStd.find(s => s.id === 'stall_aryan_the_pizza');
-  assert(noidaStallStd, 'Stall missing for Noida');
-  assert.strictEqual(noidaStallStd.isDeliverable, true, 'Noida (19 km) must be deliverable within 25 km');
-  assert.strictEqual(noidaStallStd.isDeliverableStandard, true);
-  assert.strictEqual(noidaStallStd.isDeliverableVip, true);
+  // 4. Location at 19 km (e.g. South Delhi 28.5385, 77.2075) -> Deliverable for both (<= 25 km)
+  const dist19StallsStd = db.getStalls(null, 28.5385, 77.2075, false);
+  const dist19StallStd = dist19StallsStd.find(s => s.id === 'stall_aryan_the_pizza');
+  assert(dist19StallStd, 'Stall missing at 19 km');
+  assert.strictEqual(dist19StallStd.isDeliverable, true, 'Location at 19 km must be deliverable within 25 km');
+  assert.strictEqual(dist19StallStd.isDeliverableStandard, true);
+  assert.strictEqual(dist19StallStd.isDeliverableVip, true);
   // Distance 19 km: extra = ceil(19 - 7) = 12 km -> 30 + 12*5 = 90
-  assert.strictEqual(noidaStallStd.delivery_fee, 90, 'Delivery fee at 19 km must be ₹90');
+  assert.strictEqual(dist19StallStd.delivery_fee, 90, 'Delivery fee at 19 km must be ₹90');
 
   // 5a. Ghaziabad RDC (24.4 km) -> Deliverable within 25 km, delivery fee = 30 + (18 * 5) = 120
   const gzStalls = db.getStalls(null, 28.6692, 77.4538, true);
@@ -667,6 +667,66 @@ test('Authoritative Pan-India Address Geocoding: Andhra Pradesh 515001 resolves 
   // 7. Verify index.html loads indian_geocoder.js
   const indexHtml = fs.readFileSync(path.join(__dirname, '../public/index.html'), 'utf8');
   assert(indexHtml.includes('src="/indian_geocoder.js'), 'public/index.html must include indian_geocoder.js');
+});
+
+test('Far NCR Geocoding Accuracy: Noida (26.4km) and Greater Noida (39km) resolve outside 25km range of Mukherjee Nagar stall', () => {
+  const { resolveIndianAddressCoordinates } = require('../server/src/utils/indian_geocoder');
+  const stall = db.getStallById('stall_aryan_the_pizza');
+  assert(stall, 'Aryan The Pizza stall must exist in db');
+
+  // 1. "greater noida" resolves to Pari Chowk Greater Noida (28.4744, 77.5040) -> 39km away (>25km)
+  const grNoida = resolveIndianAddressCoordinates('greater noida');
+  assert(grNoida.isResolved, 'greater noida should resolve');
+  assert.strictEqual(grNoida.area, 'Greater Noida');
+  const distGrNoida = db.computeGeographicDistanceKm(stall.lat, stall.lng, grNoida.lat, grNoida.lng);
+  assert(distGrNoida >= 38.0 && distGrNoida <= 40.0, `Distance to Greater Noida should be ~39km, got ${distGrNoida}km`);
+  assert(distGrNoida > stall.delivery_radius_km, 'Greater Noida must be strictly outside 25km delivery limit');
+
+  // 2. "greater noida pari chowk" and PIN 201306/201310
+  const pariChowk = resolveIndianAddressCoordinates('greater noida pari chowk');
+  const distPariChowk = db.computeGeographicDistanceKm(stall.lat, stall.lng, pariChowk.lat, pariChowk.lng);
+  assert(distPariChowk > 25.0, 'Pari Chowk must be outside 25km');
+
+  const pin201310 = resolveIndianAddressCoordinates('greater noida 201310');
+  const distPin201310 = db.computeGeographicDistanceKm(stall.lat, stall.lng, pin201310.lat, pin201310.lng);
+  assert(distPin201310 > 25.0, 'Greater Noida PIN 201310 must be outside 25km');
+
+  // 3. "noida" resolves to Central Noida (28.5355, 77.3910) -> 26.4km away (>25km)
+  const noida = resolveIndianAddressCoordinates('noida');
+  assert(noida.isResolved, 'noida should resolve');
+  assert.strictEqual(noida.area, 'Noida');
+  const distNoida = db.computeGeographicDistanceKm(stall.lat, stall.lng, noida.lat, noida.lng);
+  assert(distNoida > 25.0, `Noida (26.4km) must be outside 25km delivery limit of Mukherjee Nagar, got ${distNoida}km`);
+
+  // 4. "noida sector 62" and PIN 201301
+  const noidaSec62 = resolveIndianAddressCoordinates('noida sector 62');
+  const distSec62 = db.computeGeographicDistanceKm(stall.lat, stall.lng, noidaSec62.lat, noidaSec62.lng);
+  assert(distSec62 > 25.0, 'Noida Sector 62 must be outside 25km of Mukherjee Nagar');
+
+  const noidaPin = resolveIndianAddressCoordinates('noida 201301');
+  const distPin = db.computeGeographicDistanceKm(stall.lat, stall.lng, noidaPin.lat, noidaPin.lng);
+  assert(distPin > 25.0, 'Noida PIN 201301 must be outside 25km of Mukherjee Nagar');
+
+  // 5. Decentralized Parity: A stall registered IN Noida delivers to Noida & Greater Noida, but not Mukherjee Nagar
+  const noidaStall = {
+    id: 'stall_noida_rolls_1',
+    name: 'Noida Kathi Rolls',
+    lat: 28.5355,
+    lng: 77.3910,
+    area: 'Noida City Centre',
+    city: 'Noida',
+    delivery_radius_km: 25.0,
+    status: 'OPEN_FOR_ORDERS'
+  };
+
+  const distNoidaToNoidaCust = db.computeGeographicDistanceKm(noidaStall.lat, noidaStall.lng, noida.lat, noida.lng);
+  assert(distNoidaToNoidaCust < 1.0, 'Noida stall delivers locally to Noida customer');
+
+  const distNoidaToGrNoidaCust = db.computeGeographicDistanceKm(noidaStall.lat, noidaStall.lng, grNoida.lat, grNoida.lng);
+  assert(distNoidaToGrNoidaCust <= 25.0, 'Noida stall delivers to Greater Noida (~13km <= 25km)');
+
+  const distNoidaToMukherjeeNagar = db.computeGeographicDistanceKm(noidaStall.lat, noidaStall.lng, stall.lat, stall.lng);
+  assert(distNoidaToMukherjeeNagar > 25.0, 'Noida stall does not deliver to Mukherjee Nagar Delhi (>25km)');
 });
 
 test('Client-Side Script Integrity: public/app.js parses with zero syntax errors', () => {

@@ -2,8 +2,8 @@
 
 **Product Name**: Thela Express  
 **Platform**: Hyper-Local Quick Commerce Platform for Indian Street Food Stalls  
-**Current Production Version**: `v2.4.0`  
-**Current Date**: September 29, 2026  
+**Current Production Version**: `v2.4.1`  
+**Current Date**: October 6, 2026  
 **Git Repository**: [GitHub — Yooo6769/Thela-Express](https://github.com/Yooo6769/Thela-Express.git)  
 **Live Production Deployment**: [Render — thela-express.onrender.com](https://thela-express.onrender.com)  
 **Local Document Paths**:
@@ -54,6 +54,8 @@ flowchart LR
     v237 --> v238["v2.3.8<br/>25km Max Delivery Radius, VIP Free <=7km & Chargeable Rules, and Purged Area Suggestions"]
     v238 --> v239["v2.3.9<br/>Mandatory Mobile Login for Address Creation & Decentralized All-India Vendor Platform"]
     v239 --> v240["v2.4.0<br/>Pan-India Pincode & State Geocoding Engine; Zero Central Fallback; 1560km AP Out-of-Range Enforcement"]
+    v240 --> v241["v2.4.1<br/>Far NCR Geocoding Accuracy: Noida (26.4km) & Greater Noida (39km) Out-of-Range Enforcement"]
+```
 ```
 
 ---
@@ -953,11 +955,36 @@ flowchart LR
 
 ---
 
+### `v2.4.1` — Far NCR Geocoding Accuracy: Noida (26.4km) & Greater Noida (39km) Out-of-Range Enforcement
+- **Release Date**: October 6, 2026
+- **Architecture Highlights**:
+  - **Root Cause of Far NCR Delivery Bug Identified & Resolved**:
+    - In `v2.4.0`, `STATE_AND_CITY_NAME_MAP` had bundled `names: ['noida', 'greater noida']` together at coordinate `28.5700, 77.3200` (Noida Sector 18, border of Mayur Vihar, East Delhi).
+    - Because the substring `"greater noida"` matched this bundled entry, both Noida and Greater Noida were placed at the Sector 18 border corner (19.0 km Euclidean from Mukherjee Nagar, North Delhi: `28.7095, 77.2075`).
+    - Because $19.0 \le 25\text{ km}$, entering "noida" or "greater noida" erroneously flagged the Mukherjee Nagar stall as deliverable! Only completely distant cities (Mumbai, Andhra Pradesh) were excluded.
+  - **Accurate Geographic Coordinates & Ordering**:
+    - **Greater Noida (Pari Chowk / Knowledge Park / Surajpur / Greater Noida West / Gaur City)**: Now mapped to `lat: 28.4744, lng: 77.5040`. Straight-line distance from Mukherjee Nagar is **39.0 km** (road distance: ~52.7 km), which is definitively $> 25\text{ km}$.
+    - **Noida (City Centre / Sector 39 / Sector 50 / Sector 76 / Expressway)**: Now mapped to `lat: 28.5355, lng: 77.3910`. Straight-line distance from Mukherjee Nagar is **26.4 km** (road distance: ~34 km), which is definitively $> 25\text{ km}$.
+    - Greater Noida keyword triggers are placed **before** Noida in the matching array to prevent substring interception.
+  - **Granular Far NCR Postal Circle PIN Code Resolution**:
+    - Greater Noida PIN codes: `201306` (Pari Chowk), `201308` (Alpha/Beta), `201310` (Knowledge Park), `201318` (Techzone), `201305` (Noida Extension) map directly to `28.4744, 77.5040` (39.0 km away).
+    - Noida PIN codes: `201301`, `201304`, `201307`, `201309`, `201313`, and `2013` fallback map directly to `28.5355, 77.3910` (26.4 km away).
+  - **Seamless Decentralized Platform Parity Preserved**:
+    - When a stall registers in Noida (`28.5355, 77.3910`), its 25km radius covers Noida (0 km) and Greater Noida (12.9 km), while correctly excluding Mukherjee Nagar (26.4 km).
+    - Every stall's delivery zone is 100% relative to its own physical location.
+  - **Comprehensive Automated Verification**:
+    - Added dedicated Far NCR test in `scratch/test_aryan_the_pizza.js`.
+    - All 39 integration tests pass in `test_aryan_the_pizza.js`.
+    - All 101 tests across all 4 production suites pass with 100% success rate.
+
+---
+
 ## 3. Complete Git Commit Timeline
 
 | Commit | Date | Category | Description |
 | :--- | :--- | :--- | :--- |
-| `HEAD` | 2026-09-29 | Geocoding & Accuracy | Authoritative Pan-India pincode and state address resolver, zero Delhi fallback, and 1560km AP out-of-range enforcement (v2.4.0) |
+| `c8b4c28` | 2026-10-06 | Geocoding & Accuracy | Accurate Far NCR Noida (26.4km) and Greater Noida (39km) out-of-range boundaries (v2.4.1) |
+| `9c5d98a` | 2026-09-29 | Geocoding & Accuracy | Authoritative Pan-India pincode and state address resolver, zero Delhi fallback, and 1560km AP out-of-range enforcement (v2.4.0) |
 | `4f702a5` | 2026-09-29 | Auth & Location | Gate address creation behind mobile login and enforce decentralized multi-city stall delivery (v2.3.9) |
 | `5b49cd8` | 2026-09-29 | Delivery & Pricing | 25km max delivery limit, VIP free <=7km & chargeable rules, and purge all area suggestions (v2.3.8) |
 | `b3a8db0` | 2026-09-28 | Location & Delivery | 10km standard / 20km VIP delivery limits, GTB Nagar Metro landmark, and clean zero-coords UX (v2.3.7) |
