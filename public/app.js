@@ -2162,9 +2162,9 @@ function groupMenuDishes(rawItems) {
   
   rawItems.forEach(item => {
     // Extract base dish name: e.g. "Margherita Pizza (Small 7")" -> base: "Margherita Pizza", variant: "Small 7""
-    const match = item.name.match(/^(.*?)\s*\((Small|Medium|Large|3 Pcs|6 Pcs)[^\)]*\)$/i);
+    const match = item.name.match(/^(.*?)\s*\((Small|Medium|Large|Half|Full|Half Plate|Full Plate|1 Pc|2 Pcs|3 Pcs|5 Pcs|6 Pcs|10 Pcs)[^\)]*\)$/i);
     const baseName = match ? match[1].trim() : item.name;
-    const variantLabel = match ? match[2].trim() : null;
+    const variantLabel = match ? (item.name.match(/\(([^\)]+)\)$/)?.[1] || match[2].trim()) : null;
     
     const key = `${item.stall_id || 'dish'}_${baseName.toLowerCase().replace(/[^a-z0-9]/g, '')}`;
     if (!dishGroups.has(key)) {
@@ -2202,8 +2202,8 @@ function groupMenuDishes(rawItems) {
       if (variantLabel.toLowerCase().includes('small')) shortCode = 'S (7")';
       else if (variantLabel.toLowerCase().includes('medium')) shortCode = 'M (9")';
       else if (variantLabel.toLowerCase().includes('large')) shortCode = 'L (12")';
-      else if (variantLabel.includes('3')) shortCode = '3 Pcs';
-      else if (variantLabel.includes('6')) shortCode = '6 Pcs';
+      else if (variantLabel.includes('3 Pcs')) shortCode = '3 Pcs';
+      else if (variantLabel.includes('6 Pcs')) shortCode = '6 Pcs';
 
       group.variants.push({
         id: item.id,
@@ -2544,12 +2544,17 @@ function openDishCustomizer(dishKeyOrId, preferredVariantId) {
     (STATE.selectedDishVariant && STATE.selectedDishVariant[dish.key]) || 
     (hasVariants ? (dish.variants.find(v => (v.name || '').includes('Medium'))?.id || dish.variants[0].id) : dish.id);
 
+  const isMomo = (dish.category && dish.category.toLowerCase().includes('momo')) || 
+                 (dish.name && dish.name.toLowerCase().includes('momo')) ||
+                 (STATE.currentStall && STATE.currentStall.category === 'momos');
+  const defaultSeasoning = isMomo ? 'Fiery Red Chilli Garlic Chutney' : 'Oregano & Chilli Flakes';
+
   STATE.customizerState = {
     dish: dish,
     selectedVariantId: initialVariantId,
     crust: 'standard', // 'standard' | 'cheese_burst'
     extraCheese: false,
-    seasonings: new Set(['Oregano & Chilli Flakes']),
+    seasonings: new Set([defaultSeasoning]),
     cookingNote: '',
     qty: 1
   };
@@ -2822,7 +2827,16 @@ function renderCustomizerSeasoningsSection() {
   const container = document.getElementById('customizerSeasoningsContainer');
   if (!container || !STATE.customizerState) return;
 
-  const seasoningsList = [
+  const isMomos = (STATE.currentStall && STATE.currentStall.category === 'momos') ||
+                  (STATE.customizerState?.dish?.category && STATE.customizerState.dish.category.toLowerCase().includes('momo')) ||
+                  (STATE.customizerState?.dish?.name && STATE.customizerState.dish.name.toLowerCase().includes('momo'));
+
+  const seasoningsList = isMomos ? [
+    { id: 'Fiery Red Chilli Garlic Chutney', label: '🔥 Fiery Red Chilli Chutney', desc: 'Signature authentic Himalayan dip' },
+    { id: 'Creamy Street Mayo Dip', label: '🥣 Creamy Mayo Dip', desc: 'Cooling velvety street mayonnaise' },
+    { id: 'Extra Red Onions & Coriander', label: '🧅 Fresh Red Onions & Coriander', desc: 'Crisp sliced onions & coriander' },
+    { id: 'Special Roasted Chaat Masala', label: '🧂 Roasted Chaat Masala', desc: 'Chatpata tangy spice sprinkle' }
+  ] : [
     { id: 'Oregano & Chilli Flakes', label: '🌿 Oregano & Red Chilli Flakes', desc: 'Classic Italian street herbs & heat' },
     { id: 'Special Desi Street Masala', label: '🌶️ Special Desi Street Masala', desc: 'Chatpata roasted Indian street masala' },
     { id: 'Spicy Peri-Peri Seasoning', label: '🧂 Spicy Peri-Peri Dust', desc: 'Zesty tangy spice sprinkle' },

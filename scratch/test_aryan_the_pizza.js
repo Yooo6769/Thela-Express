@@ -295,12 +295,15 @@ test('app.js generates real Aryan The Pizza UPI payment URI and clean toasts', (
   assert(!appJsContent.includes('(Auto-filled)'), 'Found (Auto-filled) toast in app.js');
 });
 
-test('Database contains zero mock orders, zero mock users, and 1 verified real partner stall', () => {
+test('Database contains zero mock orders, zero mock users, and 2 verified real partner stalls', () => {
   assert.strictEqual(db.getOrders().length, 0, 'Database must have 0 orders');
-  assert.strictEqual(db.getStalls().length, 1, 'Database must have exactly 1 stall (Aryan The Pizza)');
+  assert.strictEqual(db.getStalls().length, 2, 'Database must have exactly 2 verified partner stalls (Aryan The Pizza & Darjeeling Momos)');
   const aryanStall = db.getStallById('stall_aryan_the_pizza');
   assert(aryanStall, 'Aryan The Pizza stall must exist');
   assert.strictEqual(aryanStall.upi_id, '9205359557@ptaxis');
+  const momoStall = db.getStallById('stall_darjeeling_momos');
+  assert(momoStall, 'Darjeeling Momos stall must exist');
+  assert.strictEqual(momoStall.category, 'momos');
 });
 
 test('Admin UI is purged of test record references', () => {
@@ -729,6 +732,82 @@ test('Far NCR Geocoding Accuracy: Noida (26.4km) and Greater Noida (39km) resolv
   assert(distNoidaToMukherjeeNagar > 25.0, 'Noida stall does not deliver to Mukherjee Nagar Delhi (>25km)');
 });
 
+console.log('\n--- TEST SUITE 11: Real Partner Vendor 2 — Darjeeling Momos (Vishwavidyalaya Metro) ---');
+test('Darjeeling Momos exists in database with verified profile near Vishwavidyalaya Metro Station', () => {
+  const stall = db.getStallById('stall_darjeeling_momos');
+  assert(stall, 'Stall stall_darjeeling_momos not found');
+  assert.strictEqual(stall.name, 'Darjeeling Momos');
+  assert.strictEqual(stall.category, 'momos');
+  assert.strictEqual(stall.area, 'Vishwavidyalaya, North Campus');
+  assert.strictEqual(stall.pincode, '110007');
+  assert.strictEqual(stall.lat, 28.6947);
+  assert.strictEqual(stall.lng, 77.2140);
+  assert.strictEqual(stall.upi_id, 'darjeelingmomos@ptaxis');
+  assert.strictEqual(stall.fssai_status, 'verified');
+  assert.strictEqual(stall.hygiene_score, 95);
+});
+
+test('Darjeeling Momos satisfies all 7 mandatory activation gates & is OPEN_FOR_ORDERS', () => {
+  const stall = db.getStallById('stall_darjeeling_momos');
+  const gateCheck = db.validateVendorLiveActivationGates(stall);
+  assert.strictEqual(gateCheck.eligible, true, `Activation gates failed: ${gateCheck.reasons.join('; ')}`);
+  assert.strictEqual(gateCheck.reasons.length, 0);
+
+  const status = db.getStallStoreStatus(stall);
+  assert.strictEqual(status.code, 'OPEN_FOR_ORDERS');
+  assert.strictEqual(status.isOpen, true);
+  assert.strictEqual(status.canAcceptOrders, true);
+});
+
+test('Darjeeling Momos menu items transcribed with exact physical menu board prices', () => {
+  const items = db.getMenuItems('stall_darjeeling_momos');
+  assert.strictEqual(items.length, 25, 'Must have 25 menu items');
+
+  const findItem = (name) => items.find(i => i.name === name);
+
+  // Steamed Momos
+  assert.strictEqual(findItem('Veg. Momos (Half - 6 pcs)')?.price, 35);
+  assert.strictEqual(findItem('Veg. Momos (Full - 10 pcs)')?.price, 60);
+  assert.strictEqual(findItem('Paneer Momos (Half - 5 pcs)')?.price, 35);
+  assert.strictEqual(findItem('Paneer Momos (Full - 10 pcs)')?.price, 70);
+  assert.strictEqual(findItem('Chicken Momos (Half - 5 pcs)')?.price, 35);
+  assert.strictEqual(findItem('Chicken Momos (Full - 10 pcs)')?.price, 70);
+
+  // Kurkure Momos
+  assert.strictEqual(findItem('Veg. Kurkure Momos (Half - 6 pcs)')?.price, 70);
+  assert.strictEqual(findItem('Veg. Kurkure Momos (Full - 10 pcs)')?.price, 110);
+  assert.strictEqual(findItem('Paneer Kurkure Momos (Half - 5 pcs)')?.price, 80);
+  assert.strictEqual(findItem('Paneer Kurkure Momos (Full - 10 pcs)')?.price, 130);
+  assert.strictEqual(findItem('Chicken Kurkure Momos (Half - 5 pcs)')?.price, 80);
+  assert.strictEqual(findItem('Chicken Kurkure Momos (Full - 10 pcs)')?.price, 130);
+
+  // Gravy & Butter Momos
+  assert.strictEqual(findItem('Veg. Gravy Momos (Full - 10 pcs)')?.price, 110);
+  assert.strictEqual(findItem('Paneer Gravy Momos (Full - 10 pcs)')?.price, 130);
+  assert.strictEqual(findItem('Chicken Gravy Momos (Full - 10 pcs)')?.price, 130);
+  assert.strictEqual(findItem('Butter Momos (Half - 6 pcs)')?.price, 65);
+  assert.strictEqual(findItem('Butter Momos (Full - 10 pcs)')?.price, 85);
+
+  // Rolls, Fries, Chilly Potato, Noodles, Maggi
+  assert.strictEqual(findItem('Veg. Roll (Half - 1 pc)')?.price, 35);
+  assert.strictEqual(findItem('Veg. Roll (Full - 2 pcs)')?.price, 70);
+  assert.strictEqual(findItem('French Fry (Full Plate)')?.price, 60);
+  assert.strictEqual(findItem('Chilly Potato (Half Plate)')?.price, 80);
+  assert.strictEqual(findItem('Chilly Potato (Full Plate)')?.price, 120);
+  assert.strictEqual(findItem('Noodles (Half Plate)')?.price, 60);
+  assert.strictEqual(findItem('Noodles (Full Plate)')?.price, 100);
+  assert.strictEqual(findItem('Maggies (Full Plate)')?.price, 50);
+});
+
+test('Indian Geocoder resolves Vishwavidyalaya Metro Station to accurate North Campus coordinates', () => {
+  const { resolveIndianAddressCoordinates } = require('../server/src/utils/indian_geocoder');
+  const res = resolveIndianAddressCoordinates('Near Vishwavidyalaya Metro Station, Delhi');
+  assert.strictEqual(res.isResolved, true);
+  assert.strictEqual(res.lat, 28.6947);
+  assert.strictEqual(res.lng, 77.2140);
+  assert.strictEqual(res.area, 'Vishwavidyalaya, North Campus');
+});
+
 test('Client-Side Script Integrity: public/app.js parses with zero syntax errors', () => {
   const { execSync } = require('child_process');
   assert.doesNotThrow(() => {
@@ -736,7 +815,7 @@ test('Client-Side Script Integrity: public/app.js parses with zero syntax errors
   }, 'public/app.js failed syntax validation');
 });
 
-console.log(`\n🎉 ALL ${passCount} ARYAN THE PIZZA INTEGRATION TESTS PASSED COMPLETELY!`);
+console.log(`\n🎉 ALL ${passCount} ARYAN THE PIZZA & DARJEELING MOMOS INTEGRATION TESTS PASSED COMPLETELY!`);
 console.log('================================================================');
 
 

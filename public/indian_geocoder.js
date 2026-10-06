@@ -314,6 +314,7 @@ const STATE_AND_CITY_NAME_MAP = [
   { names: ['noida', 'sector 62', 'sector 18', 'sector 15', 'sector 16', 'sector 37', 'sector 50', 'sector 76', 'sector 137', 'sector 128', 'botanical garden', 'noida expressway', 'atta market', 'film city noida', 'gautam buddha nagar'], lat: 28.5355, lng: 77.3910, area: 'Noida' },
   { names: ['uttar pradesh', 'lucknow', 'kanpur', 'varanasi', 'banaras', 'agra', 'prayagraj', 'allahabad', 'meerut', 'bareilly', 'aligarh', 'moradabad', 'gorakhpur', 'firozabad', 'jhansi', 'muzaffarnagar', 'mathura', 'ayodhya'], lat: 26.8467, lng: 80.9462, area: 'Uttar Pradesh' },
   { names: ['mukherjee nagar', 'gtb nagar', 'hudson lane', 'kingsway camp'], lat: 28.7095, lng: 77.2075, area: 'Mukherjee Nagar' },
+  { names: ['vishwavidyalaya', 'vishwavidyalaya metro', 'delhi university', 'north campus', 'mall road delhi', 'chhatra marg', 'kamla nagar', 'roop nagar', 'malka ganj', 'civil lines delhi'], lat: 28.6947, lng: 77.2140, area: 'Vishwavidyalaya, North Campus' },
   { names: ['model town'], lat: 28.7150, lng: 77.1900, area: 'Model Town' },
   { names: ['connaught place', 'cp', 'new delhi', 'delhi'], lat: 28.6139, lng: 77.2090, area: 'Delhi' }
 ];
